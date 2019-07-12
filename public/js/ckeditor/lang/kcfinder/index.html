@@ -1,0 +1,17 @@
+﻿<button name="test" onclick="openKCFinder(this)">测试</button>
+<script type="text/javascript">
+function openKCFinder(field) {
+	/*
+    window.KCFinder = {
+        callBack: function(url) {
+            field.value = url;
+            window.KCFinder = null;
+        }
+    };*/
+    window.open('browse.php?type=files&lng=zh-cn', 'kcfinder_textbox',
+        'width=837, height=500, location=no, menubar=no, status=no, toolbar=no, scrollbars=yes, resizable=no, top=50'
+    );
+}
+
+</script>
+

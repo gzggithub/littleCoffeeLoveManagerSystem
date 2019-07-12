@@ -1,0 +1,3578 @@
+@import '~antd/dist/antd.css';
+@import './static/css/CheckManage/QualityCourseCheck.css';
+
+ul, li, ol, dl, dt, dd {
+    list-style: none;
+}
+
+.clearfix::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.home {
+    padding-top: 64px;
+}
+
+.home .header {
+    position: fixed;
+    top: 0;
+    z-index: 999;
+    width: 100%;
+}
+
+.home .header .right-box {
+    position: absolute;
+    top: 0;
+    right: 50px;
+}
+
+.home .header .right-box span.username {
+    margin-right: 10px;
+    color: #fff;
+}
+
+/*表格*/
+.ant-table-wrapper thead th {
+    padding: 10px 16px;
+    text-align: center;
+}
+
+.ant-table-wrapper tbody tr {
+    height: 20px !important;
+    text-align: center;
+    overflow: hidden;
+}
+
+.ant-table-wrapper tbody tr td {
+    height: 35px;
+    padding: 2px 10px;
+    overflow: hidden;
+}
+
+.ant-table-wrapper tbody tr td div {
+    max-height: 30px;
+    line-height: 14px;
+}
+
+.institutions.finace-order .ant-table-wrapper tbody tr td div {
+    max-height: none !important;
+}
+
+.ant-table-wrapper tbody tr td .editable-row-operations a {
+    margin: 0 10px;
+}
+
+.ant-table-wrapper tbody tr td .editable-row-operations a:hover {
+    text-decoration: underline;
+}
+
+.ant-table.ant-table-bordered .ant-table-footer {
+    text-align: right;
+    font-size: 20px;    
+}
+
+th.categoryName,
+th.courseName,
+th.orgName,
+th.companyName,
+th.address{
+    text-align: left !important;
+}
+td.categoryName,
+td.courseName,
+td.orgName,
+td.companyName,
+td.address,
+td.operating {
+    text-align: left !important;
+}
+
+/*弹出层及表单*/
+.ant-modal-body {
+    max-height: 60vh;
+    padding: 10px 24px;
+    /* overflow-y: scroll; */
+    overflow-y: auto;
+}
+
+.add-form-title-h4 {
+    margin: 20px 0px;
+    font-weight: bold;
+}
+
+.ant-form-item {
+    margin: 0;
+}
+
+.ant-form-item-label {
+    padding: 0 !important;
+    line-height: 32px !important;
+    text-align: left;
+}
+
+.ant-form-item-control-wrapper {
+    /* margin-left: 10px; */
+}
+
+.ant-form-item-control {
+    /*position: relative;*/
+}
+
+.ant-form-item-children {
+    position: static;
+}
+
+.ant-form-explain {
+    width: 140px;
+    height: 14px;
+    line-height: 14px;
+    position: absolute;
+    top: 50%;
+    left: 108%;
+    margin-top: -7px !important;
+}
+
+.ant-line {
+    height: 20px;
+}
+
+/* tabs css */
+.card-container > .ant-tabs-card > .ant-tabs-content {
+    min-height: 120px;
+    margin-top: -16px;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-content > .ant-tabs-tabpane {
+    background: #fff;
+    padding: 16px;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-bar {
+    border-color: #fff;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab {
+    border-color: transparent;
+    background: transparent;
+    font-size: 20px;
+}
+
+.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
+    border-color: #fff;
+    background: #fff;
+}
+
+.snapshot .ant-tabs.ant-tabs-card .ant-tabs-card-bar .ant-tabs-tab-active {
+    color: #FF9900;
+    border-top: 1px solid #FFCC33;
+}
+
+.h4-liear-gradient {
+    /* background: -webkit-linear-gradient(left, 5% 10%, 5% 10%,#FF9900, #FF9900); Safari 5.1 - 6.0
+    background: -o-linear-gradient(right,5% 10%, 5% 10%,#FF9900, #FF9900); Opera 11.1 - 12.0
+    background: -moz-linear-gradient(right,5% 10%,5% 10%, #FF9900, #FF9900); Firefox 3.6 - 15
+    background: linear-gradient(right, 5% 10%,5% 10%, #FF9900, #FF9900); 标准的语法（必须放在最后） */
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.h4-liear-gradient span {
+    display: inline-block;
+    width: 8px;
+    height: 20px;
+    line-height: 20px;
+    background: #FF9900;
+    margin-right: 5px;
+}
+
+/*表单页面公用样式*/
+.item-form .photo .itemBox .ant-col-4 {
+    line-height: 36px;
+}
+
+.item-form .icon .itemBox .ant-col-4 {
+    line-height: 36px;
+}
+
+/*详情页面公用样式*/
+.item-details pre {
+    margin: 0;
+    font-family: inherit;
+    white-space: pre-wrap;
+}
+
+/*spinBox样式*/
+.spin-box {
+    text-align: center;
+    border-radius: 4px;
+    padding: 30px 50px;
+    margin: 20px 0;
+}
+
+/*login--------------------------------------------------------------------------------------------------------*/
+.login {
+    width: 100%;
+    height: 100vh;
+    padding-top: 100px;
+}
+
+.login img.logo {
+    display: block;
+    margin: 0 auto;
+}
+
+.login form {
+    width: 300px;
+    margin: 50px auto 0;
+}
+
+.login form .ant-form-item.code .code-input {
+    position: relative;
+}
+
+.login form .ant-form-item.code .code-box {
+    width: 60px;
+    height: 38px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    cursor: pointer;
+}
+
+.login form .ant-form-item.code img {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.login form .ant-form-item.code .icon-box {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login form .others {
+    position: relative;
+}
+
+.login .ant-form-item-control-wrapper {
+    margin: 0;
+    padding: 0 10px;
+}
+
+.login form .others .login-form-forgot {
+    color: #00a0e9;
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.login .login-form-button {
+    width: 100%;
+}
+
+.resetPassword .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.resetPassword .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.resetPassword .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+/*home---------------------------------------------------------------------------------------------------------*/
+.home .header .logo {
+    margin-right: 50px;
+    height: 64px;
+    position: absolute;
+    top: 0;
+    left: 20px;
+}
+
+.home .header .logo img {
+    display: block;
+    float: left;
+    width: 64px;
+    height: 100%;
+}
+
+.home .header .logo .pic-right {
+    float: left;
+    padding-top: 10px;
+}
+
+.home .header .logo .pic-right p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 14px;
+}
+
+.home .header .logo .pic-right p:nth-child(1) {
+    font-size: 18px;
+    line-height: 18px;
+}
+
+.home .header .logo .pic-right p:nth-child(2) {
+    line-height: 14px;
+    margin-top: 5px;
+}
+
+/* .home {
+    position: relative;
+} */
+
+/* .home .footer {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+} */
+
+.home .footer .version-infor {
+    text-align: center;
+}
+
+/*app首页(app-home)-----------------------------------------------------------------------------------------------*/
+/*banner管理*/
+.app-home .banner header {
+    margin-bottom: 10px;
+}
+
+.banner-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.banner-form .ant-form-item.photo .ant-upload {
+    width: 266px;
+    height: 136px;
+}
+
+.banner-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.banner-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*众筹课堂管理*/
+.app-home .crowdFunding header {
+    margin-bottom: 10px;
+}
+
+.crowdFunding-details {
+    margin-bottom: 20px;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item .teacher div.list-content {
+    float: left;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item .teacher div.list-content span {
+    margin-right: 10px;
+}
+
+.crowdFunding-details .crowdFunding-baseData .ant-list .ant-list-item .teacherPhoto img.item-content {
+    width: 80px;
+    height: 80px;
+}
+
+.crowdFunding-form .ant-form-item.photo .ant-upload {
+    width: 136px;
+    height: 102px;
+}
+
+.crowdFunding-form .ant-form-item.photo img {
+    display: block;
+    width: 120px;
+    height: 86px;
+}
+
+.crowdFunding-form .ant-form-item.teacherPhoto img {
+    display: block;
+    width: 86px;
+    height: 86px;
+}
+
+.crowdFunding-form .ant-form-item.seniority .ant-form-item-control {
+    position: relative;
+}
+
+.crowdFunding-form .ant-form-item.seniority .ant-form-item-control .numOfSeniority {
+    width: 50px;
+    position: absolute;
+    top: 0;
+    left: 108%;
+}
+
+.crowdFunding-form #add-crowdFunding-container {
+    width: 420px;
+    height: 300px;
+    margin-left: 30px;
+    margin-bottom: 10px;
+}
+
+.crowdFunding-form #edit-crowdFunding-container {
+    width: 420px;
+    height: 300px;
+    margin-left: 30px;
+    margin-bottom: 10px;
+}
+
+.crowdFunding-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.crowdFunding-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.crowdFunding-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+/*推荐机构*/
+.institutions .ant-layout-sider {
+    background: #FFF;
+    font-size: 16px;
+}
+
+.institutions .ant-layout-content {
+    background: #FFF;
+}
+
+.institutions .ant-layout-sider .chooseDivision {
+    background: #FAFAFA;
+    height: 63px;
+    line-height: 63px;
+    font-size: 16px;
+    text-align: center;
+}
+.app-home .recommendInstitutions header {
+    margin-bottom: 10px;
+}
+
+.recommendInstitutions-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.recommendInstitutions-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*推荐课程*/
+.app-home .recommendCourse header {
+    margin-bottom: 10px;
+}
+
+.recommendCourse-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.recommendCourse-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*视频课程*/
+.app-home .videoCourses header {
+    margin-bottom: 10px;
+}
+
+.videoCourses-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.teacher-certification-form .ant-upload.ant-upload-select-picture-card {
+    width: 180px !important;
+    height: 120px !important;
+}
+
+.teacher-certification-form .ant-upload.ant-upload-select-picture-card img {
+    width: 100% !important;
+}
+
+.quality-course-form .ant-upload.ant-upload-select-picture-card {
+    width: 180px !important;
+    height: 120px !important;
+}
+
+.quality-course-form .ant-upload.ant-upload-select-picture-card img {
+    width: 100% !important;
+}
+
+/*用户管理(user)----------------------------------------------------------------------------------------------------*/
+
+/*所有用户*/
+.user-manage .users header {
+    margin-bottom: 10px;
+}
+
+.user-form .ant-form-item.photo img {
+    display: block;
+    width: 86px;
+    height: 86px;
+}
+
+.user-form .ant-form-item.remark {
+    padding: 4px 0;
+}
+
+.user-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.user-details {
+    margin-bottom: 20px;
+}
+
+.user-details .user-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.user-details .user-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.user-details .user-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.user-details .user-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.user-details .user-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 80px;
+    height: 80px;
+}
+
+.form-footer {
+    text-align: center;
+    margin: 50px 0;
+}
+
+.form-footer button:first-child {
+    margin-right: 10px;
+}
+
+/*用户反馈*/
+.user-manage .user-feedback header {
+    margin-bottom: 10px;
+}
+
+.user-feedback-details {
+    margin-bottom: 20px;
+}
+
+.user-feedback-details .user-feedback-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.user-feedback-details .user-feedback-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.user-feedback-details .user-feedback-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.user-feedback-details .user-feedback-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.user-detail-table-basic {
+    width: 100%;
+    display: flex;
+    border: 1px solid #e8e8e8;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td:first-child {
+    background-color: #FAFAFA;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td {
+    flex: 1;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .advator {
+    margin: 0 auto;
+    text-align: center;
+    padding-top: 5%;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .advator img {
+    width: 100px;
+    height: 100px;
+    vertical-align: middle;
+    border-radius: 100%;
+   
+}
+
+.user-detail-table-basic .user-detail-table-basic-td:nth-child(2) {
+    border-left: 1px solid #e8e8e8;
+    border-right: 1px solid #e8e8e8;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .user-detail-table-basic-item {
+    display: flex;
+    height: 35px;
+    line-height: 35px;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .user-detail-table-basic-item {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .user-detail-table-basic-item:last-child {
+    border-bottom: none;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .user-detail-table-basic-item div:first-child {
+    border-right: 1px solid #e8e8e8;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .user-detail-table-basic-item div:first-child {
+    flex: 1;
+    text-align: right;
+    background: #FAFAFA;
+    padding: 0 10px;
+}
+
+.user-detail-table-basic .user-detail-table-basic-td .user-detail-table-basic-item div:last-child {
+    flex: 1;
+    padding-left: 10px;
+}
+
+/*机构管理----------------------------------------------------------------------------------------------------------*/
+
+/*机构类型管理*/
+.institution-manage .category {
+    height: calc(100vh - 140px);
+}
+
+.institution-manage .category header {
+    margin-bottom: 10px;
+}
+
+.institution-manage .category div.table-box {
+    height: calc(100% - 42px);
+    overflow-y: scroll;
+}
+
+.category-form .ant-form-item.photo img {
+    display: block;
+    width: 86px;
+    height: 86px;
+}
+
+.category-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.category-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*所有机构*/
+.institution-manage .institutions header {
+    margin-bottom: 10px;
+}
+
+.institutions header {
+    margin-bottom: 10px;
+}
+
+.institution-form .feesHint {
+    margin: 0 0 5px 120px;
+    color: #999
+}
+
+.institution-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.institution-form .ant-form-item.photo .ant-upload {
+    position: relative;
+    width: 196px;
+    height: 116px;
+}
+
+.institution-form .ant-form-item.photo .photoExist-item {
+    margin-bottom: 10px;
+}
+
+.institution-form .ant-form-item.photo .photoExist-item img {
+    float: left;
+    width: 180px;
+    height: 100px;
+}
+
+.institution-form .ant-form-item.photo .photoExist-item .remove {
+    float: left;
+    margin-left: 20px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.institution-form .ant-form-item.photo .itemBox .hint {
+    width: 140px;
+    margin: 10px 0 0;
+    padding: 0;
+    color: #999;
+    position: absolute;
+    top: 40px;
+    left: 100%;
+}
+
+.institution-form .ant-form-explain {
+    width: 100%;
+    top: 150%;
+    left: 0;
+}
+
+.institution-form .ant-form-item.icon .ant-form-explain {
+    top: 110%;
+    left: 0;
+}
+
+.institution-form .ant-form-item.detailedAddress .ant-form-explain {
+    top: 135% !important;
+}
+
+.institution-form .ant-form-item.listenBookSummary .ant-form-explain {
+    top: 108%;
+}
+
+.institution-form .ant-form-item.photo .ant-form-explain {
+    width: 120px;
+}
+
+
+.institution-form .ant-form-item.icon .itemBox {
+    position: relative;
+}
+
+.institution-form .ant-form-item.icon .ant-upload {
+    width: 96px;
+    height: 96px;
+}
+
+.institution-form.company-form .ant-form-item.icon .ant-upload {
+    width: 96px;
+    height: 38px;
+}
+
+.institution-form.company-form.agent-form .ant-form-item.icon .ant-upload {
+    width: 120px;
+    height: 100px;
+}
+
+.institution-form .ant-form-item.icon .itemBox canvas {
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+.institution-form .ant-form-item.area .ant-form-item-label label:before {
+    display: inline-block;
+    margin-right: 4px;
+    content: "*";
+    font-family: SimSun;
+    line-height: 1;
+    font-size: 14px;
+    color: #f5222d;
+}
+
+.institution-form .ant-form-item.detailedAddress .ant-form-item-control-wrapper {
+    /* margin-left: 100px; */
+}
+
+.institution-form p.addressSaved {
+    padding: 0 0 5px 0;
+    margin: 0;
+    color: #999;
+}
+
+.institution-form #add-institution-container {
+    width: 100%;
+    height: 320px;
+    margin-left: 0;
+    margin-bottom: 10px;
+}
+
+.institution-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.institution-form .ant-form-item.longItem .ant-form-explain {
+    top: 110%;
+    left: 0%;
+}
+
+.institution-form .ant-form-item.photo .ant-form-explain {
+    top: 106%;
+}
+
+.institution-form .ant-form-item.area .ant-form-explain {
+    top: 150%;
+}
+
+/* .institution-form .ant-form-item.typeIds .ant-form-explain {
+    top: 113%;
+} */
+
+/* .institution-form .ant-form-item.description .ant-form-explain {
+    top: 110%;
+} */
+
+.institution-form .ant-form-item .ant-form-item-label {
+    width: 100px;
+}
+
+.institution-form.receive-bank-card-form .ant-form-item .ant-form-item-label {
+    width: 120px !important;
+}
+
+.institution-details {
+    margin-bottom: 20px;
+}
+
+.institution-details .institution-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.institution-details .institution-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.institution-details .institution-baseData .ant-list .ant-list-item span.item-name {
+    width: 90px;
+}
+
+.institution-details .institution-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 445px;
+}
+
+.institution-details .institution-baseData .ant-list .ant-list-item .logo img.item-content {
+    width: 80px;
+    height: 80px;
+}
+
+.institution-details .institution-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 180px;
+    height: 100px;
+}
+
+.shop-form .ant-form-item.photo .ant-upload {
+    width: 136px;
+    height: 102px;
+}
+
+.shop-form .ant-form-item.photo img {
+    display: block;
+    width: 120px;
+    height: 86px;
+}
+
+.shop-form .ant-form-item.details .ant-form-explain {
+    left: 102%;
+}
+
+.shop-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+/*我的机构*/
+.institution-manage .MyInstitution {
+    height: calc(100vh - 140px);
+}
+
+.institution-manage .MyInstitution header {
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.MyInstitution .emptyTips {
+    padding: 16px 0;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.MyInstitution .content {
+    height: calc(100% - 42px);
+    overflow-y: scroll;
+    padding: 20px 10%;
+    position: relative;
+}
+
+.MyInstitution .content .item {
+    float: left;
+}
+
+.MyInstitution .content .shortItem {
+    width: 40%;
+}
+
+.MyInstitution .content .longItem {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.MyInstitution .content span {
+    float: left;
+    line-height: 2;
+}
+
+.MyInstitution .content span.item-name {
+    width: 70px;
+}
+
+.MyInstitution .content span.item-content {
+    max-width: 90%;
+}
+
+.MyInstitution .content div.item-content {
+    width: 100%;
+    padding-left: 70px;
+}
+
+.MyInstitution .content .managerPhone span.item-name {
+    width: 150px;
+}
+
+.MyInstitution .content .longItem span {
+    line-height: 1.5;
+}
+
+.MyInstitution .content .logo img {
+    width: 60px;
+    height: 60px;
+}
+
+.MyInstitution .content .photo img {
+    width: 270px;
+    height: 150px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+
+.MyInstitution .content .status-box {
+    position: absolute;
+    top: 20px;
+    right: 10%;
+}
+
+.MyInstitution .content .status-box img {
+    width: 80px;
+    height: 50px;
+}
+
+.idAuthenticate-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.idAuthenticate-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*教师管理*/
+.institution-manage .teachers header {
+    margin-bottom: 10px;
+}
+
+.teacher-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.teacher-form .ant-form-item.photo .ant-upload {
+    width: 96px;
+    height: 96px;
+}
+
+.teacher-form .ant-form-item.photo .itemBox canvas {
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+.teacher-form .ant-form-item.photo .item-box {
+    position: relative;
+}
+
+.teacher-form .ant-form-item.experienceAge .ant-form-item-control {
+    position: relative;
+}
+
+.teacher-form .ant-form-item.experienceAge .ant-form-item-control .numOfSeniority {
+    width: 50px;
+    position: absolute;
+    top: 0;
+    left: 108%;
+}
+
+.teacher-form .ant-form-item .ant-form-explain {
+    width: 100%;
+    top: 150%;
+    left: 0;
+}
+
+.teacher-form .ant-form-item.description .ant-form-explain {
+    top: 110%;
+}
+
+.teacher-form .ant-form-item.photo .ant-form-explain {
+    top: 93%;
+    left: 110%;
+}
+
+.teacher-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.teacher-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.teacher-form .ant-form-item.experience .ant-form-explain {
+    top: 108%;
+}
+
+.teacher-details {
+    margin-bottom: 20px;
+}
+
+.teacher-details .teacher-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.teacher-details .teacher-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.teacher-details .teacher-baseData .ant-list .ant-list-item span.item-name {
+    width: 90px;
+}
+
+.teacher-details .teacher-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 445px;
+}
+
+.teacher-details .teacher-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 80px;
+    height: 80px;
+}
+
+/*课程管理*/
+.institution-manage .courses header {
+    margin-bottom: 10px;
+}
+
+.coursesBack {
+    position: absolute;
+    top: -50%;
+    right: 0;
+}
+
+.orderBack {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+}
+
+.billBack {
+    position: absolute;
+    top: 50%;
+    right: 24px;
+    transform: translateY(-50%);
+}
+
+.course-form .ant-form-item.courseType .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.course-form .ant-form-item.studentType .ant-form-item-label:before {
+    display: inline-block;
+    margin-right: 4px;
+    content: "*";
+    font-family: SimSun;
+    line-height: 1;
+    font-size: 14px;
+    color: #f5222d;
+}
+
+.course-form .ant-form-item.photo .ant-upload {
+    position: relative;
+    width: 196px;
+    height: 116px;
+}
+
+.course-form .ant-form-item.photo .itemBox canvas {
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+.course-form .ant-form-item.photo .photoExist-item {
+    margin-bottom: 10px;
+}
+
+.course-form .ant-form-item.photo .photoExist-item img {
+    float: left;
+    width: 180px;
+    height: 100px;
+}
+
+.course-form .ant-form-item.photo .photoExist-item .remove {
+    float: left;
+    margin-left: 20px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.course-form .ant-form-item.photo .itemBox .hint {
+    width: 140px;
+    margin: 10px 0 0;
+    padding: 0;
+    color: #999;
+    position: absolute;
+    top: 40px;
+    left: 100%;
+}
+
+.course-form .ant-form-item.subItem .ant-form-item-control-wrapper {
+    margin-left: 98px;
+    margin-left: 0;
+}
+
+.course-form .ant-form-item.subItem1 .ant-form-item-control-wrapper {
+    margin-left: 0;
+}
+
+.course-form .ant-form-item.subItemsAddButton .ant-form-item-control-wrapper .course-subItem-box {
+    margin: 4px 0;
+}
+
+.course-form .ant-form-item.subItemsAddButtonChanged .ant-form-item-control-wrapper {
+    /* margin-left: 100px; */
+    margin-left: 0;
+}
+
+.course-form p.lessonHint {
+    padding: 0 0 5px 20px;
+    margin: 0;
+    color: #999;
+}
+
+.course-form .ant-form-item.characteristic .ant-form-item-control-wrapper {
+    /* margin-left: 98px; */
+    margin-left: 0;
+}
+
+.course-form .ant-form-item.characteristic1 .ant-form-item-control-wrapper {
+    margin-left: 0;
+}
+
+.course-form .ant-form-item.characteristicAddButtonChanged .ant-form-item-control-wrapper {
+    /* margin-left: 100px; */
+    margin-left: 0;
+}
+
+.course-form .ant-form-item.address .ant-form-item-control-wrapper {
+    margin-left: 100px;
+}
+
+.course-form p.addressSaved {
+    padding: 0 0 5px 100px;
+    margin: 0;
+    color: #999;
+}
+
+.course-form #add-course-container {
+    width: 420px;
+    height: 300px;
+    margin-left: 30px;
+    margin-bottom: 10px;
+}
+
+.course-form .ant-form-item.eIds .ant-form-item-label {
+    width: 200px
+}
+
+.course-form .ant-form-item.eIds .ant-form-item-control-wrapper {
+    margin-left: 100px;
+    float: none
+}
+
+.course-form .ant-form-item.eIds .ant-form-item-control-wrapper .ant-checkbox-wrapper {
+    margin-left: 0;
+}
+
+.course-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.course-form .longItem .ant-form-explain {
+    top: 110%;
+}
+
+.course-form .ant-form-item .ant-form-explain {
+    top: 150%;
+    left: 0;
+}
+
+.course-form .ant-form-item.sketch .ant-form-explain {
+    top: 107%;
+}
+
+.course-form .ant-form-item.target .ant-form-explain {
+    top: 120%;
+}
+
+.course-form .ant-form-item.photo .ant-form-explain {
+    top: 93%;
+    left: 110%;
+}
+
+.course-form .ant-form-item.warmPrompt .ant-form-explain {
+    top: 115%;
+}
+
+.course-form .ant-form-item.tips .ant-form-explain {
+    top: 110%;
+}
+
+.course-form .ant-form-item.official .ant-form-explain {
+    top: 115%;
+}
+.course-form .ant-form-item.characteristic .ant-form-explain {
+    left: 20% !important;
+}
+
+.course-form .ant-form-item.itemNone {
+    display: none
+}
+
+.course-details {
+    margin-bottom: 20px;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item span.item-name {
+    width: 90px;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 445px;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item div.item-content {
+    float: left;
+    max-width: 360px;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 180px;
+    height: 100px;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item .lessonList .item-content p {
+    margin: 0;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item .characteristic .item-content p {
+    margin: 0;
+}
+
+.course-details .course-baseData .ant-list .ant-list-item .institutionList .item-content p {
+    margin: 0;
+}
+
+/*班级列表*/
+.class-form .subItemBox {
+    padding-top: 5px;
+}
+
+.class-form .subItemBox .boxTitle {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.85);
+}
+
+.class-form .subItemBox .boxTitle:before {
+    display: inline-block;
+    margin-right: 4px;
+    content: "*";
+    font-family: SimSun;
+    line-height: 1;
+    font-size: 14px;
+    color: #f5222d;
+}
+
+.class-form .subItemBox .method {
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+
+.class-form .subItemBox .method .subItemContent {
+    float: left;
+}
+
+.class-form .subItemBox .method01 span.weekSpan {
+    line-height: 32px;
+}
+
+.class-form .subItemBox .method02 .subItem {
+    margin-bottom: 10px;
+}
+
+.class-form .subItemBox .method02 .subItem .title {
+    margin: 0;
+}
+
+.class-form .subItemBox .method02 .subItem .time {
+}
+
+.class-form .weeks {
+    margin-bottom: 10px
+}
+
+.class-form .weeks .weeksTitle {
+    float: left;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.85);
+    line-height: 32px;
+}
+
+.class-form .weeks .weeksTitle:before {
+    display: inline-block;
+    margin-right: 4px;
+    content: "*";
+    font-family: SimSun;
+    line-height: 1;
+    font-size: 14px;
+    color: #f5222d;
+}
+
+.class-form .weeks .weeksBox {
+    float: left;
+    margin-left: 20px;
+}
+
+.class-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.class-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.class-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.class-list {
+    margin-bottom: 20px;
+}
+
+/*签到管理*/
+.institution-manage .attendConfirm header {
+    margin-bottom: 10px;
+}
+
+.students-list .ant-table-row td {
+    position: relative;
+}
+
+/*优惠券*/
+.institution-manage .coupons header {
+    margin-bottom: 10px;
+}
+
+.coupon-details {
+    margin-bottom: 20px;
+}
+
+.coupon-details .coupon-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.coupon-details .coupon-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.coupon-details .coupon-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 465px;
+}
+
+.coupon-details .coupon-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.coupon-form .ant-form-item.type .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.coupon-form .ant-form-item.effective .ant-input-number {
+    width: 65px;
+}
+
+.coupon-form .ant-form-item.range .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.coupon-form .ant-form-item.category .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.coupon-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.coupon-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.coupon-form .ant-form-item.unnecessary .ant-form-item-label label {
+    padding-left: 11px;
+}
+
+.coupon-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.coupon-form .ant-form-item.shortExplain .ant-form-explain {
+    width: 80px;
+}
+
+.institution-manage .IM {
+    height: calc(100vh - 140px);
+    padding-bottom: 20px;
+}
+
+/*资讯管理-------------------------------------------------------------------------------------------------*/
+.information-manage .information {
+    position: relative;
+    height: calc(100vh - 140px);
+}
+
+.information-manage .information header {
+    margin-bottom: 10px;
+}
+
+.information-manage .information .add-information {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.information-manage .information .add-information header {
+    width: 100%;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #efefef;
+}
+
+.information-manage .information .add-information .content {
+    width: 100%;
+    height: calc(100% - 50px);
+    display: flex;
+}
+
+.information-manage .information .add-information .content .item {
+    width: 50%;
+    height: 100%;
+}
+
+.information-manage .information .add-information .content .item-left {
+    padding-left: 20px;
+    overflow-y: scroll;
+}
+
+.information-manage .information .add-information .content .item-right #cke_TextArea1 {
+    height: 100%;
+}
+
+.information-manage .information .add-information .content .item-right #cke_TextArea1 .cke_inner {
+    height: 100%;
+}
+
+.information-manage .information .add-information .content .item-right #cke_TextArea1 .cke_inner .cke_contents {
+    height: calc(100% - 270px) !important;
+}
+
+.information-manage .information .add-information .content .item-right #cke_TextArea3 {
+    height: 100%;
+}
+
+.information-manage .information .add-information .content .item-right #cke_TextArea3 .cke_inner {
+    height: 100%;
+}
+
+.information-manage .information .add-information .content .item-right #cke_TextArea3 .cke_inner .cke_contents {
+    height: calc(100% - 270px) !important;
+}
+
+.information-manage .information .edit-information {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.information-manage .information .edit-information header {
+    width: 100%;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #efefef;
+}
+
+.information-manage .information .edit-information .content {
+    width: 100%;
+    height: calc(100% - 50px);
+    display: flex;
+}
+
+.information-manage .information .edit-information .content .item {
+    width: 50%;
+    height: 100%;
+}
+
+.information-manage .information .edit-information .content .item-left {
+    padding-left: 20px;
+    overflow-y: scroll;
+}
+
+.information-manage .information .edit-information .content .item-right #cke_TextArea2 {
+    height: 100%;
+}
+
+.information-manage .information .edit-information .content .item-right #cke_TextArea2 .cke_inner {
+    height: 100%;
+}
+
+.information-manage .information .edit-information .content .item-right #cke_TextArea2 .cke_inner .cke_contents {
+    height: calc(100% - 270px) !important;
+}
+
+.information-form .ant-form-item {
+    margin-bottom: 20px;
+}
+
+.information-form .ant-form-item .ant-form-item-label {
+    line-height: 40px !important;
+}
+
+.information-form .ant-form-explain {
+    width: 160px;
+    height: 14px;
+    line-height: 14px;
+    left: 10px;
+    top: 120%;
+}
+
+.information-form .ant-form-item.photo {
+    margin-bottom: 30px;
+}
+
+.information-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.information-form .ant-form-item.photo .ant-upload {
+    width: 315px;
+    height: 185px;
+}
+
+.information-form .ant-form-item.photo .ant-form-explain {
+    top: 104%;
+}
+
+.information-form .ant-form-item.summary {
+    margin-bottom: 20px;
+}
+
+.information-form .ant-form-item.summary .ant-form-explain {
+    top: 105%;
+}
+
+.information-form .ant-form-item.hide {
+    display: none;
+}
+
+.information-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+/* 资讯频道 */
+.information-manage .information-channel {
+    height: calc(100vh - 140px);
+}
+
+.information-manage .information-channel header {
+    margin-bottom: 10px;
+}
+
+.information-manage .information-channel div.table-box {
+    height: calc(100% - 42px);
+    overflow-y: scroll;
+}
+
+/* mdhBanner管理 */
+.information-manage .bannerOne header {
+    margin-bottom: 10px;
+}
+
+.bannerOne-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.bannerOne-form .ant-form-item.photo .ant-upload {
+    width: 266px;
+    height: 136px;
+}
+
+.bannerOne-form .ant-form-item.photo .item-box {
+    position: relative;
+}
+
+.bannerOne-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.bannerOne-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.bannerOne-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*mdh资讯*/
+.information-manage .newsOne {
+    position: relative;
+    height: calc(100vh - 140px);
+}
+
+.information-manage .newsOne header {
+    position: relative;
+}
+
+.information-manage .newsOne header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.information-manage .newsOne .keyWord {
+    margin-bottom: 10px;
+}
+
+.information-manage .newsOne .add-newsOne {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.information-manage .newsOne .add-newsOne header {
+    width: 100%;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #efefef;
+}
+
+.information-manage .newsOne .add-newsOne .content {
+    width: 100%;
+    height: calc(100% - 50px);
+    padding-top: 10px;
+    display: flex;
+}
+
+.information-manage .newsOne .add-newsOne .content .item {
+    width: 50%;
+    height: 100%;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-left {
+    padding-left: 20px;
+    overflow-y: scroll;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-right #cke_TextArea1 {
+    height: 100%;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-right #cke_TextArea1 .cke_inner {
+    height: 100%;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-right #cke_TextArea1 .cke_inner .cke_contents {
+    height: calc(100% - 270px) !important;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-right #cke_TextArea3 {
+    height: 100%;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-right #cke_TextArea3 .cke_inner {
+    height: 100%;
+}
+
+.information-manage .newsOne .add-newsOne .content .item-right #cke_TextArea3 .cke_inner .cke_contents {
+    height: calc(100% - 270px) !important;
+}
+
+.information-manage .newsOne .edit-newsOne {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.information-manage .newsOne .edit-newsOne header {
+    width: 100%;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #efefef;
+}
+
+.information-manage .newsOne .edit-newsOne .content {
+    width: 100%;
+    height: calc(100% - 50px);
+    padding-top: 10px;
+    display: flex;
+}
+
+.information-manage .newsOne .edit-newsOne .content .item {
+    width: 50%;
+    height: 100%;
+}
+
+.information-manage .newsOne .edit-newsOne .content .item-left {
+    padding-left: 20px;
+    overflow-y: scroll;
+}
+
+.information-manage .newsOne .edit-newsOne .content .item-right #cke_TextArea2 {
+    height: 100%;
+}
+
+.information-manage .newsOne .edit-newsOne .content .item-right #cke_TextArea2 .cke_inner {
+    height: 100%;
+}
+
+.information-manage .newsOne .edit-newsOne .content .item-right #cke_TextArea2 .cke_inner .cke_contents {
+    height: calc(100% - 270px) !important;
+}
+
+.newOne-details {
+    margin-bottom: 20px;
+}
+
+.newOne-details .newOne-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.newOne-details .newOne-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.newOne-details .newOne-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.newOne-details .newOne-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 465px;
+}
+
+.newOne-details .newOne-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 250px;
+    height: 120px;
+}
+
+.newOne-details .newOne-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.newsOne-show {
+    width: 100%;
+    height: 60vh;
+    background-color: #fff;
+}
+
+.newsOne-show iframe {
+    width: 100%;
+    height: 100%;
+}
+
+/* news css  start*/
+.institution-details.item-details.newsOne-show {
+    padding-left: 25px;
+}
+
+.current-order-status {
+    width: 100%;
+    min-height: 100px;
+    line-height: 100px;
+    border-bottom: 1px solid #e8e8e8;
+    font-size: 20px;
+    color: red;
+}
+
+.font-color-red {
+    color: red !important;
+}
+
+/* 图片放大 */
+
+.hove-photo-scale img {
+    transition: all 0.6s !important;
+}
+
+.hove-photo-scale img:hover {
+    transform: scale(1.4) !important;
+}
+
+.professionCertification {
+    padding-left: 100px;
+}
+
+.professionCertification img {
+    width: 20%;
+}
+
+.professionCertification img {
+    transition: all 0.6s !important;
+}
+
+.professionCertification img:hover {
+    transform: scale(2.0) !important;
+}
+
+.coursePhoto img {
+    width: 20%;
+}
+
+/* video */
+video::-internal-media-controls-download-button {
+      display:none;
+}
+video::-webkit-media-controls-enclosure {
+      overflow:hidden;
+}
+video::-webkit-media-controls-panel {
+      width: calc(100% + 30px); 
+}
+
+.videoCol {
+    border: 1px solid #E3E2E5;
+    padding: 0 10px;
+}
+
+.video {
+    width: 100%;
+    padding: 0 10px;
+    margin-bottom: 20px;
+    border: 1px solid #E3E2E5;
+}
+
+.chapter {
+    padding: 10px 0;
+    border-bottom: 1px solid #E3E2E5;
+}
+
+.chapterChoose {
+    margin-top: 25px; 
+}
+
+.chapterChooseAdd {
+    margin-top: 30px; 
+}
+
+.videoSource {
+    width: 100%;
+}
+
+.videoSize {
+    padding: 10px 0;
+    text-align: right;
+}
+
+.videoSrc video {
+    width: 100%;
+}
+
+input.videoCourseName {
+    display: block;
+    width: 100%;
+    font-size: 16px;
+    border: none;
+    outline: none;
+    margin-bottom: 10px;
+    padding: 0 10px;
+}
+
+.videoEdit .videoEditCourseName,.video-edit-ul-items {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.videoEdit .videoEditCourseName input {
+    width: 100%;
+    font-size: 16px;
+    border: none;
+    outline: none;
+}
+
+.video-edit-ul-items {
+    width: 100%;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.video-edit-ul-items .item-video {
+    flex: 1;
+}
+
+.video-edit-ul-items .item-video:nth-child(2) {
+    border-left: 1px solid #E3E2E5;
+    border-right: 1px solid #E3E2E5;
+}
+
+.video-edit-ul-items .item-video input {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    border: none;
+    outline: none;
+}
+
+input[disabled].videoCourseName,
+input:disabled.videoCourseName {
+    background-color: #F5F5F5;
+    color: #ACA899;
+    cursor:not-allowed;
+}
+
+ul li.item-video input[disabled],
+ul li.item-video input:disabled {
+    background-color: #F5F5F5;
+    color: #ACA899;
+    cursor: not-allowed;
+    border-radius: 5px;
+}
+
+
+
+/* news css  end*/
+
+.newOneCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.newOneCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.newOneCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*妈董会课程*/
+.information-manage .courseOne {
+    position: relative;
+}
+
+.information-manage .courseOne .table-box {
+    min-height: 140px;
+}
+
+.information-manage .courseOne header {
+    position: relative;
+}
+
+.information-manage .courseOne header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.information-manage .courseOne .keyWord {
+    margin-bottom: 10px;
+}
+
+.information-manage .courseOne .hint {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+.courseOne-form .ant-form-item.type .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.courseOne-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.courseOne-form .ant-form-item.photo .ant-upload {
+    width: 266px;
+    height: 136px;
+}
+
+.courseOne-form #add-course-container {
+    width: 420px;
+    height: 300px;
+    margin-left: 30px;
+    margin-bottom: 10px;
+}
+
+.courseOne-form .ant-form-item.area .ant-form-item-label label:before {
+    display: inline-block;
+    margin-right: 4px;
+    content: "*";
+    font-family: SimSun;
+    line-height: 1;
+    font-size: 14px;
+    color: #f5222d;
+}
+
+.courseOne-form .ant-form-item.detailedAddress .ant-form-item-control-wrapper {
+    margin-left: 100px;
+}
+
+.courseOne-form p.addressSaved {
+    padding: 0 0 5px 100px;
+    margin: 0;
+    color: #999;
+}
+
+.courseOne-form #add-courseOne-container {
+    width: 520px;
+    height: 320px;
+    margin-left: 50px;
+    margin-bottom: 10px;
+}
+
+.courseOne-form #edit-courseOne-container {
+    width: 520px;
+    height: 320px;
+    margin-left: 50px;
+    margin-bottom: 10px;
+}
+
+.courseOne-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.courseOne-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.courseOne-form .ant-form-item .ant-form-item-label {
+    width: 100px
+}
+
+.courseOne-form .ant-form-item.itemNone {
+    display: none
+}
+
+.courseOne-details {
+    margin-bottom: 20px;
+}
+
+.courseOne-details .courseOne-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.courseOne-details .courseOne-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.courseOne-details .courseOne-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.courseOne-details .courseOne-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 465px;
+}
+
+.courseOne-details .courseOne-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 250px;
+    height: 120px;
+}
+
+.courseOne-details .courseOne-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.courseOneCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.courseOneCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.courseOneCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*mdh课时*/
+.lessonOne-form .ant-form-item.photo .ant-upload {
+    width: 166px;
+    height: 116px;
+}
+
+.lessonOne-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.lessonOne-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*mdh音频*/
+.information-manage .audioOne header {
+    position: relative;
+}
+
+.information-manage .audioOne header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.information-manage .audioOne .keyWord {
+    margin-bottom: 10px;
+}
+
+.audioOne-form .ant-form-item.type .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.audioOne-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.audioOne-form .ant-form-item.photo .ant-upload {
+    width: 166px;
+    height: 116px;
+}
+
+.audioOne-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.audioOne-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.audioOne-form .ant-form-item.itemNone {
+    display: none
+}
+
+.audioOne-details {
+    margin-bottom: 20px;
+}
+
+.audioOne-details .audioOne-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.audioOne-details .audioOne-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.audioOne-details .audioOne-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.audioOne-details .audioOne-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 460px;
+}
+
+.audioOne-details .audioOne-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+.audioOne-details .audioOne-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.audioOneCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.audioOneCheck-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.audioOneCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.audioOneCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*mdh推荐课程*/
+.information-manage .recommendCourseOne {
+    position: relative;
+}
+
+.information-manage .recommendCourseOne .table-box {
+    min-height: 140px;
+}
+
+.information-manage .recommendCourseOne header {
+    margin-bottom: 10px;
+}
+
+.information-manage .recommendCourseOne .hint {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+.recommendCourseOne-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.recommendCourseOne-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*mdh广告*/
+.information-manage .advOne header {
+    position: relative;
+}
+
+.information-manage .advOne header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.information-manage .advOne .keyWord {
+    margin-bottom: 10px;
+}
+
+.advOne-form .ant-form-item.photo .itemBox {
+    position: relative;
+}
+
+.advOne-form .ant-form-item.photo .ant-upload {
+    width: 166px;
+    height: 116px;
+}
+
+.advOne-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.advOne-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.advOne-details {
+    margin-bottom: 20px;
+}
+
+.advOne-details .advOne-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.advOne-details .advOne-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.advOne-details .advOne-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.advOne-details .advOne-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 460px;
+}
+
+.advOne-details .advOne-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+.advOne-details .advOne-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.advOneCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.advOneCheck-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.advOneCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.advOneCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*mdh订单*/
+.information-manage .orderOne header {
+    position: relative;
+}
+
+.information-manage .orderOne header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.information-manage .orderOne .keyWord {
+    margin-bottom: 10px;
+}
+
+.orderOne-details {
+    margin-bottom: 20px;
+}
+
+.orderOne-details .orderOne-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.orderOne-details .orderOne-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.orderOne-details .orderOne-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.orderOne-details .orderOne-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 465px;
+}
+
+/*mdh答疑解惑*/
+.information-manage .answerOne header {
+    margin-bottom: 10px;
+}
+
+.answerOne-details {
+    margin-bottom: 20px;
+}
+
+.answerOne-details .answerOne-baseData .ant-list .ant-list-item {
+    padding: 5px 0 0 0;
+    border: 0;
+}
+
+.answerOne-details .answerOne-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.answerOne-details .answerOne-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.answerOne-details .answerOne-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 465px;
+}
+
+.answerOne-details .answerOne-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+/*mdh签到管理*/
+.information-manage .attendConfirmOne header {
+    margin-bottom: 10px;
+}
+
+/*信息审核----------------------------------------------------------------------------------------------------*/
+
+/*机构审核*/
+.check-manage .institution-check {
+    position: relative;
+}
+
+.check-manage .institution-check header {
+    position: relative;
+}
+
+.check-manage .institution-check header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.check-manage .institution-check .keyWord {
+    margin-bottom: 10px;
+}
+
+.check-manage .institution-check p.hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.institution-check-details {
+    width: 500px;
+    margin-bottom: 20px;
+}
+
+.institution-check-details p.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.institution-check-details-left {
+    float: left;
+    padding-left: 50px;
+}
+
+.institution-check-details-right {
+    float: right;
+    padding-right: 50px;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item {
+    padding: 0;
+    border: 0;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item .item {
+    padding: 4px 0;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item span.item-name {
+    width: 90px;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 360px;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item .logo img.item-content {
+    width: 80px;
+    height: 80px;
+}
+
+.institution-check-details .institution-check-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 250px;
+    height: 120px;
+}
+
+.institutionCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.institutionCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.institutionCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.institutionCheck-form.famous-teacher-check-form .ant-form-item .ant-form-explain {
+    left: 0;
+    bottom: 0;
+}
+
+/*教师审核*/
+.check-manage .teacher-check {
+    position: relative;
+}
+
+.check-manage .teacher-check header {
+    position: relative;
+}
+
+.check-manage .teacher-check header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.check-manage .teacher-check .keyWord {
+    margin-bottom: 10px;
+}
+
+.check-manage .teacher-check p.hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.teacher-check-detail {
+    width: 500px;
+    margin-bottom: 20px;
+}
+
+.teacher-check-detail p.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.teacher-check-detail-left {
+    float: left;
+    padding-left: 50px;
+}
+
+.teacher-check-detail-right {
+    float: right;
+    padding-right: 50px;
+}
+
+.teacher-check-detail .teacher-check-baseData .ant-list .ant-list-item {
+    padding: 0 0;
+    border: 0;
+}
+
+.teacher-check-detail .teacher-check-baseData .ant-list .ant-list-item .item {
+    padding: 4px 0;
+}
+
+.teacher-check-detail .teacher-check-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.teacher-check-detail .teacher-check-baseData .ant-list .ant-list-item span.item-name {
+    width: 90px;
+}
+
+.teacher-check-detail .teacher-check-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 360px;
+}
+
+.teacher-check-detail .teacher-check-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 80px;
+    height: 80px;
+}
+
+.teacherCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.teacherCheck-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.teacherCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.teacherCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*课程审核*/
+.check-manage .course-check {
+    position: relative;
+}
+
+.check-manage .course-check header {
+    position: relative;
+}
+
+.check-manage .course-check header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.check-manage .course-check .keyWord {
+    margin-bottom: 10px;
+}
+
+.check-manage .course-check .table-box {
+    min-height: 140px;
+}
+
+.check-manage .course-check .hint {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+.courseCheck-form .ant-form-item.state .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.courseCheck-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+.courseCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.courseCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*商城管理--------------------------------------------------------------------------------------------------------*/
+
+/*商品分类*/
+.mall-manage .goodsCategory {
+    height: calc(100vh - 140px);
+}
+
+.mall-manage .goodsCategory header {
+    margin-bottom: 10px;
+}
+
+.mall-manage .goodsCategory div.table-box {
+    height: calc(100% - 42px);
+    overflow-y: scroll;
+}
+
+.goodsCategory-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+/*商品标签*/
+.mall-manage .goodsLabel header {
+    margin-bottom: 10px;
+}
+
+.goodsLabel-form .ant-form-item.photo .ant-upload {
+    width: 96px;
+    height: 96px;
+}
+
+.goodsLabel-form .ant-form-item.photo img {
+    display: block;
+    width: 80px;
+    height: 80px;
+}
+
+.goodsLabel-form .ant-form-item.photo .photoExist-item {
+    margin-bottom: 10px;
+}
+
+.goodsLabel-form .ant-form-item.photo .photoExist-item img {
+    float: left;
+    width: 150px;
+    height: 100px;
+}
+
+.goodsLabel-form .ant-form-item.photo .photoExist-item .remove {
+    float: left;
+    margin-left: 20px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.goodsLabel-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.goodsLabel-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.goodsLabel-form .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+/*商品管理*/
+.mall-manage .goods header {
+    margin-bottom: 10px;
+}
+
+.goods-form .ant-form-item.photo .ant-upload {
+    width: 136px;
+    height: 102px;
+}
+
+.goods-form .ant-form-item.photo img {
+    display: block;
+    width: 120px;
+    height: 86px;
+}
+
+.goods-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.goods-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.goods-details {
+    margin-bottom: 20px;
+}
+
+.goods-details .goods-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.goods-details .goods-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.goods-details .goods-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.goods-details .goods-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.goods-details .goods-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+.shop-details {
+    margin-bottom: 20px;
+}
+
+.shop-details .shop-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.shop-details .shop-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.shop-details .shop-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.shop-details .shop-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.shop-details .shop-baseData .ant-list .ant-list-item .photo img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+.shop-edit .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.shop-edit .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.shop-edit .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+/*订单管理--------------------------------------------------------------------------------------------------------*!*/
+
+/*订单管理*/
+
+.order div {
+    text-align: center;
+}
+
+.order .disc {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+    margin-right: 10px;
+}
+
+.order .disc.blueDisc {
+    background-color: #58A3F7;
+}
+
+.order .disc.yellowDisc {
+    background-color: #FEC03D;
+}
+
+.order .disc.brownDisc {
+    background-color: #FFA94C;
+}
+
+.order .disc.purpleDisc {
+    background-color: #8167F5;
+}
+
+.order .disc.greenDisc {
+    background-color: #4BCED0;
+}
+
+.order .disc.redDisc {
+    background-color: #FB6260;
+}
+
+.order-list .order-operation-tip {
+    min-height: 100px;
+    width: 100%;
+    border-radius: 5px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    background-color: #B3D7FF;
+}
+/*评价管理*/
+
+
+/*财务管理----------------------------------------------------------------------------------------------------------*/
+
+/*订单管理*/
+.financial-manage .orders header {
+    position: relative;
+}
+
+.financial-manage .orders header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.financial-manage .orders .keyWord {
+    margin-bottom: 10px;
+}
+
+/*订单详情*/
+.order-details {
+    margin-bottom: 20px;
+}
+
+.order-details .order-baseData .ant-list {
+    /*border-bottom: 2px solid #e8e8e8;*/
+}
+
+.order-details .order-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.order-details .order-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.order-details .order-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.order-details .order-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.order-details .order-baseData .ant-list .ant-list-item .goodsPhoto img.item-content {
+    width: 120px;
+    height: 80px;
+}
+
+/*.order-details .order-goodsList .ant-list .ant-list-item {*/
+/*padding: 5px 0 0 0;*/
+/*border: 0;*/
+/*}*/
+
+/*商品物流详情*/
+.logisticsData {
+    margin-bottom: 20px;
+}
+
+.logisticsData p.empty {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+/*订单发货*/
+.orderDeliver .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.orderDeliver .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.orderDeliver .ant-form-item.noInput {
+    padding: 4px 0;
+}
+
+/*我的财务*/
+.financial-manage .finance header {
+    border-bottom: 2px solid #e8e8e8;
+    position: relative;
+}
+
+.financial-manage .finance header .finance-now .item {
+    margin-bottom: 10px;
+}
+
+.financial-manage .finance header .my-bankcards {
+    position: absolute;
+    bottom: 10px;
+    right: 0;
+}
+
+.flow-details {
+    margin-bottom: 20px;
+}
+
+.flow-details .flow-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.flow-details .flow-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.flow-details .flow-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.flow-details .flow-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.withDraw-details {
+    margin-bottom: 20px;
+}
+
+.withDraw-details .withDraw-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.withDraw-details .withDraw-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.withDraw-details .withDraw-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.withDraw-details .withDraw-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+.withdraw-form .account-amount {
+    margin: 0 0 10px 10px;
+}
+
+.withdraw-form .bankcardAdd-button {
+    margin-top: 5px;
+    padding-left: 88px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.withdraw-form .bankcardAdd-button span {
+    margin-left: 6px;
+    color: #08c;
+    font-size: 12px;
+}
+
+.withdraw-form .verifyCode-input {
+    padding-left: 50px;
+}
+
+.withdraw-form .verifyCode-input p.input-hint {
+    margin-bottom: 15px;
+    color: #999;
+}
+
+.withdraw-form .withdraw-success .icon-box {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto;
+}
+
+.withdraw-form .withdraw-success p.success {
+    font-size: 20px;
+    color: #398BC5;
+    text-align: center;
+}
+
+.withdraw-form .withdraw-success p.success-hint {
+    text-align: center;
+}
+
+.withdraw-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.withdraw-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*提现审核*/
+.withdrawCheck-form .ant-form-item.status .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.withdrawCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.withdrawCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*退款审核*/
+.refundCheck-form .ant-form-item.status .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.refundCheck-form .hint {
+    margin: 0 0 5px 100px;
+    color: #999
+}
+
+.refundCheck-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.refundCheck-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.refundCheck-form .ant-form-item.itemNone {
+    display: none
+}
+
+.refundCheck-details {
+    margin-bottom: 20px;
+}
+
+.refundCheck-details .refundCheck-baseData .ant-list .ant-list-item {
+    padding: 0 0;
+    border: 0;
+}
+
+.refundCheck-details .refundCheck-baseData .ant-list .ant-list-item .item {
+    padding: 4px 0;
+}
+
+.refundCheck-details .refundCheck-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.refundCheck-details .refundCheck-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.refundCheck-details .refundCheck-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 380px;
+}
+
+/*银行卡管理*/
+.bankcards header {
+    padding-bottom: 10px;
+}
+
+.bankcards .ant-card {
+    margin-bottom: 20px;
+}
+
+.bankcards .ant-card-grid {
+    width: 260px;
+    padding: 5px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    background-color: #FF8353;
+    color: #fff;
+    position: relative;
+}
+
+.bankcards .ant-card-grid .part-one .icon {
+    float: left;
+    margin-left: 5px;
+}
+
+.bankcards .ant-card-grid .part-one .bank-type {
+    float: left;
+    margin-left: 8px;
+}
+
+.bankcards .ant-card-grid .part-one .bank-type p {
+    margin: 0;
+    line-height: 16px;
+}
+
+.bankcards .ant-card-grid .part-one .bank-type p:nth-child(2) {
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.bankcards .ant-card-grid .part-two {
+    margin-top: 5px;
+    padding-left: 10px;
+}
+
+.bankcards .ant-card-grid .part-two span {
+    margin-right: 15px;
+    line-height: 16px;
+}
+
+.bankcards .ant-card-grid .part-two span:nth-child(5) {
+    font-size: 20px;
+}
+
+.bankcards .ant-card-grid .delete {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.bankcard-form .bankcardNum {
+    margin-left: 11px;
+    padding: 5px 0;
+}
+
+.bankcard-form .card-type {
+    margin-left: 11px;
+    padding: 5px 0;
+}
+
+.bankcard-form .verifyCode-input {
+    margin-top: 10px;
+    padding-left: 10px;
+}
+
+/*帐号管理--------------------------------------------------------------------------------------------------------*!*/
+
+/*所有账号*/
+.backUser-manage .backUsers header {
+    margin-bottom: 10px;
+}
+
+.backUser-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.backUser-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.backUser-form .ant-form-item.password .ant-form-explain {
+    width: 100%;
+    left: 161%;
+}
+/*岗位管理*/
+.backUser-manage .roles header {
+    margin-bottom: 10px;
+}
+
+/* .personInCharge .personInChargeItem Icon {
+    !important;
+} */
+
+.personInCharge .personInChargeItem Button {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    border-style: dotted;
+    border-radius: 100%;
+}
+
+.role-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.role-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.role-authority .roleMenuList .ant-form-item-label {
+    display: block;
+    float: none;
+}
+
+.role-authority .roleMenuList .ant-form-item-control-wrapper {
+    margin: 0;
+}
+
+.role-authority .roleMenuList .itemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .subItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .thirdItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .subfourthItemBox {
+    float: left;
+    margin-left: 5px;
+}
+
+/* .role-authority .roleMenuList .thirdItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .thirdItemBox div {
+    float: left;
+    margin-left: 5px;
+} */
+
+.role-authority .roleMenuList .fourthItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .fourthItemBox div {
+    float: left;
+    margin-left: 5px;
+}
+/* new add csss */
+.role-add-member.role-edit.role-form {
+    display: flex;
+}
+
+.role-add-member div:first-child.left {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+}
+
+.role-add-member div:first-child.left .top {
+    height: 40px;
+    line-height: 40px;
+    background: #F5F5F5;
+    font-size: 16px;
+    color:  #999;
+    padding-left: 10px;
+}
+
+.role-add-member div:first-child.left .bottom {
+    padding: 10px 10px 0;
+    /* max-height: 300px;
+    overflow: auto; */
+}
+
+.role-add-member div:first-child.left .bottom Tree {
+
+}
+
+.role-add-member div:last-child.right {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    margin-left: 10px;  
+}
+
+.role-add-member div:last-child.right .top {
+    display: flex;
+    height: 40px;
+    line-height: 40px;
+    font-size: 16px;
+    background: #F5F5F5; 
+}
+
+.role-add-member div:last-child.right .top  div {
+    flex: 1;
+    padding-left: 10px;
+}
+
+.role-add-member div:last-child.right .top  div:last-child {
+    text-align: right;
+    padding-right: 10px;
+    color: #0079FE;
+}
+
+.role-add-member div:last-child.right .bottom {
+    padding-left: 0;
+    height: 300px;
+    overflow: auto;
+}
+
+.role-add-member div:last-child.right .bottom li {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    border: 1px solid #FFF;
+    display: flex;
+}
+
+.role-add-member div:last-child.right .bottom li:hover {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    background: #F5F5F5;
+    border: 1px solid #CCE4FF;
+}
+
+.role-add-member div:last-child.right .bottom li div:first-child {
+    flex: 5;
+}
+.role-add-member div:last-child.right .bottom li div:last-child {
+    flex: 1;
+    text-align: right;
+    color: #0079FE;
+}
+
+.role-add-member div:last-child.right .bottom li div:last-child {
+    text-align: right;
+}
+
+.role-add-member div:last-child.right .bottom li div:last-child:hover {
+    display: block;
+}
+
+/*系统管理--------------------------------------------------------------------------------------------------------*/
+
+/*菜单管理*/
+.sys-manage .menus {
+    height: calc(100vh - 140px);
+}
+
+.sys-manage .menus header {
+    margin-bottom: 10px;
+}
+
+.sys-manage .menus div.table-box {
+    height: calc(100% - 42px);
+    overflow-y: scroll;
+}
+
+.menu-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.menu-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*配置管理*/
+.sys-manage .configuration header {
+    margin-bottom: 10px;
+}
+
+.configuration-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.configuration-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+/*系统通知*/
+.sys-manage .notice header {
+    margin-bottom: 10px;
+}
+
+.notice-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.notice-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.notice-details {
+    margin-bottom: 20px;
+}
+
+.notice-details .notice-baseData .ant-list .ant-list-item {
+    padding: 4px 0;
+    border: 0;
+}
+
+.notice-details .notice-baseData .ant-list .ant-list-item span {
+    float: left;
+}
+
+.notice-details .notice-baseData .ant-list .ant-list-item span.item-name {
+    width: 70px;
+}
+
+.notice-details .notice-baseData .ant-list .ant-list-item span.item-content {
+    max-width: 465px;
+}
+
+/*新鲜事*/
+.fresh-thing-form .ant-form-item .ant-form-explain {
+    width: 160px !important;
+    top: 120% !important;
+    left: 0 !important;
+}
+
+.notice-details.fresh-things-details .notice-baseData .ant-list .ant-list-item span.item-name {
+    width: 90px;
+}
+
+.fresh-thing-form .ant-form-item.body .ant-form-explain {
+    top: 110% !important;
+}
+
+/*app版本管理*/
+.sys-manage .appEdition header {
+    position: relative;
+}
+
+.sys-manage .appEdition header .add-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.sys-manage .appEdition .ant-table-wrapper tbody tr td div {
+    max-height: none;
+    line-height: 18px;
+}
+
+.sys-manage .appEdition .table-box pre {
+    margin: 0;
+    font-family: inherit;
+    white-space: pre-wrap;
+    text-align: left;
+}
+
+/*app版本管理*/
+.appEdition-form .ant-form-item.type .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.appEdition-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.appEdition-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.appEdition-form .ant-form-item .ant-form-item-label {
+    width: 120px !important;
+}
+
+/*物流公司*/
+.sys-manage .logistics-company header {
+    margin-bottom: 10px;
+}
+
+/*数据统计-----------------------------------------------------------------------------------------------------------*/
+
+/*类别数据统计*/
+.data-statistics .categoryStatistics header {
+    margin-bottom: 10px;
+}
+
+/*机构数据统计*/
+.data-statistics .institutionStatistics header {
+    margin-bottom: 10px;
+}
+
+/*机构数据统计*/
+.data-statistics .courseStatistics header {
+    margin-bottom: 10px;
+}
+
+/*其他---------------------------------------------------------------------------------------------------------*/
+/*机构沟通结果设置*/
+.contactResult-form .ant-form-item.result .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.contactResult-form .ant-form-item.refuseStatus .ant-form-item-control-wrapper .ant-form-item-control {
+    line-height: 32px;
+}
+
+.contactResult-form .ant-form-item.unnecessary label {
+    margin-left: 11px;
+}
+
+.contactResult-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.contactResult-form .ant-form-item.itemNone {
+    display: none
+}
+
+
+
+
