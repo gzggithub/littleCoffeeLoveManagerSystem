@@ -5,21 +5,12 @@ import {
     Link
 } from 'react-router-dom';
 import AppHome from './AppHome/AppHome';
-import OrgManage from './OrgManage/OrgManage';
-import Mine from './Mine/Mine';
+import BackUserManage from './BackUserManage/BackUserManage';
 import EduManage from './EduManage/EduManage';
 import OrderManage from './OrderManage/OrderManage';
 import CheckManage from './CheckManage/CheckManage';
-
-import DataStatistics from './DataStatistics/DataStatistics';
-import MdhManage from './MdhManage/MdhManage';
-import InformationManage from './InformationManage/InformationManage';
-import MallManage from './MallManage/MallManage';
-
 import FinancialManage from './FinancialManage/FinancialManage';
 import UserManage from './UserManage/UserManage';
-import BackUserManage from './BackUserManage/BackUserManage';
-import AgentManage from './AgentManage/AgentManage';
 import SysManage from './SysManage/SysManage';
 
 import {
@@ -862,23 +853,13 @@ class Home extends Component {
                         
                     </Layout>
                     {/*一级菜单路由组件映射表*/}
-                    <Route path="/index/app-home" component={AppHome}/>
-                    <Route path="/index/org-manage" component={OrgManage}/>
-                    <Route path="/index/mine" component={Mine}/>
+                    <Route path="/index/app-home" component={AppHome}/>        
                     <Route path="/index/edu-manage" component={EduManage}/>
-                    <Route path="/index/order-manage" component={OrderManage}/>
-                    
-                    <Route path="/index/check-manage" component={CheckManage}/>
-
-                    <Route path="/index/data-statistics" component={DataStatistics}/>
-                    <Route path="/index/mdh-manage" component={MdhManage}/>                 
-                    <Route path="/index/information-manage" component={InformationManage}/>
-                    <Route path="/index/mall-manage" component={MallManage}/>
-                    
+                    <Route path="/index/order-manage" component={OrderManage}/>                    
+                    <Route path="/index/check-manage" component={CheckManage}/>                    
                     <Route path="/index/financial-manage" component={FinancialManage}/>
                     <Route path="/index/user-manage" component={UserManage}/>
-                    <Route path="/index/backUser-manage" component={BackUserManage}/>
-                    <Route path="/index/agent-manage" component={AgentManage}/>                     
+                    <Route path="/index/backUser-manage" component={BackUserManage}/>                   
                     <Route path="/index/sys-manage" component={SysManage}/> 
                     <Layout>
                         <Footer className="footer">

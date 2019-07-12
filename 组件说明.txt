@@ -3,75 +3,14 @@
 顶部一级菜单组件：Home
 
 二级菜单组件：
-1.App首页：AppHome
-    banner管理：Banner
-    众筹名师讲堂：CrowdFunding
-    推荐机构：RecommendInstitution
-    推荐课程：RecommendCourses
-    视频课程：VideoCourses
-
-2.用户管理：UserManage
-    所有用户：Users
-    用户反馈：UserFeedback
-
-3.机构管理：InstitutionManage
+1.小咖爱：AppHome
     分类管理：Category
-    所有机构：Institutions
-    我的机构：MyInstitution
-    教师管理：Teachers
-    课程管理：Courses
-    优惠券管理：Coupons
-    签到管理：AttendConfirm
-    
-4.妈董会管理中心：MdhManage
-    图文管理：NewsOne
-    课程管理：CourseOne
-    音频管理：AudioOne
-    广告管理：AdvOne
-    banner管理：BannerOne
-    推荐课程：RecommendCourseOne
-    订单管理：OrderOne
-    图文审核：NewsOneCheck
-    课程审核：CourseOneCheck
-    音频审核：AudioOneCheck
-    广告审核：AdvOneCheck
-    答疑解惑：AnswerOne
+    广告管理：AdvManage
+    明星管理：StarManage
+    通告管理：NotificationManage
+    明星审核：StarCheck
 
-5.资讯管理：InformationManage
-    资讯列表：Information
-    资讯频道：InformationChannel
-
-6.信息审核：CheckManage
-    机构审核：InstitutionCheck
-    教师审核：TeacherCheck
-    课程审核：CourseCheck
-
-7.数据统计：DataStatistics
-    类别数据统计：CategoryStatistics
-    机构数据统计：InstitutionStatistics
-    课程数据统计：CourseStatistics
-
-8.商城管理：MallManage
-    商品分类：GoodsCategory
-    商品标签：GoodsLabel
-    店铺管理：Goods
-    商品退款审核：GoodsRefundCheck
-
-9.财务管理：FinancialManage
-    我的财务：Finance
-    提现审核：WithdrawCheck
-    银行卡：Bankcards
-    订单管理：Orders
-    退款审核：RefundCheck
-
-10.账号管理：BackUserManage
+2.账号管理：BackUserManage
+    部门管理：Departments
+    角色管理：Roles
     所有账号：BackUsers
-    岗位管理：Roles
-
-11.系统菜单：SysManage
-    菜单管理：Menus
-    配置管理：Configuration
-    系统通知：Notice
-    app版本管理：AppEdition
-    物流公司管理：LogisticsCompany
-    操作日志：OperationRecord

@@ -21,7 +21,7 @@
     "reqwest": "^2.0.5"
   },
   "scripts": {
-    "start": "set PORT=3000 HOST=192.168.166.107 && react-scripts start",
+    "start": "set PORT=3002 HOST=192.168.166.107 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
