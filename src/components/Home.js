@@ -14,7 +14,6 @@ import UserManage from './UserManage/UserManage';
 import SysManage from './SysManage/SysManage';
 
 import {
-    Table,
     Layout,
     Menu,
     Popconfirm,
@@ -24,13 +23,11 @@ import {
     Modal,
     Form
 } from 'antd';
-import '../config/config.js';
-import reqwest from 'reqwest';
+import { getVerificationCode, loginOut, resetPassword } from '../config';
 import logoImg from "../logo.png";
 
 const {Header, Footer} = Layout;
 const FormItem = Form.Item;
-const confirm = Modal.confirm;
 
 //栅格设置
 const formItemLayout_8 = {
@@ -46,11 +43,6 @@ const formItemLayout_12 = {
     wrapperCol: {span: 12},
 };
 
-//单元格
-const Cell = ({value}) => (
-    <div>{value}</div>
-);
-
 //修改密码表单
 const ResetPasswordForm = Form.create()(
     (props) => {
@@ -65,8 +57,7 @@ const ResetPasswordForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="resetPassword">
                     <Form layout="vertical">
                         <FormItem className="phone" {...formItemLayout_8} label="手机号码：">
@@ -121,7 +112,7 @@ class ResetPassword extends Component {
         countDown: 0,
         codeButtonStatus: false,
         // 确认按钮状态开关
-        confirmLoading: false
+        loading: false
     };
     fn_countDown = "";
 
@@ -150,32 +141,29 @@ class ResetPassword extends Component {
             return;
         } else {
             const regPhone = /^1[0-9]{10}$/;
-            if (regPhone.test(phone)) {
-                reqwest({
-                    url: '/mobileCode/sendVerificationCode',
-                    type: 'json',
-                    method: 'post',
-                    data: {
-                        phone: phone
-                    },
-                    headers: {
-                        Authorization: sessionStorage.token
-                    },
-                    success: (json) => {
-                        if (json.result === 0) {
-                            this.setState({
-                                codeButtonStatus: true,
-                                countDown: 60
-                            }, () => {
-                                this.fn_countDown = setInterval(this.countDown, 1000)
-                            })
+            if (regPhone.test(phone)) {               
+                getVerificationCode({phone: phone}).then((json) => {
+                    if (json.data.result === 0) {                        
+                        this.setState({// 开启倒计时
+                            codeButtonStatus: true,
+                            countDown: 60
+                        }, () => {
+                            this.fn_countDown = setInterval(this.countDown, 1000)
+                        })
+                    } else {
+                        if (json.data.code === 901) {
+                            message.error("请先登录");                           
+                            this.props.toLoginPage(); // 返回登陆页
+                        } else if (json.data.code === 902) {
+                            message.error("登录信息已过期，请重新登录");                            
+                            this.props.toLoginPage();// 返回登陆页
                         } else {
-                            message.error(json.message);
+                            message.error(json.data.message);
+                            this.setState({loading: false});
                         }
-                    },
-                    error: (XMLHttpRequest) => {
-                        message.error("发送失败");
                     }
+                }).catch((err) => {
+                    message.error("发送失败");
                 });
             } else {
                 if (phone) {
@@ -190,40 +178,16 @@ class ResetPassword extends Component {
     // 取消处理
     handleCancel = () => {
         const form = this.form;
-        const cancel = () => {
+        this.setState({
+            visible: false
+        }, () => {
             this.setState({
-                visible: false
-            }, () => {
-                this.setState({
-                    countDown: 0,
-                    codeButtonStatus: false,
-                    confirmLoading: false
-                });
-            })
-        };
-        const data = form.getFieldsValue();
-        let flag = false;
-        for (let x in data) {
-            if (data[x]) {
-                flag = true
-            }
-        }
-        if (flag) {
-            confirm({
-                title: '已添加信息未保存，确认放弃添加？',
-                content: "",
-                okText: '确认',
-                okType: 'danger',
-                cancelText: '取消',
-                onOk() {
-                    cancel();
-                },
-                onCancel() {
-                }
+                countDown: 0,
+                codeButtonStatus: false,
+                loading: false
             });
-        } else {
-            cancel()
-        }
+            form.resetFields();
+        });        
     };
 
     // 确认处理
@@ -233,51 +197,37 @@ class ResetPassword extends Component {
             if (err) {
                 return;
             }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/user/resetPassword',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    phone: values.phone,
-                    code: values.code,
-                    userKey: sessionStorage.userKey,
-                    pwd: values.pwd
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("密码设置成功，请重新登录");
-                        // 密码设置成功后更新缓存登陆信息
-                        const loginMsg = {
-                            phone: values.phone
-                        };
-                        localStorage.loginMsg = JSON.stringify(loginMsg);
-                        // 退出登录
-                        this.props.signOut()
+            this.setState({loading: true});            
+            const data = {
+                phone: values.phone,
+                code: values.code,
+                pwd: values.pwd
+            };
+            resetPassword(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("密码设置成功，请重新登录");
+                    // 设置成功之后变量初始化
+                    this.handleCancel();
+                    // 密码设置成功后更新缓存登陆信息
+                    const loginMsg = {
+                        phone: values.phone
+                    };
+                    localStorage.loginMsg = JSON.stringify(loginMsg);
+                    // 退出登录
+                    this.props.signOut();                    
+                } else {
+                    if (json.data.code === 703) {
+                        message.error("短信验证码错误或已过期")
+                    } else if (json.data.code === 803) {
+                        message.error("密码格式错误")
                     } else {
-                        if (json.code === "703") {
-                            message.error("短信验证码错误或已过期")
-                        } else if (json.code === "803") {
-                            message.error("密码格式错误")
-                        } else {
-                            message.error(json.message);
-                        }
-                        this.setState({
-                            confirmLoading: false
-                        });
-                    }
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    });
+                        message.error(json.data.message);
+                    }                        
+                    this.setState({loading: false});
                 }
+            }).catch((err) => {
+                message.error("保存失败");
+                this.setState({loading: false});
             });
         });
     };
@@ -298,248 +248,10 @@ class ResetPassword extends Component {
                     countDown={this.state.countDown}
                     codeButtonStatus={this.state.codeButtonStatus}
                     getCode={this.getCode}
-                    confirmLoading={this.state.confirmLoading}
+                    confirmLoading={this.state.loading}
                 />
             </a>
         );
-    }
-}
-
-//机构列表表格
-const InstitutionListTable = Form.create()(
-    (props) => {
-        const {visible, onCancel, onCreate, pagination, data, columns, pageChange, loading} = props;
-
-        return (
-            <Modal
-                width={1000}
-                visible={visible}
-                title="机构列表"
-                footer={null}
-                onCancel={onCancel}
-                onOk={onCreate}
-                destroyOnClose={true}
-            >
-                <div className="institution-list">
-                    <Table bordered pagination={pagination} dataSource={data} columns={columns}
-                           onChange={pageChange} loading={loading}/>;
-                </div>
-            </Modal>
-        );
-    }
-);
-
-//机构列表组件
-class InstitutionList extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            visible: false,
-            // 列表信息加载状态 true：加载中；false：加载完成
-            loading: false,
-            // 机构列表
-            data: [],
-            // 分页相关变量
-            pagination: {
-                // 当前页码
-                current: 1,
-                // 每页信息条数
-                pageSize: 5,
-            },
-        };
-        // 表格的列配置
-        this.columns = [
-            {
-                title: '序号',
-                dataIndex: 'index',
-                width: '8%',
-                render: (text, record) => this.renderColumns(text, record, 'index'),
-            },
-            {
-                title: '机构名称',
-                dataIndex: 'name',
-                width: '40%',
-                render: (text, record) => this.renderColumns(text, record, 'name'),
-            },
-            {
-                title: '操作',
-                dataIndex: '操作',
-                render: (text, record) => {
-                    return (
-                        <div className="editable-row-operations">
-                            {/*当前机构项展示此信息*/}
-                            <p style={{display: Number(sessionStorage.EId) === record.id ? "inline" : "none"}}>当前机构</p>
-                            <Popconfirm title="确认切换?"
-                                        placement="topRight"
-                                        onConfirm={() => this.itemSwitch(record.id)}
-                                        onCancel=""
-                                        okType="danger"
-                                        okText="立即切换"
-                                        cancelText="取消">
-                                {/*当前机构项不展示此按钮*/}
-                                <a style={{display: Number(sessionStorage.EId) === record.id ? "none" : "inline"}}>切换</a>
-                            </Popconfirm>
-                            <Popconfirm title="确认设置该机构为主机构?"
-                                        placement="topRight"
-                                        onConfirm={() => this.itemMainInstitution(record.id)}
-                                        onCancel=""
-                                        okType="danger"
-                                        okText="确认"
-                                        cancelText="取消">
-                                {/*当前机构项不展示此按钮*/}
-                                <a style={{display: Number(sessionStorage.EId) === record.id ? "none" : "inline"}}>设为主机构</a>
-                            </Popconfirm>
-                        </div>
-                    )
-                }
-            }
-        ]
-    }
-
-    // 列表信息写入
-    getData = () => {
-        this.setState({
-            data: this.props.institutionList
-        }, () => {
-            const data = [];
-            this.state.data.forEach((item, index) => {
-                data.push({
-                    key: index.toString(),
-                    id: item.id,
-                    index: index + 1,
-                    name: item.name,
-                });
-            });
-            this.setState({
-                data: data
-            })
-        })
-    };
-
-    // 机构切换
-    itemSwitch = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/user/switchAdminUser',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                eid: id
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    // 切换成功后登陆信息更新
-                    sessionStorage.token = json.data.token;
-                    sessionStorage.id = json.data.userInfo.id;
-                    sessionStorage.EId = json.data.userInfo.EId;
-                    sessionStorage.name = json.data.userInfo.username;
-                    sessionStorage.phone = json.data.userInfo.phone;
-                    sessionStorage.userKey = json.data.userInfo.userKey;
-                    // 切换成功后其他操作
-                    this.props.switchSuccess(json.data.menuList);
-                    // 取消对话框
-                    this.handleCancel();
-                    message.success("机构切换成功");
-                    this.setState({
-                        loading: false
-                    });
-                } else {
-                    message.error(json.message);
-                    this.setState({
-                        loading: false
-                    });
-                }
-            },
-            error: (XMLHttpRequest) => {
-                message.error("切换失败");
-                this.setState({
-                    loading: false
-                });
-            }
-        });
-    };
-
-    // 主机构设置
-    itemMainInstitution = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/institution/switchMainEducation',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                eId: id
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("设置成功，请重新登录");
-                    this.props.signOut()
-                } else {
-                    message.error(json.message);
-                    this.setState({
-                        loading: false
-                    });
-                }
-            },
-            error: (XMLHttpRequest) => {
-                message.error("设置失败");
-                this.setState({
-                    loading: false
-                });
-            }
-        });
-    };
-
-    showModal = () => {
-        this.getData();
-        this.setState({visible: true});
-    };
-
-    //列渲染
-    renderColumns(text) {
-        return (
-            <Cell value={text}/>
-        );
-    }
-
-    //页码变化处理
-    pageChange = (pagination) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        this.setState({
-            pagination: pager
-        })
-    };
-
-    // 取消对话框
-    handleCancel = () => {
-        this.setState({visible: false})
-    };
-
-    render() {
-        return (
-            <a style={{display: this.props.flag ? "inline" : "none", marginRight: 10}}>
-                <span onClick={() => this.showModal(this.props.id)}>机构列表</span>
-                <InstitutionListTable
-                    visible={this.state.visible}
-                    onCancel={this.handleCancel}
-                    pagination={this.state.pagination}
-                    loading={this.state.loading}
-                    data={this.state.data}
-                    columns={this.columns}
-                    pageChange={this.pageChange}
-                />
-            </a>
-        )
     }
 }
 
@@ -621,7 +333,7 @@ class Home extends Component {
     };
     
     // 导航数据
-    getMenuList = () => {                
+    getMenuList = () => {
         const tempMenuList = [];           
         // 新改的菜单数据
         const handleResult = JSON.parse(sessionStorage.menuListOne);           
@@ -663,98 +375,13 @@ class Home extends Component {
 
     // 退出登录处理
     signOut = () => {
-        reqwest({
-            url: '/user/loginOut',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                sessionStorage.clear();
-                this.props.history.push('/')
-            },
-            success: (json) => {
-                // 清除登陆信息
-                sessionStorage.clear();
-                // 跳转至登陆页面
-                this.props.history.push('/')
-            }
-        });
-    };
-
-    getInstitutionList = () => {
-        reqwest({
-            url: '/institution/getEducations',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        institutionList: json.data.list
-                    })
-                }
-            },
-            error: (XMLHttpRequest) => {}
-        });
-    };
-
-    // 设置机构切换开关
-    setSwitchFlag = () => {
-        reqwest({
-            url: '/institution/getDetail',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    if (json.data.institution) {
-                        // 若该机构为主机构，则机构切换开关开启
-                        this.setState({
-                            switchFlag: json.data.institution.mainEducation === 0
-                        })
-                    }
-                }
-            }
-        });
-    };
-
-    // 机构切换成功函数
-    switchSuccess = (data) => {
-        // 设置机构切换开关
-        this.setSwitchFlag();
-        // 菜单列表重新写入
-        const tempMenuList = [];
-        const handleResult = this.dataHandle(data);
-        sessionStorage.menuList = JSON.stringify(handleResult);
-        handleResult.forEach((item, index) => {
-            tempMenuList.push(
-                <Menu.Item key={index + 1}>
-                    <Link to={item.url}>
-                        {item.name}
-                    </Link>
-                </Menu.Item>
-            )
-        });
-        this.setState({
-            menuList: tempMenuList
-        }, () => {
-            // 跳转至第一个二级菜单
-            this.props.history.push(handleResult[0].children[0].url + "?flag=true")
-        });
-        // 其他信息重新写入
-        this.setState({
-            highlight: "1",
-            name: sessionStorage.name,
-            userKey: sessionStorage.userKey
+        loginOut().then((json) => {            
+            sessionStorage.clear();// 清除登陆信息            
+            this.props.history.push('/');// 跳转至登陆页面
+        }).catch((err) => {
+            // message.error("失败");
+            sessionStorage.clear();
+            this.props.history.push('/')
         })
     };
 
@@ -765,14 +392,7 @@ class Home extends Component {
         })
     };
 
-    componentWillMount() {
-        // 登陆人为机构管理员的分支操作
-        if (Number(sessionStorage.EId) !== 0 && Number(sessionStorage.EId) !== 1) {
-            // 获取该机构管理员下属机构列表
-            // this.getInstitutionList();
-            // 设置机构切换开关
-            // this.setSwitchFlag();
-        }
+    componentWillMount() {        
         // 登陆信息写入
         this.setState({
             name: sessionStorage.name,
@@ -820,34 +440,36 @@ class Home extends Component {
                                 mode="horizontal"
                                 selectedKeys={[this.state.highlight]}
                                 style={{marginLeft: '150px', lineHeight: '64px'}}
-                                onClick={this.setHighlight}
-                            >
-                                {this.state.menuList}
+                                onClick={this.setHighlight}>
+                                {/*this.state.menuList*/}
+                                <Menu.Item key={1} style={{textAlign: "center"}}>
+                                    <Link to="/index/app-home">
+                                        小咖爱
+                                    </Link>
+                                </Menu.Item>
+                                <Menu.Item key={2} style={{textAlign: "center"}}>
+                                    <Link to="/index/backUser-manage">
+                                        账号管理
+                                    </Link>
+                                </Menu.Item>
                             </Menu>
-                            {/*登陆信息相关*/}
+                            {/*登录信息相关*/}
                             <div className="right-box">
                                 {/*当前登录人信息*/}
-                                <span
-                                    className="username">{sessionStorage.name ? (sessionStorage.name + "(" + sessionStorage.phone + ")") : "未登录"}</span>
-                                {/*机构管理员下属机构列表，当前机构为主机构且机构数量大于1时展示*/}
-                                <InstitutionList 
-                                    institutionList={this.state.institutionList}
-                                    switchSuccess={this.switchSuccess}
-                                    signOut={this.signOut}
-                                    flag={this.state.institutionList.length > 1 && this.state.switchFlag}/>
+                                <span className="username">{sessionStorage.name ? (sessionStorage.name + "(" + sessionStorage.phone + ")") : "未登录"}</span>                                
                                 {/*重置密码*/}
                                 <ResetPassword signOut={this.signOut}/> 
                                 {/*退出登录*/}
-                                <Popconfirm title="确认退出?"
-                                            placement="topRight"
-                                            onConfirm={this.signOut}
-                                            onCancel=""
-                                            okType="danger"
-                                            okText="立即退出"
-                                            cancelText="取消">
+                                <Popconfirm 
+                                    title="确认退出?"
+                                    placement="topRight"
+                                    onConfirm={this.signOut}
+                                    onCancel=""
+                                    okType="danger"
+                                    okText="立即退出"
+                                    cancelText="取消">
                                     <a style={{marginLeft: "10px"}}>退出</a>
                                 </Popconfirm>
-
                             </div>
                         </Header>
                         

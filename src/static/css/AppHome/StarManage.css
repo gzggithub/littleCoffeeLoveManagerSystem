@@ -1,0 +1,24 @@
+/* 明星管理css */
+.star header {
+    position: relative;
+}
+
+.star-search {
+    display: block;
+    width: 300px;
+    float: left;
+    margin-right: 20px;
+}
+
+.star-select {
+    width: 150px;
+    float: left;
+    margin-right: 20px;
+}
+
+.star-add-button {
+    display: block;
+    float: right;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}

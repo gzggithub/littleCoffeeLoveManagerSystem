@@ -14,20 +14,17 @@ import {
     Icon,
     message,
     Spin,
-    Tree,
     Cascader,
 } from 'antd';
-import '../../config/config';
+import { configUrl, getToken, advList, saveAdv, updateAdv, deleteAdv, sortAdv, putAwayAdv } from '../../config';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
-import reqwest from 'reqwest';
 
 const Search = Input.Search;
 const {Option} = Select;
 const FormItem = Form.Item;
-const { TreeNode } = Tree;
 
-//单元格
+// 单元格
 const Cell = ({value}) => (
     <div>{value}</div>
 );
@@ -49,7 +46,7 @@ class EditableCell extends Component {
     }
 
     toggleEdit = (valuess) => {
-        console.log(valuess);
+        // console.log(valuess);
         const editing = !this.state.editing;
         this.setState({ editing }, () => {
             if (editing) {
@@ -122,52 +119,13 @@ class EditableCell extends Component {
     }
 }
 
-//添加广告表单
+// 添加广告表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, allTypeList, optionsOfCity, reqwestUploadToken, viewPic, picUpload01, photoList01, setPhotoList01, photoLoading, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, optionsOfCity, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        // 总广告选项生成
-        const optionsOfAllTypeList = [];
-        if (allTypeList) {
-            allTypeList.forEach((item, index) => {
-                optionsOfAllTypeList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-            });
-        }        
-
-        // 已上传图片列表
-        const photoExist01 = [];
-        photoList01.forEach((item, index) => {
-            photoExist01.push(
-                <div className="photoExist-item clearfix" key={index + 1}>
-                    <img src={item.path} alt=""/>
-                    <div className="remove">
-                        <Button type="dashed"
-                                shape="circle" icon="minus" onClick={() => setPhotoList01(index)}/>
-                    </div>
-                </div>
-            )
-        });
-
-        // 由图片文件对象获取其base64编码
-        // const getBase64 = (img, callback) => {
-        //     const reader = new FileReader();
-        //     reader.addEventListener('load', () => callback(reader.result));
-        //     reader.readAsDataURL(img);
-        // };
-        // 由图片地址获取其文件对象
-        // const dataURLtoFile = (url) => {
-        //     let arr = url.split(','),
-        //         bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-        //     while (n--) {
-        //         u8arr[n] = bstr.charCodeAt(n)
-        //     }
-        //     return new Blob([u8arr], {type: "image/jpeg"});
-        // };
-
         // 广告图片相关
-        // 图片上传保持原比例
         const beforeUpload = (file) => {
             const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
             if (!isIMG) {
@@ -192,47 +150,6 @@ const ItemAddForm = Form.create()(
             </div>
         );
 
-        // 广告地址相关
-        // const provinceOptions = provinceList.map(item => <Option key={item.name}>{item.name}</Option>);
-        // const cityOptions = cityList.map(item => <Option key={item.name}>{item.name}</Option>);
-        // const districtOptions = districtList.map(item => <Option key={item.name}>{item.name}</Option>);
-        // const streetOptions = streetList.map(item => <Option key={item.name}>{item.name}</Option>);
-        // const addressChange = (value) => {
-        //     if (!value) {
-        //         return
-        //     }
-        //     let keyword = "";
-        //     keyword = keyword + area.province + area.city + area.district + area.street;
-        //     keyword = keyword + value;
-        //     // 清除已有标记点
-        //     mapObj.remove(markers);
-        //     mapObj.plugin('AMap.Geocoder', function () {
-        //         const geocoder = new window.AMap.Geocoder({});
-        //         const marker = new window.AMap.Marker({
-        //             map: mapObj,
-        //             bubble: true
-        //         });
-        //         geocoder.getLocation(keyword, (status_, result_) => {
-        //             if (status_ === 'complete' && result_.info === 'OK') {
-        //                 geocoder.getAddress([result_.geocodes[0].location.lng, result_.geocodes[0].location.lat], (status, result) => {
-        //                     if (status === 'complete' && result.info === 'OK') {
-        //                         // 经纬度写入
-        //                         setXY({x: result_.geocodes[0].location.lng, y: result_.geocodes[0].location.lat});
-        //                         // 生成当前标记点
-        //                         marker.setPosition(result_.geocodes[0].location);
-        //                         mapObj.setCenter(marker.getPosition());
-        //                         setMarkers(marker);
-        //                         // address字段写入
-        //                         setFormattedAddress(area.street ? keyword : result.regeocode.addressComponent.province + result.regeocode.addressComponent.city + result.regeocode.addressComponent.district + result.regeocode.addressComponent.township + keyword);
-        //                         // 其他地址信息写入
-        //                         setArea(5, result.regeocode.addressComponent);
-        //                     }
-        //                 });
-        //             }
-        //         });
-        //     });
-        // };
-
         return (
             <Modal
                 visible={visible}
@@ -240,8 +157,7 @@ const ItemAddForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 onOk={onCreate}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="institution-add institution-form item-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
@@ -254,21 +170,7 @@ const ItemAddForm = Form.create()(
                                             message: '展示城市未选择'
                                         }],
                                     })(
-                                        <Cascader options={optionsOfCity} placeholder="请选择展示城市"/>
-                                        /*<div>
-                                            <Select placeholder="省" style={{width: "45%", marginRight: 10}}
-                                                    value={area.province || undefined} onChange={(value) => {
-                                                setArea(1, value)
-                                            }} dropdownMatchSelectWidth={false} allowClear={true}>
-                                                {provinceOptions}
-                                            </Select>
-                                            <Select placeholder="市" style={{width: "45%", marginRight: 10}}
-                                                    value={area.city || undefined} onChange={(value) => {
-                                                setArea(2, value)
-                                            }} dropdownMatchSelectWidth={false} allowClear={true}>
-                                                {cityOptions}
-                                            </Select>
-                                        </div>*/
+                                        <Cascader options={optionsOfCity} placeholder="请选择展示城市"/>                                        
                                     )}
                                 </FormItem>
                             </Col>
@@ -282,12 +184,7 @@ const ItemAddForm = Form.create()(
                                             }
                                         ],
                                     })(
-                                        <Select
-                                            style={{width: '100%'}}
-                                            placeholder="请选择广告位置"
-                                            // onChange={handleFirstChange}
-                                        >
-                                            {/*{optionsType}*/}
+                                        <Select style={{width: '100%'}} placeholder="请选择广告位置">                                           
                                             <Option key={3} value={3}>育儿资讯轮播 </Option>
                                             <Option key={4} value={4}>首页轮播</Option>
                                         </Select>                                       
@@ -311,152 +208,11 @@ const ItemAddForm = Form.create()(
                                             className="avatar-uploader"
                                             showUploadList={false}
                                             beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}                                                                     
-                                        >
+                                            customRequest={picHandleChange}>
                                             {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
                                         </Upload>
                                     )}
-                                </FormItem>
-                                {/*<FormItem className="icon" label="广告图片：">
-                                    {getFieldDecorator('photo', {
-                                        rules: [{
-                                            required: true,
-                                            message: '请上传广告图片',
-                                        }],
-                                    })(*/}
-                                        {/*<div>
-                                            <Upload
-                                                name="avatar"
-                                                listType="picture-card"
-                                                className="avatar-uploader"
-                                                style={{width: "190", height: "90px"}}
-                                                showUploadList={false}
-                                                beforeUpload={beforeUpload02}
-                                              >
-                                                {viewPic02 ? <img src={viewPic02} alt="avatar" /> : uploadButton02}
-                                              </Upload>
-                                              <Button type="primary"
-                                                    onClick={picHandle02}
-                                                    loading={logoLoading}
-                                                    style={{
-                                                        position: "absolute",
-                                                        right: "0",
-                                                        bottom: "0"
-                                                    }}>{data_pic02 ? "重新提交" : "图片提交"}</Button>
-                                        </div>*/}
-                                        {/*<div className="itemBox">
-                                            <Upload
-                                                name="file"
-                                                listType="picture-card"
-                                                className="avatar-uploader"
-                                                showUploadList={false}
-                                                beforeUpload={beforeUpload02}
-                                                customRequest={picHandleChange}
-                                            >
-                                                {viewPic02 ? partImg02 : uploadButton02}
-                                            </Upload>*/}
-                                            {/*<Row>
-                                                <Col span={4}>缩放：</Col>
-                                                <Col span={12}>
-                                                    <Slider min={0.5} max={1.5} step={0.01} value={avatarEditor02.scale}
-                                                            disabled={!viewPic02}
-                                                            onChange={(value) => {
-                                                                setAvatarEditor02(1, value)
-                                                            }}/>
-                                                </Col>
-                                            </Row>
-                                            <Row>
-                                                <Col span={4}>X：</Col>
-                                                <Col span={12}>
-                                                    <Slider min={0} max={1} step={0.01} value={avatarEditor02.positionX}
-                                                            disabled={!viewPic02}
-                                                            onChange={(value) => {
-                                                                setAvatarEditor02(2, value)
-                                                            }}/>
-                                                </Col>
-                                            </Row>
-                                            <Row>
-                                                <Col span={4}>Y：</Col>
-                                                <Col span={12}>
-                                                    <Slider min={0} max={1} step={0.01} value={avatarEditor02.positionY}
-                                                            disabled={!viewPic02}
-                                                            onChange={(value) => {
-                                                                setAvatarEditor02(3, value)
-                                                            }}/>
-                                                </Col>
-                                            </Row>*/}
-                                            {/*<Button type="primary"
-                                                    onClick={picHandle02}
-                                                    loading={logoLoading}
-                                                    style={{
-                                                        position: "absolute",
-                                                        right: "0",
-                                                        bottom: "0"
-                                                    }}>{data_pic02 ? "重新提交" : "图片提交"}</Button>
-                                        </div>
-                                    )}
-                                </FormItem>*/}
-                                {/*<FormItem className="photo photos"  label="广告图片：">
-                                    {getFieldDecorator('photos', {
-                                        rules: [{
-                                            required: true,
-                                            message: '广告图片不能为空',
-                                        }],
-                                    })(
-                                        <div className="itemBox">
-                                            {photoExist01}                                            
-                                            <Upload
-                                                name="file"                                          
-                                                showUploadList={false}
-                                                listType="picture-card"
-                                                className="avatar-uploader"
-                                                beforeUpload={beforeUpload01}
-                                            >
-                                                {viewPic01 ? partImg01 : uploadButton01}
-                                            </Upload>
-                                            <Row>
-                                                <Col span={4}>缩放：</Col>
-                                                <Col span={12}>
-                                                    <Slider min={1} max={1.5} step={0.01} value={avatarEditor01.scale}
-                                                            disabled={!viewPic01}
-                                                            onChange={(value) => {
-                                                                setAvatarEditor01(1, value)
-                                                            }}/>
-                                                </Col>
-                                            </Row>
-                                            <Row>
-                                                <Col span={4}>X：</Col>
-                                                <Col span={12}>
-                                                    <Slider min={0} max={1} step={0.01} value={avatarEditor01.positionX}
-                                                            disabled={!viewPic01}
-                                                            onChange={(value) => {
-                                                                setAvatarEditor01(2, value)
-                                                            }}/>
-                                                </Col>
-                                            </Row>
-                                            <Row>
-                                                <Col span={4}>Y：</Col>
-                                                <Col span={12}>
-                                                    <Slider min={0} max={1} step={0.01} value={avatarEditor01.positionY}
-                                                            disabled={!viewPic01}
-                                                            onChange={(value) => {
-                                                                setAvatarEditor01(3, value)
-                                                            }}/>
-                                                </Col>
-                                            </Row>
-                                            <Button type="primary"
-                                                    onClick={picHandle01}
-                                                    loading={photoLoading}
-                                                    style={{
-                                                        position: "absolute",
-                                                        right: "-20px",
-                                                        bottom: "0"
-                                                    }}>
-                                                图片提交
-                                            </Button>
-                                        </div>
-                                    )}
-                                </FormItem>*/}
+                                </FormItem>                                
                             </Col>
                         </Row>                       
                         <div className="ant-line"></div>
@@ -504,649 +260,64 @@ const ItemAddForm = Form.create()(
     }
 );
 
-//添加广告组件
+// 添加广告组件
 class ItemAdd extends Component {
     state = {
-        visible: false,
-        // 总广告类型表
-        allTypeList: [],
-        // 广告类型表
-        typeList: [],
-        // 短信验证码相关变量
-        phone: "",
-        countDown: 0,
-        codeButtonStatus: false,
-        // 广告图片相关变量
-        // 上传Token
-        uploadToken: '',
-        fileKey: 0,
+        visible: false,      
+        // 广告图片相关变量       
+        uploadToken: '',// 上传Token
         viewPic: "",
-        data_pic: "",
-        viewPic01: "",
-        photoList01: [],
-        photoList11: [],
-        avatarEditor01: {
-            scale: 1,
-            positionX: 0.5,
-            positionY: 0.5
-        },
-        photoLoading: false,
-        // 广告LOGO相关变量
-        viewPic02: "",
-        effectPic02: "",
-        data_pic02: "",
-        data_pic22: "",
-        avatarEditor02: {
-            scale: 1,
-            positionX: 0.5,
-            positionY: 0.5
-        },
-        logoLoading: false,
-        // 广告地址相关变量
-        provinceList: [],
-        cityList: [],
-        districtList: [],
-        streetList: [],
-        markers: [],
-        area: {
-            province: "",
-            provinceId: "",            
-            city: "",
-            cityId: "",
-            district: "",
-            street: ""
-        },
-        mapObj: {},
-        formattedAddress: "",
-        xy: {},
-        provinceId: null,
-        cityId: null,
-        areaId: null,
-        confirmLoading: false
+        photoLoading: false,      
+        loading: false
     };
-    fn_countDown = "";
 
     showModal = () => {
-        this.setState({visible: true}, () => {
-            this.getInstitutionTypeList();
-            setTimeout(() => {
-                this.setState({
-                    mapObj: new window.AMap.Map('add-institution-container', {
-                        resizeEnable: true,
-                        zoom: 16
-                    })
-                }, () => {
-                    this.getProvinceList();
-                    window.AMap.service('AMap.Geocoder', () => {
-                        const geocoder = new window.AMap.Geocoder({extensions: "all"});
-                        this.state.mapObj.on('click', (e) => {
-                            // 清除已有标记点
-                            this.state.mapObj.remove(this.state.markers);
-                            // 经纬度写入
-                            this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
-                            // 生成当前标记点
-                            const marker = new window.AMap.Marker({
-                                map: this.state.mapObj,
-                                bubble: true
-                            });
-                            marker.setPosition(e.lnglat);
-                            this.state.mapObj.setCenter(marker.getPosition());
-                            this.state.markers.push(marker);
-                            geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
-                                if (status === 'complete' && result.info === 'OK') {
-                                    this.setFormattedAddress(result.regeocode.formattedAddress);
-                                    // 其他地址信息写入
-                                    this.setArea(5, result.regeocode.addressComponent);
-                                }
-                            });
-                        });
-                    })
-                })
-            }, 500)
-        });
-    };
-
-    // 获取广告类型列表
-    getInstitutionTypeList = () => {
-        reqwest({
-            url: '/sys/orgType/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                status: 1,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: [
-                //         {id: 1, name: ""},
-                //     ]
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    const data = [];
-                    // const fnFilter = (para) => {
-                    //     return para.parentId = item.id
-                    // }
-                    json.data.forEach((item) => {
-                        let subData = [];
-                        if (item.list) {
-                            item.list.forEach((subItem) => {
-                                subData.push({
-                                    key: subItem.parentId + ',' + subItem.id,
-                                    value: subItem.parentId + ',' + subItem.id,
-                                    title: subItem.name,
-                                    parentId: item.id,
-                                })
-                            })
-                        }                        
-                        data.push({
-                            key: item.id,
-                            value: String(item.id),
-                            title: item.name,
-                            children: subData
-                        })
-                    });
-                    console.log(data);
-                    this.setState({
-                        typeList: data
-                    })
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
-    };
-
-    // 根据输入广告名字模糊查找广告列表
-    handleSearch = (value) => {
-        console.log(value);
-        reqwest({
-            url: '/admin/org/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                orgName: value,
-                status: 2,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    console.log(json.data.list)
-                    const data = [];
-                    if (json.data.list.length) {
-                        json.data.list.forEach((item, index) => {
-                            data.push({
-                                id: item.id,
-                                name: item.name,
-                            })
-                        });
-                    }
-                    this.setState({
-                        allTypeList: data
-                    });
-                    // if (currentValue === value) {
-                    //     const result = d.result;
-                    //     const data = [];
-                    //     result.forEach(r => {
-                    //         data.push({
-                    //             value: r[0],
-                    //             text: r[0]
-                    //         });
-                    //     });
-                    //     callback(data);
-                    // }
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
+        this.setState({visible: true});
     };
     
     // 广告图片处理-----------------------------------
-    // 初始图片写入
-    setViewPic01 = (para) => {
-        this.setState({
-            viewPic01: para
-        })
-    };
-    // 设置图片缩放比例及偏移量
-    setAvatarEditor01 = (index, value) => {
-        if (index === 1) {
-            this.setState({
-                avatarEditor01: {
-                    scale: value,
-                    positionX: this.state.avatarEditor01.positionX,
-                    positionY: this.state.avatarEditor01.positionY
-                }
-            })
-        }
-        if (index === 2) {
-            this.setState({
-                avatarEditor01: {
-                    scale: this.state.avatarEditor01.scale,
-                    positionX: value,
-                    positionY: this.state.avatarEditor01.positionY
-                }
-            })
-        }
-        if (index === 3) {
-            this.setState({
-                avatarEditor01: {
-                    scale: this.state.avatarEditor01.scale,
-                    positionX: this.state.avatarEditor01.positionX,
-                    positionY: value
-                }
-            })
-        }
-    };
-
     // 请求上传凭证，需要后端提供接口
-    reqwestUploadToken = (file) => {
-        reqwest({
-            url: '/sys/upload/getToken',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("发送失败");
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    // sessionStorage.uploadToken = json.data;
+    reqwestUploadToken = () => {
+        getToken().then((json) => {
+            if (json.data.result === 0) {
                     this.setState({
-                        uploadToken: json.data,
+                        uploadToken: json.data.data,
                     })
                 } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    this.exceptHandle(json.data);
                 }
-            }
+        }).catch((err) => {
+            message.error("发送失败");
         });
     };
 
     picUpload01 = (para) => {
-        console.log(para);
-        console.log(typeof(para))
         const _this = this;
-        this.setState({
-            photoLoading: true,
-        });
-        // if (para.name && para.type) {
-            const file = para;
-            const key = UUID.create().toString().replace(/-/g,"");
-            const token = this.state.uploadToken;
-            const config = {
-                region: qiniu.region.z0
-            };
-            const observer = {
-                next (res) {
-                    console.log(res)
-                },
-                error (err) {
-                    console.log(err)
-                    message.error(err.message ? err.message : "图片提交失败");
-                    // message.error("图片提交失败");
-                    _this.setState({
-                        photoLoading: false,
-                    })
-                }, 
-                complete (res) {
-                    console.log(res);
-                    message.success("图片提交成功");
-                    _this.setState({
-                        viewPic: global.config.photoUrl + res.key || "",
-                        data_pic: res.key || "",             
-                        photoLoading: false,
-                    })
-                }
-            }
-            const observable = qiniu.upload(file, key, token, config);
-            observable.subscribe(observer); // 上传开始
-        // }        
-    };
-
-    // 图片上传
-    picUpload03 = (para) => {
-        const _this = this;
-        if (this.state.photoList01.length >= 5) {
-            message.error("图片最多上传5张");
-            return
-        } else {
-            this.setState({
-                photoLoading: true,
-            });
-            const file = para;
-            const key = UUID.create().toString().replace(/-/g,"");
-            const token = this.state.uploadToken;
-            const config = {
-                region: qiniu.region.z0
-            };
-            const observer = {
-                next (res) {
-                    console.log(res)
-                },
-                error (err) {
-                    console.log(err)
-                    message.error(err.message ? err.message : "图片提交失败");
-                    // message.error("图片提交失败");
-                    _this.setState({
-                        photoLoading: false,
-                    })
-                }, 
-                complete (res) {
-                    console.log(res);
-                    message.success("图片提交成功");
-                    let photoList01 = _this.state.photoList01;   
-                    let photoList11 = _this.state.photoList11;                  
-                    photoList01.push({
-                        path: global.config.photoUrl + res.key
-                    });
-                    photoList11.push({
-                        path: res.key
-                    });
-                    _this.setState({
-                        photoList01: photoList01,
-                        photoList11: photoList11,
-                        viewPic01: "",
-                        avatarEditor01: {
-                            scale: 1,
-                            positionX: 0.5,
-                            positionY: 0.5
-                        },
-                        photoLoading: false,
-                    })
-                }
-            }
-            const observable = qiniu.upload(file, key, token, config);
-            observable.subscribe(observer); // 上传开始
-        }        
-    };
-    // 图片删除
-    setPhotoList01 = (index) => {
-        let data = this.state.photoList01;
-        data.splice(index, 1);
-        this.setState({
-            photoList01: data
-        })
-    };
-
-    // 机构LOGO处理-----------------------------------
-    setViewPic02 = (para) => {
-        this.setState({
-            viewPic02: para
-        })
-    };
-    setAvatarEditor02 = (index, value) => {
-        if (index === 1) {
-            this.setState({
-                avatarEditor02: {
-                    scale: value,
-                    positionX: this.state.avatarEditor02.positionX,
-                    positionY: this.state.avatarEditor02.positionY
-                }
-            })
-        }
-        if (index === 2) {
-            this.setState({
-                avatarEditor02: {
-                    scale: this.state.avatarEditor02.scale,
-                    positionX: value,
-                    positionY: this.state.avatarEditor02.positionY
-                }
-            })
-        }
-        if (index === 3) {
-            this.setState({
-                avatarEditor02: {
-                    scale: this.state.avatarEditor02.scale,
-                    positionX: this.state.avatarEditor02.positionX,
-                    positionY: value
-                }
-            })
-        }
-    };
-
-    picUpload02 = (para01, para02) => {
-        const _this = this;
-        this.setState({
-             logoLoading: true,
-        });
-        const file = para02;
+        this.setState({photoLoading: true,});
+        const file = para;
         const key = UUID.create().toString().replace(/-/g,"");
         const token = this.state.uploadToken;
         const config = {
             region: qiniu.region.z0
         };
         const observer = {
-            next (res) {
-                console.log(res)
-            },
+            next (res) {console.log(res)},
             error (err) {
                 console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");
-                _this.setState({
-                    logoLoading: false,
-                })
+                message.error(err.message ? err.message : "图片提交失败");                
+                _this.setState({photoLoading: false});
             }, 
             complete (res) {
+                console.log(res);
                 message.success("图片提交成功");
                 _this.setState({
-                    effectPic02: para01,
-                    data_pic02: global.config.photoUrl + res.key,
-                    data_pic22: res.key,
-                    logoLoading: false,
+                    viewPic: configUrl.photoUrl + res.key || "",                               
+                    photoLoading: false,
                 })
             }
         }
-        const observable = qiniu.upload(file, key, token, config)
-        observable.subscribe(observer) // 上传开始
-    };
-
-    // 广告地址处理-----------------------------------
-    setArea = (type, value) => {
-        if (type === 1) {
-            const fnFilter = (item) => {
-                return item.name === value
-            };
-            this.setState({
-                area: {
-                    province: value,
-                    city: "",
-                    district: "",
-                    street: ""
-                }
-            }, () => {
-                this.setState({
-                    cityList: this.state.provinceList.filter(fnFilter)[0] ? this.state.provinceList.filter(fnFilter)[0].districtList : [],
-                    provinceId: this.state.provinceList.filter(fnFilter)[0] ? this.state.provinceList.filter(fnFilter)[0].adcode : null,
-                    districtList: [],
-                    streetList: []
-                })
-            })
-        }
-        if (type === 2) {
-            const fnFilter = (item) => {
-                return item.name === value
-            };
-            this.setState({
-                area: {
-                    province: this.state.area.province,
-                    city: value,
-                    district: "",
-                    street: ""
-                },
-            }, () => {
-                this.setState({
-                    districtList: this.state.cityList.filter(fnFilter)[0] ? this.state.cityList.filter(fnFilter)[0].districtList : [],
-                    cityId: this.state.cityList.filter(fnFilter)[0] ? this.state.cityList.filter(fnFilter)[0].adcode : null,
-                    streetList: []
-                })
-            })
-        }
-        if (type === 3) {
-            const fnFilter = (item) => {
-                return item.name === value
-            };
-            this.setState({
-                area: {
-                    province: this.state.area.province,
-                    city: this.state.area.city,
-                    district: value,
-                    street: ""
-                },
-            }, () => {
-                this.setState({
-                    streetList: [],
-                    areaId: this.state.districtList.filter(fnFilter)[0] ? this.state.districtList.filter(fnFilter)[0].adcode : null
-                }, () => {
-                    if (this.state.areaId) {
-                        this.getStreetList();
-                    }
-                })
-            })
-        }
-        if (type === 4) {
-            this.setState({
-                area: {
-                    province: this.state.area.province,
-                    city: this.state.area.city,
-                    district: this.state.area.district,
-                    street: value
-                },
-            })
-        }
-        if (type === 5) {
-            // 获取城市列表
-            const provinceFilter = (item) => {
-                return item.name === value.province;
-            };
-            this.setState({
-                cityList: this.state.provinceList.filter(provinceFilter)[0] ? this.state.provinceList.filter(provinceFilter)[0].districtList : [],
-            }, () => {
-                // 获取地区列表
-                // 城市列表只有一条信息，如直辖市，导致value.city为空，则取城市列表第一条作为有效信息
-                if (this.state.cityList.length === 1) {
-                    value.city = this.state.cityList[0].name;
-                }
-                const cityFilter = (item) => {
-                    return item.name === value.city;
-                };
-                this.setState({
-                    districtList: this.state.cityList.filter(cityFilter)[0] ? this.state.cityList.filter(cityFilter)[0].districtList : [],
-                }, () => {
-                    // 根据区ID获取街道列表
-                    this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-                        let districtSearch = new window.AMap.DistrictSearch({
-                            level: 'district',
-                            subdistrict: 1
-                        });
-                        districtSearch.search(value.adcode, (status, result) => {
-                            this.setState({
-                                streetList: result.districtList[0].districtList || [],
-                            }, () => {
-                                // 地址信息获取完全之后进行写入
-                                this.setState({
-                                    areaId: value.adcode,
-                                    area: {
-                                        province: value.province,
-                                        city: value.city,
-                                        district: value.district,
-                                        street: value.township
-                                    },
-                                })
-                            })
-                        })
-                    })
-                })
-            });
-        }
-    };
-    getProvinceList = () => {
-        this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-            var districtSearch = new window.AMap.DistrictSearch({
-                level: 'country',
-                subdistrict: 3
-            });
-
-            districtSearch.search('中国', (status, result) => {
-                this.setState({
-                    provinceList: result.districtList[0].districtList
-                })
-            })
-        })
-    };
-    getStreetList = () => {
-        this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-            var districtSearch = new window.AMap.DistrictSearch({
-                level: 'district',
-                subdistrict: 1
-            });
-            districtSearch.search(this.state.areaId, (status, result) => {
-                this.setState({
-                    streetList: result.districtList[0].districtList || [],
-                })
-            })
-        })
-    };
-    setXY = (para) => {
-        this.setState({
-            xy: para
-        })
-    };
-    setFormattedAddress = (para) => {
-        console.log(para)
-        this.setState({
-            formattedAddress: para
-        })
-    };
-    setMarkers = (marker) => {
-        const arr = [];
-        arr.push(marker);
-        this.setState({
-            markers: arr
-        })
+        const observable = qiniu.upload(file, key, token, config);
+        observable.subscribe(observer); // 上传开始     
     };
 
     handleCancel = () => {
@@ -1155,49 +326,10 @@ class ItemAdd extends Component {
             visible: false
         }, () => {
             this.setState({
-                typeList: [],
-                phone: "",
-                countDown: 0,
-                codeButtonStatus: false,
-                viewPic: "",
-                data_pic: "",
-                viewPic01: "",
-                photoList01: [],
-                photoList11: [],
-                avatarEditor01: {
-                    scale: 1,
-                    positionX: 0.5,
-                    positionY: 0.5
-                },
-                photoLoading: false,
-                viewPic02: "",
-                effectPic02: "",
-                data_pic02: "",
-                data_pic22: "",
-                avatarEditor02: {
-                    scale: 1,
-                    positionX: 0.5,
-                    positionY: 0.5
-                },
-                logoLoading: false,
-                provinceList: [],
-                cityList: [],
-                districtList: [],
-                streetList: [],
-                markers: [],
-                area: {
-                    province: "",
-                    city: "",
-                    district: "",
-                    street: ""
-                },
-                mapObj: {},
-                formattedAddress: "",
-                xy: {},
-                provinceId: null,
-                cityId: null,
-                areaId: null,
-                confirmLoading: false
+                uploadToken: '',
+                viewPic: "",                      
+                photoLoading: false,      
+                loading: false
             });
             form.resetFields();
         });
@@ -1217,119 +349,54 @@ class ItemAdd extends Component {
             }
             
             if (values.photo && this.state.viewPic) {
-                values.photo = this.state.data_pic
+                values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
             }
             // 广告展示城市校验
             if (!values.cityId.length) {
                 message.error("请选择广告展示城市");
                 return
             }
-            this.setState({
-                confirmLoading: true
-            });
-           
-            reqwest({
-                url: '/sys/banner/save',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    title: values.title,
-                    type: values.type,
-                    photo: values.photo,
-                    linkAddress: values.linkAddress,
-                    provinceName: this.state.area.province,
-                    provinceId: values.cityId[0],
-                    cityId: values.cityId[1] || values.cityId[0],
-                    cityName: this.state.area.city,                   
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("广告添加成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                typeList: [],
-                                phone: "",
-                                countDown: 0,
-                                codeButtonStatus: false,
-                                viewPic01: "",
-                                photoList01: [],
-                                avatarEditor01: {
-                                    scale: 1,
-                                    positionX: 0.5,
-                                    positionY: 0.5
-                                },
-                                photoLoading: false,
-                                viewPic02: "",
-                                effectPic02: "",
-                                data_pic02: "",
-                                avatarEditor02: {
-                                    scale: 1,
-                                    positionX: 0.5,
-                                    positionY: 0.5
-                                },
-                                logoLoading: false,
-                                provinceList: [],
-                                cityList: [],
-                                districtList: [],
-                                streetList: [],
-                                markers: [],
-                                area: {
-                                    province: "",
-                                    city: "",
-                                    district: "",
-                                    street: ""
-                                },
-                                mapObj: {},
-                                formattedAddress: "",
-                                xy: {},
-                                areaId: null,
-                                confirmLoading: false
-                            });
-                            form.resetFields();
-                            this.props.recapture();
-                        });
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            this.setState({loading: true});
+            const data = {
+                provinceId: values.cityId[0],
+                cityId: values.cityId[1] || values.cityId[0],                    
+                type: values.type,
+                photo: values.photo,
+                title: values.title,
+                linkAddress: values.linkAddress,
+            };
+            saveAdv(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("广告添加成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            });
+            }).catch((err) => {
+                message.error("保存失败");
+                this.setState({loading: false});
+            })
         });
     };
+
+    // 异常处理
+    exceptHandle = (data) => {
+        if (data.code === 901) {
+            message.error("请先登录");
+            this.props.toLoginPage();
+        } else if (data.code === 902) {
+            message.error("登录信息已过期，请重新登录");
+            this.props.toLoginPage();
+        } else {
+            message.error(data.message);
+            this.setState({loading: false});
+        }
+    }
 
     saveFormRef = (form) => {
         this.form = form;
     };
-
-    // componentDidMount() {
-    //     const _this = this;
-    //     window.addEventListener('keypress', function(e) {
-    //         if (e.which === 13) {
-    //             _this.handleCreate();
-    //         }
-    //     });
-    // }
 
     render() {
         return (
@@ -1340,97 +407,22 @@ class ItemAdd extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    allTypeList={this.state.allTypeList}
-                    typeList={this.state.typeList}
-                    handleSearch={this.handleSearch}
-                    checkOrgType={this.checkOrgType}
-
-                    viewPic={this.state.viewPic}
-
-                    viewPic01={this.state.viewPic01}
-                    setViewPic01={this.setViewPic01}
-                    picUpload01={this.picUpload01}
-                    avatarEditor01={this.state.avatarEditor01}
-                    setAvatarEditor01={this.setAvatarEditor01}
-                    photoList01={this.state.photoList01}
-                    setPhotoList01={this.setPhotoList01}
-                    photoLoading={this.state.photoLoading}
-                    
-                    getUploadToken={this.getUploadToken}
                     reqwestUploadToken={this.reqwestUploadToken}
-                    viewPic02={this.state.viewPic02}
-                    effectPic02={this.state.effectPic02}
-                    data_pic02={this.state.data_pic02}
-                    setViewPic02={this.setViewPic02}
-                    picUpload02={this.picUpload02}
-                    avatarEditor02={this.state.avatarEditor02}
-                    setAvatarEditor02={this.setAvatarEditor02}
-                    logoLoading={this.state.logoLoading}
-
-                    optionsOfCity={this.props.optionsOfCity}
-                    optionsType={this.props.optionsType}
-                    provinceList={this.state.provinceList}
-                    cityList={this.state.cityList}
-                    districtList={this.state.districtList}
-                    streetList={this.state.streetList}
-                    markers={this.state.markers}
-                    setMarkers={this.setMarkers}
-                    area={this.state.area}
-                    setArea={this.setArea}
-                    mapObj={this.state.mapObj}
-                    formattedAddress={this.state.formattedAddress}
-                    setFormattedAddress={this.setFormattedAddress}
-                    setXY={this.setXY}
-                    confirmLoading={this.state.confirmLoading}
-                />
+                    viewPic={this.state.viewPic}
+                    picUpload01={this.picUpload01}
+                    photoLoading={this.state.photoLoading}
+                    optionsOfCity={this.props.optionsOfCity}                                     
+                    confirmLoading={this.state.loading}/>
             </div>
         );
     }
 }
 
-//广告信息编辑表单
+// 广告信息编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, allTypeList, reqwestUploadToken, viewPic,  picUpload01, photoList01, setPhotoList01, photoLoading, provinceList, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, reqwestUploadToken, viewPic,  picUpload01, photoLoading, provinceList, confirmLoading} = props;
         const {getFieldDecorator} = form;
-
-        // 总广告选项生成
-        const optionsOfAllTypeList = [];
-        if (allTypeList) {
-            allTypeList.forEach((item, index) => {
-                optionsOfAllTypeList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-            });
-        }  
-
-        // 已上传图片列表
-        const photoExist01 = [];
-        photoList01.forEach((item, index) => {
-            photoExist01.push(
-                <div className="photoExist-item clearfix" key={index + 1}>
-                    <img src={item.path} alt=""/>
-                    <div className="remove">
-                        <Button type="dashed"
-                                shape="circle" icon="minus" onClick={() => setPhotoList01(index)}/>
-                    </div>
-                </div>
-            )
-        });
-
-        // 由图片文件对象获取其base64编码
-        // const getBase64 = (img, callback) => {
-        //     const reader = new FileReader();
-        //     reader.addEventListener('load', () => callback(reader.result));
-        //     reader.readAsDataURL(img);
-        // };
-        // 由图片地址获取其文件对象
-        // const dataURLtoFile = (url) => {
-        //     let arr = url.split(','),
-        //         bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-        //     while (n--) {
-        //         u8arr[n] = bstr.charCodeAt(n)
-        //     }
-        //     return new Blob([u8arr], {type: "image/jpeg"});
-        // };
 
         // 图片上传保持原比例
         const beforeUpload = (file) => {
@@ -1459,23 +451,22 @@ const ItemEditForm = Form.create()(
         
         // 城市选项生成
         const optionsOfCity = [{value: "0", label: "全国"}];
-        let currentCity = [];
-        provinceList.forEach((item) => {
-            let children = [];
-            if (item.districtList) {
-                item.districtList.forEach((subItem) => {
-                    children.push({value: subItem.adcode, label: subItem.name});
-                    // if (subItem.adcode === cityCode) {
-                    // 数据类型的问题
-                    if (Number(subItem.adcode) === data.cityId) {
-                        // 当前城市设为选中项
-                        currentCity = [item.adcode, subItem.adcode]
-                        console.log(currentCity)
-                    }
-                });
-            }
-            optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-        });
+        let currentCity = []; 
+        if (provinceList.length) {
+            provinceList.forEach((item) => {
+                let children = [];
+                if (item.districtList) {
+                    item.districtList.forEach((subItem) => {
+                        children.push({value: subItem.adcode, label: subItem.name});
+                        if (Number(subItem.adcode) === data.cityId) {                            
+                            currentCity = [item.adcode, subItem.adcode];// 当前城市设为选中项
+                        }
+                    });
+                }
+                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+            });
+        }
+        
         return (
             <Modal
                 visible={visible}
@@ -1484,8 +475,7 @@ const ItemEditForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 {
                     JSON.stringify(data) === "{}" ?
                         <div className="spin-box">
@@ -1519,10 +509,7 @@ const ItemEditForm = Form.create()(
                                                     }
                                                 ],
                                             })(
-                                                <Select
-                                                    style={{width: '100%'}}
-                                                    placeholder="请选择广告位置"
-                                                >
+                                                <Select style={{width: '100%'}} placeholder="请选择广告位置">
                                                     <Option key={3} value={3}>育儿资讯轮播</Option>
                                                     <Option key={4} value={4}>首页轮播</Option>
                                                 </Select>
@@ -1547,74 +534,13 @@ const ItemEditForm = Form.create()(
                                                     className="avatar-uploader"
                                                     showUploadList={false}
                                                     beforeUpload={beforeUpload}
-                                                    customRequest={picHandleChange}                                                                     
-                                                >
+                                                    customRequest={picHandleChange}>
                                                     {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
                                                 </Upload>
                                             )}
-                                        </FormItem>
-                                        {/*<FormItem className="Icon" label="广告图片：">
-                                            {getFieldDecorator('photo', {
-                                                initialValue: viewPic02,
-                                                rules: [{
-                                                    required: true,
-                                                    message: '请上传广告图片',
-                                                }],
-                                            })(
-                                                <div className="itemBox">
-                                                    <Upload
-                                                        name="file"
-                                                        listType="picture-card"
-                                                        className="avatar-uploader"
-                                                        showUploadList={false}
-                                                        beforeUpload={beforeUpload02}
-                                                    >
-                                                        {viewPic02 ? partImg02 : uploadButton02}
-                                                    </Upload>
-                                                    {<Row>
-                                                        <Col span={4}>缩放：</Col>
-                                                        <Col span={12}>
-                                                            <Slider min={0.5} max={1.5} step={0.01} value={avatarEditor02.scale}
-                                                                    disabled={!viewPic02}
-                                                                    onChange={(value) => {
-                                                                        setAvatarEditor02(1, value)
-                                                                    }}/>
-                                                        </Col>
-                                                    </Row>
-                                                    <Row>
-                                                        <Col span={4}>X：</Col>
-                                                        <Col span={12}>
-                                                            <Slider min={0} max={1} step={0.01} value={avatarEditor02.positionX}
-                                                                    disabled={!viewPic02}
-                                                                    onChange={(value) => {
-                                                                        setAvatarEditor02(2, value)
-                                                                    }}/>
-                                                        </Col>
-                                                    </Row>
-                                                    <Row>
-                                                        <Col span={4}>Y：</Col>
-                                                        <Col span={12}>
-                                                            <Slider min={0} max={1} step={0.01} value={avatarEditor02.positionY}
-                                                                    disabled={!viewPic02}
-                                                                    onChange={(value) => {
-                                                                        setAvatarEditor02(3, value)
-                                                                    }}/>
-                                                        </Col>
-                                                    </Row>}
-                                                    <Button type="primary"
-                                                            onClick={picHandle02}
-                                                            loading={logoLoading}
-                                                            style={{
-                                                                position: "absolute",
-                                                                right: "0",
-                                                                bottom: "0"
-                                                            }}>{data_pic02 ? "重新提交" : "图片提交"}</Button>
-                                                </div>
-                                            )}
-                                        </FormItem> */}                                   
+                                        </FormItem>                                                                      
                                     </Col>
-                                </Row>
-                                
+                                </Row>                                
                                 <div className="ant-line"></div>
                                 <Row gutter={24}>
                                     <Col span={8}>
@@ -1662,855 +588,70 @@ const ItemEditForm = Form.create()(
     }
 );
 
-//广告信息编辑组件
+// 广告信息编辑组件
 class ItemEdit extends Component {
     constructor(props) {
-      super(props);
-    
+      super(props);    
       this.state = {
             visible: false,
-            // 广告基本信息
-            data: {},
-            allTypeList: [],
-            // 广告类型表
-            typeList: [],
-            // 广告图片相关变量
-            uploadToken: "",
-            viewPic01: "",
-            photoList01: [],
-            photoList11: [],
-            avatarEditor01: {
-                scale: 1,
-                positionX: 0.5,
-                positionY: 0.5
-            },
-            photoLoading: false,
-            // 广告LOGO相关变量
-            viewPic02: "",
-            data_pic02: "",
-            data_pic22: "",
-            effectPic02: "",
-            avatarEditor02: {
-                scale: 1,
-                positionX: 0.5,
-                positionY: 0.5
-            },
-            logoLoading: false,
-            // 广告地址相关变量
-            provinceList: [],
-            cityList: [],
-            districtList: [],
-            streetList: [],
-            markers: [],
-            area: {
-                province: "",
-                city: "",
-                district: "",
-                street: ""
-            },
-            mapObj: {},
-            formattedAddress: "",
-            xy: {},
-            provinceId: null,
-            cityId: null,
-            areaId: null,
-            addressLoading: true,
-            // 提交按钮状态变量
-            confirmLoading: false,
-            tempTypeIds: [],
+            data: {}, // 广告基本信息
+            uploadToken: "",// 广告图片相关变量
+            viewPic: "",
+            photoLoading: false,            
+            loading: false, // 提交按钮状态变量          
         };
-    }    
+    }
 
-    // 获取广告类型列表
-    getInstitutionTypeList = () => {
-        reqwest({
-            url: '/sys/banner/list',        
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: [
-                //         {id: 1, name: "01"},
-                //         {id: 2, name: "02"},
-                //         {id: 3, name: "03"},
-                //         {id: 4, name: "04"},
-                //     ]
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    const data = [];
-                    json.data.forEach((item) => {
-                        let subData = [];
-                        if (item.list) {
-                            item.list.forEach((subItem) => {
-                                subData.push({
-                                    key: subItem.id,
-                                    value: subItem.parentId + ',' + subItem.id,
-                                    // value: String(subItem.id),
-                                    title: subItem.name,
-                                    parentId: item.id,
-                                })
-                            })
-                        }                        
-                        data.push({
-                            key: item.id,
-                            value: String(item.id),
-                            title: item.name,
-                            children: subData,
-                        })
-                    });
-                    console.log(data)
-                    this.setState({
-                        typeList: data
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        })
-    };
-
-    onChange = (value) => {
-        console.log('onChange ', value);
-        this.setState({ 
-            tempTypeIds: value
-        });
-    };
-
-    // 获取广告基本信息
-    getData = () => {
-        reqwest({
-            url: '/admin/org/getDetails',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        data: json.data.org,
-                        photoList01: json.data.orgResourceList,
-                        viewPic02: json.data.orgResourceList[0] ?  json.data.orgResourceList[0].path : "",
-                        effectPic02: json.data.orgResourceList[1] ? json.data.orgResourceList[1].path : "",
-                        data_pic02: json.data.orgResourceList[2] ? json.data.orgResourceList[2].path : "",
-                        areaId: json.data.org.areaId,
-                        // area: {
-                        //     province: "provinceName",
-                        //     city: "cityName",
-                        // },
-                        // provinceId: "provinceId",
-                        // cityId: "cityId",
-                        formattedAddress: json.data.org.address,
-                        xy: {
-                            x: json.data.org.lng,
-                            y: json.data.org.lat
-                        }
-                    }, () => {
-                        // 广告地址相关操作
-                        const mapId = "edit-institution-container" + this.props.id;
-                        this.setState({
-                            mapObj: new window.AMap.Map(mapId, {
-                                resizeEnable: true,
-                                zoom: 16,
-                                center: this.state.data.lng ? [this.state.data.lng, this.state.data.lat] : ""
-                            })
-                        }, () => {
-                            this.state.mapObj.on('complete', () => {
-                                // 获取省份列表
-                                this.getProvinceList();
-                                // 生成当前标记点
-                                const marker = new window.AMap.Marker({
-                                    map: this.state.mapObj,
-                                    bubble: true
-                                });
-                                marker.setPosition(this.state.mapObj.G.center);
-                                this.state.mapObj.setCenter(marker.getPosition());
-                                this.state.markers.push(marker);
-                                // 地图点击事件
-                                window.AMap.service('AMap.Geocoder', () => {
-                                    const geocoder = new window.AMap.Geocoder({extensions: "all"});
-                                    this.state.mapObj.on('click', (e) => {
-                                        // 清除已有标记点
-                                        this.state.mapObj.remove(this.state.markers);
-                                        // 经纬度写入
-                                        this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
-                                        // 生成当前标记点
-                                        const marker = new window.AMap.Marker({
-                                            map: this.state.mapObj,
-                                            bubble: true
-                                        });
-                                        marker.setPosition(e.lnglat);
-                                        this.state.mapObj.setCenter(marker.getPosition());
-                                        this.state.markers.push(marker);
-                                        geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
-                                            if (status === 'complete' && result.info === 'OK') {
-                                                this.setFormattedAddress(result.regeocode.formattedAddress);
-                                                // 其他地址信息写入
-                                                this.setArea(5, result.regeocode.addressComponent);
-                                            }
-                                        });
-                                    });
-                                })
-                            });
-                        })
-                    })
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        })
-    };
-
-    showModal = () => {
-        // 获取广告基本信息
-        console.log(this.props.record)
-        // this.getData();
-        this.getMapDate();
-        this.setState({
+    showModal = () => {        
+        this.setState({// 获取广告基本信息
             visible: true,
             data: this.props.record,
-            viewPic: this.props.record.photo,
-            area: {
-                province: this.props.record.provinceName,
-                city: this.props.record.cityName,
-            },
-            provinceId: this.props.record.provinceId,
-            cityId: this.props.record.cityId
-        })
-    };
-
-    // 获取省市列表信息及当前城市地区代码
-    getMapDate = () => {
-        this.setState({
-            mapObj: new window.AMap.Map('information-mapContainer')
-        }, () => {
-            // 获取省区列表
-            this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-                var districtSearch = new window.AMap.DistrictSearch({
-                    level: 'country',
-                    subdistrict: 2
-                });
-                districtSearch.search('中国', (status, result) => {
-                    this.setState({
-                        provinceList: result.districtList[0].districtList
-                    })
-                })
-            });
-            // 获取当前城市地区代码
-            this.state.mapObj.plugin('AMap.CitySearch', () => {
-                var citySearch = new window.AMap.CitySearch();
-                citySearch.getLocalCity((status, result) => {
-                    if (status === 'complete' && result.info === 'OK') {
-                        this.setState({
-                            cityCode: result.adcode
-                        })
-                    }
-                })
-            })
-        })
-    };
-
-    handleSearch = (value) => {
-        console.log(value);
-        reqwest({
-            url: '/admin/org/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                orgName: value,
-                status: 2,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    console.log(json.data.list)
-                    const data = [];
-                    if (json.data.list.length) {
-                        json.data.list.forEach((item, index) => {
-                            data.push({
-                                id: item.id,
-                                name: item.name,
-                            })
-                        });
-                    }
-                    this.setState({
-                        allTypeList: data
-                    });
-                    // if (currentValue === value) {
-                    //     const result = d.result;
-                    //     const data = [];
-                    //     result.forEach(r => {
-                    //         data.push({
-                    //             value: r[0],
-                    //             text: r[0]
-                    //         });
-                    //     });
-                    //     callback(data);
-                    // }
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
+            viewPic: this.props.record.photo
         });
-    };
-
-    //图片处理
-    getBase64Image01 = (url, width, height) => {//width、height调用时传入具体像素值，控制大小 ,不传则默认图像大小
-        const image = new Image();
-        image.crossOrigin = '';
-        image.src = url;
-        image.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = width ? width : image.width;
-            canvas.height = height ? height : image.height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            const dataURL = canvas.toDataURL("image/jpeg", 0.92);
-            this.setState({
-                viewPic01: dataURL,
-                effectPic01: dataURL,
-            })
-        };
-    };
-    setViewPic01 = (para) => {
-        this.setState({
-            viewPic01: para
-        })
-    };
-    setAvatarEditor01 = (index, value) => {
-        if (this.state.viewPic01.slice(26) === this.state.data_pic01) {
-            this.getBase64Image01(this.state.viewPic01)
-        }
-        if (index === 1) {
-            this.setState({
-                avatarEditor01: {
-                    scale: value,
-                    positionX: this.state.avatarEditor01.positionX,
-                    positionY: this.state.avatarEditor01.positionY
-                }
-            })
-        }
-        if (index === 2) {
-            this.setState({
-                avatarEditor01: {
-                    scale: this.state.avatarEditor01.scale,
-                    positionX: value,
-                    positionY: this.state.avatarEditor01.positionY
-                }
-            })
-        }
-        if (index === 3) {
-            this.setState({
-                avatarEditor01: {
-                    scale: this.state.avatarEditor01.scale,
-                    positionX: this.state.avatarEditor01.positionX,
-                    positionY: value
-                }
-            })
-        }
     };
 
     // 请求上传凭证，需要后端提供接口
-    reqwestUploadToken = (file) => {
-        reqwest({
-            url: '/sys/upload/getToken',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("发送失败");
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    sessionStorage.uploadToken = json.data;
+    reqwestUploadToken = () => {
+        getToken().then((json) => {
+            if (json.data.result === 0) {
                     this.setState({
-                        uploadToken: json.data,
+                        uploadToken: json.data.data,
                     })
                 } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    this.exceptHandle(json.data);
                 }
-            }
+        }).catch((err) => {
+            message.error("发送失败");
         });
     };
     
     picUpload01 = (para) => {
-        console.log(para);
-        console.log(typeof(para))
         const _this = this;
-        this.setState({
-            photoLoading: true,
-        });
-        // if (para.name && para.type) {
-            const file = para;
-            const key = UUID.create().toString().replace(/-/g,"");
-            const token = this.state.uploadToken;
-            const config = {
-                region: qiniu.region.z0
-            };
-            const observer = {
-                next (res) {
-                    console.log(res)
-                },
-                error (err) {
-                    console.log(err)
-                    message.error(err.message ? err.message : "图片提交失败");
-                    // message.error("图片提交失败");
-                    _this.setState({
-                        photoLoading: false,
-                    })
-                }, 
-                complete (res) {
-                    console.log(res);
-                    message.success("图片提交成功");
-                    _this.setState({
-                        viewPic: global.config.photoUrl + res.key || "",
-                        data_pic: res.key || "",             
-                        photoLoading: false,
-                    })
-                }
-            }
-            const observable = qiniu.upload(file, key, token, config);
-            observable.subscribe(observer); // 上传开始
-        // }        
-    };
-    // 暂时舍弃
-    picUpload04 = (para) => {
-        const _this = this;
-        if (this.state.photoList01.length >= 5) {
-            message.error("图片最多上传5张");
-            return
-        } else {
-            this.setState({
-                photoLoading: true,
-            });
-            const file = para;
-            const key = UUID.create().toString().replace(/-/g,"");
-            const token = this.state.uploadToken;
-            const config = {
-                region: qiniu.region.z0
-            };
-            const observer = {
-                next (res) {
-                    console.log(res)
-                },
-                error (err) {
-                    console.log(err)
-                    message.error(err.message ? err.message : "图片提交失败");
-                    _this.setState({
-                        photoLoading: false,
-                    })
-                }, 
-                complete (res) {
-                    console.log(res);
-                    message.success("图片提交成功");
-                    let photoList01 = _this.state.photoList01; 
-                    let photoList11 = _this.state.photoList11;               
-                    photoList01.push({
-                        path: global.config.photoUrl + res.key
-                    });
-                    photoList11.push({
-                        path: res.key
-                    })
-                    _this.setState({
-                        photoList01: photoList01,
-                        photoList11: photoList11,
-                        viewPic01: "",
-                        avatarEditor01: {
-                            scale: 1,
-                            positionX: 0.5,
-                            positionY: 0.5
-                        },
-                        photoLoading: false,
-                    })
-                }
-            }
-            const observable = qiniu.upload(file, key, token, config);
-            observable.subscribe(observer); // 上传开始
-        } 
-    };
-
-    //图片删除
-    setPhotoList01 = (index) => {
-        let data = this.state.photoList01;
-        data.splice(index, 1);
-        this.setState({
-            photoList01: data
-        })
-    };
-
-    //LOGO处理 暂时舍弃
-    getBase64Image02 = (url, width, height) => {//width、height调用时传入具体像素值，控制大小 ,不传则默认图像大小
-        const image = new Image();
-        image.crossOrigin = '';
-        image.src = url;
-        image.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = width ? width : image.width;
-            canvas.height = height ? height : image.height;
-            const ctx = canvas.getContext("2d");
-            // ctx.fillStyle = "#fff";
-            // ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            // const dataURL = canvas.toDataURL("image/jpeg", 0.92);
-            const dataURL = canvas.toDataURL("png", 0.92);
-            this.setState({
-                viewPic02: dataURL,
-                effectPic02: dataURL,
-            })
-        };
-    };
-    setViewPic02 = (para) => {
-        this.setState({
-            viewPic02: para
-        })
-    };
-    setAvatarEditor02 = (index, value) => {
-        if (this.state.viewPic02.slice(26) === this.state.data_pic02) {
-            this.getBase64Image02(this.state.viewPic02)
-        }
-        if (index === 1) {
-            this.setState({
-                avatarEditor02: {
-                    scale: value,
-                    positionX: this.state.avatarEditor02.positionX,
-                    positionY: this.state.avatarEditor02.positionY
-                }
-            })
-        }
-        if (index === 2) {
-            this.setState({
-                avatarEditor02: {
-                    scale: this.state.avatarEditor02.scale,
-                    positionX: value,
-                    positionY: this.state.avatarEditor02.positionY
-                }
-            })
-        }
-        if (index === 3) {
-            this.setState({
-                avatarEditor02: {
-                    scale: this.state.avatarEditor02.scale,
-                    positionX: this.state.avatarEditor02.positionX,
-                    positionY: value
-                }
-            })
-        }
-    };
-    // 暂时舍弃
-    picUpload02 = (para01, para02) => {
-        const _this = this;
-        this.setState({
-            logoLoading: true
-        });
-        const file = para02;
+        this.setState({photoLoading: true});       
+        const file = para;
         const key = UUID.create().toString().replace(/-/g,"");
         const token = this.state.uploadToken;
         const config = {
             region: qiniu.region.z0
         };
         const observer = {
-            next (res) {
-                console.log(res)
-            },
+            next (res) {console.log(res)},
             error (err) {
                 console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");
-                _this.setState({
-                    logoLoading: false,
-                })
+                message.error(err.message ? err.message : "图片提交失败");                
+                _this.setState({photoLoading: false});
             }, 
             complete (res) {
+                console.log(res);
                 message.success("图片提交成功");
                 _this.setState({
-                    effectPic02: para01,
-                    data_pic02: global.config.photoUrl + res.key,
-                    data_pic22: res.key,
-                    logoLoading: false,
-                })
+                    viewPic: global.config.photoUrl + res.key || "",                            
+                    photoLoading: false,
+                });
             }
-        };
+        }
         const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始
-    };
-
-    // 广告地址处理-----------------------------------
-    setArea = (type, value) => {
-        // 省份信息变更
-        if (type === 1) {
-            const fnFilter = (item) => {
-                return item.name === value
-            };
-            this.setState({
-                area: {
-                    province: value,
-                    city: "",
-                    district: "",
-                    street: ""
-                }
-            }, () => {
-                this.setState({
-                    cityList: this.state.provinceList.filter(fnFilter)[0] ? this.state.provinceList.filter(fnFilter)[0].districtList : [],
-                    provinceId: this.state.provinceList.filter(fnFilter)[0] ? this.state.provinceList.filter(fnFilter)[0].adcode : null,
-                    districtList: [],
-                    streetList: []
-                })
-            })
-        }
-        // 城市信息变更
-        if (type === 2) {
-            const fnFilter = (item) => {
-                return item.name === value
-            };
-            this.setState({
-                area: {
-                    province: this.state.area.province,
-                    city: value,
-                    district: "",
-                    street: ""
-                },
-            }, () => {
-                this.setState({
-                    districtList: this.state.cityList.filter(fnFilter)[0] ? this.state.cityList.filter(fnFilter)[0].districtList : [],
-                    cityId: this.state.cityList.filter(fnFilter)[0] ? this.state.cityList.filter(fnFilter)[0].adcode : null,
-                    streetList: []
-                })
-            })
-        }
-        // 区信息变更
-        if (type === 3) {
-            const fnFilter = (item) => {
-                return item.name === value
-            };
-            this.setState({
-                area: {
-                    province: this.state.area.province,
-                    city: this.state.area.city,
-                    district: value,
-                    street: ""
-                },
-            }, () => {
-                this.setState({
-                    streetList: [],
-                    areaId: this.state.districtList.filter(fnFilter)[0] ? this.state.districtList.filter(fnFilter)[0].adcode : null
-                }, () => {
-                    if (this.state.areaId) {
-                        this.getStreetList();
-                    }
-                })
-            })
-        }
-        // 街道信息变更
-        if (type === 4) {
-            this.setState({
-                area: {
-                    province: this.state.area.province,
-                    city: this.state.area.city,
-                    district: this.state.area.district,
-                    street: value
-                },
-            })
-        }
-        // 地址信息整体写入
-        if (type === 5) {
-            // 获取城市列表
-            const provinceFilter = (item) => {
-                return item.name === value.province;
-            };
-            this.setState({
-                cityList: this.state.provinceList.filter(provinceFilter)[0] ? this.state.provinceList.filter(provinceFilter)[0].districtList : [],
-            }, () => {
-                // 获取地区列表
-                // 城市列表只有一条信息，如直辖市，导致value.city为空，则取城市列表第一条作为有效信息
-                if (this.state.cityList.length === 1) {
-                    value.city = this.state.cityList[0].name;
-                }
-                const cityFilter = (item) => {
-                    return item.name === value.city;
-                };
-                this.setState({
-                    districtList: this.state.cityList.filter(cityFilter)[0] ? this.state.cityList.filter(cityFilter)[0].districtList : [],
-                }, () => {
-                    // 根据区ID获取街道列表
-                    this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-                        let districtSearch = new window.AMap.DistrictSearch({
-                            level: 'district',
-                            subdistrict: 1
-                        });
-                        districtSearch.search(String(value.adcode), (status, result) => {
-                            this.setState({
-                                streetList: result.districtList ? result.districtList[0].districtList : [],
-                            }, () => {
-                                // 地址信息获取完全之后进行写入
-                                this.setState({
-                                    areaId: value.adcode,
-                                    area: {
-                                        province: value.province,
-                                        city: value.city,
-                                        district: value.district,
-                                        street: value.township
-                                    },
-                                    addressLoading: false
-                                })
-                            })
-                        })
-                    })
-                })
-            });
-        }
-    };
-    // 获取省列表（包含市区信息）
-    getProvinceList = () => {
-        this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-            const districtSearch = new window.AMap.DistrictSearch({
-                level: 'country',
-                subdistrict: 3
-            });
-            districtSearch.search('中国', (status, result) => {
-                this.setState({
-                    provinceList: result.districtList[0].districtList
-                }, () => {
-                    const addressComponent = {
-                        province: this.state.data.provinceName,
-                        city: this.state.data.cityName,
-                        district: this.state.data.areaName,
-                        township: this.state.data.street,
-                        adcode: this.state.data.areaId
-                    };
-                    this.setArea(5, addressComponent)
-                })
-            })
-        })
-    };
-    // 根据区Id获取街道列表
-    getStreetList = () => {
-        this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-            let districtSearch = new window.AMap.DistrictSearch({
-                level: 'district',
-                subdistrict: 1
-            });
-            districtSearch.search(this.state.areaId, (status, result) => {
-                this.setState({
-                    streetList: result.districtList[0].districtList || [],
-                })
-            })
-        })
-    };
-    // 经纬度写入
-    setXY = (para) => {
-        this.setState({
-            xy: para
-        })
-    };
-    // 定位地址写入
-    setFormattedAddress = (para) => {
-        this.setState({
-            formattedAddress: para
-        })
-    };
-    // 地图标记点信息记录
-    setMarkers = (marker) => {
-        const arr = [];
-        arr.push(marker);
-        this.setState({
-            markers: arr
-        })
-    };
-
-    // 信息比对函数
-    dataContrast = (values) => {
-        console.log(values);
-        const initValues = this.state.data;
-        console.log(initValues);
-        const itemList = ["title", "provinceName", "cityName", "type", "linkAddress"];
-        const result = {};
-        itemList.forEach((item) => {
-            if (values[item] !== initValues[item]) {
-                result[item] = values[item];
-            }
-        });
-        // 广告类型
-        // if (values.typeIds.sort().toString() !== initValues.toString()) {
-        //     result.typeIds = values.typeIds;
-        // }
-        // 广告图片
-        if (values.photos.toString() !== initValues.toString()) {
-            const photoTemp = [];
-            if (this.state.photoList01.length) {
-                this.state.photoList11.forEach((item, index) => {
-                    photoTemp.push(item.path);
-                })
-            }
-            result.photos = photoTemp;
-            console.log(result.photos);
-        }
-        if (values.icon.toString() !== initValues.toString()) {
-            result.icon = this.state.data_pic22;
-        }
-        console.log(result);
-        if (JSON.stringify(result) === "{}") {
-            return false;
-        } else {
-            result.id = this.props.id;
-            return result;
-        }
+        observable.subscribe(observer); // 上传开始    
     };
 
     // 取消操作
@@ -2518,49 +659,12 @@ class ItemEdit extends Component {
         this.setState({
             visible: false
         }, () => {
-            this.setState({
-                data: {},
-                typeList: [],
+            this.setState({                
+                data: {},                            
+                uploadToken: "",
                 viewPic: "",
-                data_pic: "",
-                viewPic01: "",
-                photoList01: [],
-                photoList11: [],
-                avatarEditor01: {
-                    scale: 1,
-                    positionX: 0.5,
-                    positionY: 0.5
-                },
-                photoLoading: false,
-                viewPic02: "",
-                data_pic02: "",
-                data_pic22: "",
-                effectPic02: "",
-                avatarEditor02: {
-                    scale: 1,
-                    positionX: 0.5,
-                    positionY: 0.5
-                },
-                logoLoading: false,
-                provinceList: [],
-                cityList: [],
-                districtList: [],
-                streetList: [],
-                markers: [],
-                area: {
-                    province: "",
-                    city: "",
-                    district: "",
-                    street: ""
-                },
-                mapObj: {},
-                formattedAddress: "",
-                xy: {},
-                provinceId: null,
-                cityId: null,
-                areaId: null,
-                addressLoading: true,
-                confirmLoading: false
+                photoLoading: false,                
+                loading: false,
             });
         });
     };
@@ -2576,180 +680,58 @@ class ItemEdit extends Component {
             if (err) {
                 return;
             }
-            // 广告图片写入与校验
-            // values.photos = this.state.photoList01;
-            console.log(this.state.photoList01);
-            console.log(values.photos);
-            // values.photo = this.state.photoList01[0];
-
-            // const photoTemp = [];
-            // if (this.state.photoList01.length) {
-            //     this.state.photoList01.forEach((item, index) => {
-            //         let endIndex = item.path.indexOf('cn/');
-            //         // let endIndexo = item.path.indexOf('.jpg');
-            //         let pathTemp = item.path.slice(endIndex + 3);
-            //         photoTemp.push(pathTemp);
-            //     })
-            // }
-            // 编辑修改图片是没有提交，没有提示
-            // if (values.photo !== this.state.viewPic02) {
-            //     message.error("课程图片未选择或未提交");
-            //     return
-            // }
-
-            // 如何判断是否修改
+            // 广告图片写入与校验 // 如何判断是否修改            
             if (!this.state.viewPic) {
                 message.error("广告图片未选择提交");
                 return
-            }
+            }        
             
-            if (this.state.viewPic) {
-                // console.log(values.photo)
-                // console.log(this.state.data_pic)
-                // console.log(this.state.viewPic)
-                let pathTemp = this.state.viewPic.slice(global.config.photoUrl.length);
-                values.photo = pathTemp;
-            }
-
-            // if (this.state.data_pic02) {
-            //     values.photo = this.state.data_pic22
-            // }           
-            // console.log(values.photo);
-            // 广告logo写入
-            values.icon = this.state.data_pic02;
-            // 广告地址信息写入
-            // values.provinceName = this.state.area.province;
-            // values.provinceId = this.state.provinceId;
-            // values.cityName = this.state.area.city;
-            // values.cityId = this.state.cityId;
             if (!values.cityId) {
                 message.error("请选择展示城市");
                 return
-            }
-            // values.areaName = this.state.area.district;
-            // values.areaId = this.state.areaId;
-            // values.street = this.state.area.street;
-            // values.address = this.state.formattedAddress;
-            // values.lng = this.state.xy.x;
-            // values.lat = this.state.xy.y;
-            // 信息比对
-            // const result = this.dataContrast(values);
-            const result = {
+            }          
+            this.setState({loading: true});           
+            const data = {
                 id: this.props.id,
-                title: values.title,
-                type: values.type,
-                photo: values.photo,
-                linkAddress: values.linkAddress,                
                 provinceId: values.cityId[0],
-                cityId: values.cityId[1] || values.cityId[0],               
+                cityId: values.cityId[1] || values.cityId[0],
+                type: values.type,
+                photo: this.state.viewPic.slice(configUrl.photoUrl.length),
+                title: values.title,
+                linkAddress: values.linkAddress,
             }
-            if (!result) {
-                message.error("暂无信息更改");
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/banner/update',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: result,
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("广告信息修改成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                data: {},
-                                typeList: [],
-                                viewPic: "",
-                                data_pic: "",
-                                viewPic01: "",
-                                photoList01: [],
-                                avatarEditor01: {
-                                    scale: 1,
-                                    positionX: 0.5,
-                                    positionY: 0.5
-                                },
-                                photoLoading: false,
-                                viewPic02: "",
-                                data_pic02: "",
-                                effectPic02: "",
-                                avatarEditor02: {
-                                    scale: 1,
-                                    positionX: 0.5,
-                                    positionY: 0.5
-                                },
-                                logoLoading: false,
-                                provinceList: [],
-                                cityList: [],
-                                districtList: [],
-                                streetList: [],
-                                markers: [],
-                                area: {
-                                    province: "",
-                                    city: "",
-                                    district: "",
-                                    street: ""
-                                },
-                                mapObj: {},
-                                formattedAddress: "",
-                                xy: {},
-                                areaId: null,
-                                addressLoading: true,
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.recapture();
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            // 返回登陆页
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            // 返回登陆页
-                            this.props.toLoginPage();
-                        } else if (json.code === "1127") {
-                            message.error("已修改信息正在审核中，暂不能修改");
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            updateAdv(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("广告信息修改成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            });
+            }).catch((err) => {
+                message.error("保存失败");
+                this.setState({loading: false});
+            })
         });
     };
+
+     // 异常处理
+    exceptHandle = (data) => {
+        if (data.code === 901) {
+            message.error("请先登录");
+            this.props.toLoginPage();
+        } else if (data.code === 902) {
+            message.error("登录信息已过期，请重新登录");
+            this.props.toLoginPage();
+        } else {
+            message.error(data.message);
+            this.setState({loading: false});
+        }
+    }
 
     saveFormRef = (form) => {
         this.form = form;
     };
-
-    // componentDidMount() {
-    //     const _this = this;
-    //     window.addEventListener('keypress', function(e) {
-    //         if (e.which === 13) {
-    //             _this.handleCreate();
-    //         }       
-    //     });
-    // }
 
     render() {
         return (
@@ -2760,69 +742,26 @@ class ItemEdit extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    onChange={this.onChange}
                     id={this.props.id}
                     data={this.state.data}
-                    allTypeList={this.state.allTypeList}
-                    handleSearch={this.handleSearch}
-                    handleChange={this.handleChange}
-                    typeList={this.state.typeList}
-                    checkOrgType={this.checkOrgType}
                     reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
                     picUpload01={this.picUpload01}
-
-                    viewPic01={this.state.viewPic01}
-                    setViewPic01={this.setViewPic01}                    
-                    avatarEditor01={this.state.avatarEditor01}
-                    setAvatarEditor01={this.setAvatarEditor01}
-                    photoList01={this.state.photoList01}
-                    setPhotoList01={this.setPhotoList01}
                     photoLoading={this.state.photoLoading}
-                    viewPic02={this.state.viewPic02}
-                    data_pic02={this.state.data_pic02}
-                    setViewPic02={this.setViewPic02}
-                    effectPic02={this.state.effectPic02}
-                    picUpload02={this.picUpload02}
-                    avatarEditor02={this.state.avatarEditor02}
-                    setAvatarEditor02={this.setAvatarEditor02}
-                    logoLoading={this.state.logoLoading}
-
-                    provinceList={this.state.provinceList}
-                    optionsType={this.props.optionsType}
-
-                    cityList={this.state.cityList}
-                    districtList={this.state.districtList}
-                    streetList={this.state.streetList}
-                    markers={this.state.markers}
-                    setMarkers={this.setMarkers}
-                    area={this.state.area}
-                    setArea={this.setArea}
-                    mapObj={this.state.mapObj}
-                    formattedAddress={this.state.formattedAddress}
-                    setFormattedAddress={this.setFormattedAddress}
-                    setXY={this.setXY}
-                    confirmLoading={this.state.confirmLoading}
-                />
+                    provinceList={this.props.provinceList}                    
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
 }
 
-//广告列表
+// 广告列表
 class DataTable extends Component {
     constructor(props) {
         super(props);
         this.state = {
             loading: true,
-            data: [],
-            // 广告类型表
-            typeList: [],
-            // 当前广告类型
-            type: null,
-            // 当前广告状态
-            status: null,
-            addStatus: false,
+            data: [],     
             pagination: {
                 current: 1,
                 pageSize: 15,
@@ -2876,6 +815,7 @@ class DataTable extends Component {
                 title: '跳转链接',
                 dataIndex: 'linkAddress',
                 width: '15%',
+                className: 'operating',
                 render: (text, record) => this.renderColumns(text, record, 'linkAddress'),
             },
             {
@@ -2911,9 +851,18 @@ class DataTable extends Component {
                                 okType="danger"
                                 okText="立即删除"
                                 cancelText="取消">
-                                {
-                                    <a style={{display: this.props.opObj.delete ? "inline" : "none"}}>删除</a>
-                                }
+                                <a style={{display: this.props.opObj.delete ? "inline" : "none"}}>删除</a>
+                            </Popconfirm>
+                            {/*广告下架*/}
+                            <Popconfirm 
+                                title={record.status === "上架" ? "确认下架?" : "确认上架?"}
+                                placement="topRight"
+                                onConfirm={() => this.itemBan(record.id, record.status)}
+                                onCancel=""
+                                okType="danger"
+                                okText="确认"
+                                cancelText="取消">
+                                <a>{record.status === "上架" ? "下架" : "上架"}</a>
                             </Popconfirm>
                         </div>
                     )
@@ -2928,337 +877,161 @@ class DataTable extends Component {
             <Cell value={text}/>
         );
     };
-
-    setAdd = (type, para) => {
-        if (type === "status") {
-            this.setState({
-                addStatus: para
-            })
-        }
-        if (type === "flag") {
-            this.setState({
-                addFlag: !this.state.addFlag
-            })
-        }
-    };
-
-    // 日期处理函数
-    dateHandle = (para) => {
-        const tempDate = new Date(para.replace("CST", "GMT+0800")),
-            oMonthT = (tempDate.getMonth() + 1).toString(),
-            oMonth = oMonthT.length <= 1 ? "0" + oMonthT : oMonthT,
-            oDayT = tempDate.getDate().toString(),
-            oDay = oDayT.length <= 1 ? "0" + oDayT : oDayT,
-            oYear = tempDate.getFullYear().toString(),
-            oTime = oYear + '-' + oMonth + '-' + oDay;
-        return oTime;
-    };
-
-    dateHandle02 = (para) => {
-        const add0 = (m) => {
-            return m < 10 ? '0' + m : m;
-        }
-        //shijianchuo是整数，否则要parseInt转换
-        const time = new Date(para),
-            y = time.getFullYear(),
-            m = time.getMonth()+1,
-            d = time.getDate();
-        return y + '-' + add0(m) + '-' + add0(d);
-    };
-
-    //获取本页信息
+    
+    // 获取本页信息
     getData = (keyword) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/banner/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                // 广告位置
-                type: keyword ? keyword.type : this.props.keyword.type,
-                // 广告描述
-                title: keyword ? keyword.educationName : this.props.keyword.educationName,
-                // 城市
-                cityId: keyword ? keyword.cityCode : this.props.keyword.cityCode,
-                startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
-                endTime: keyword ? keyword.endTime : this.props.keyword.endTime,
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({
-                    loading: false
-                })
-                // const json = {
-                //     result: 0,
-                //     data: {
-                //         size: 100,
-                //         list: [
-                //             {id: 1, status: 2},
-                //             {id: 2, status: 2},
-                //         ]
-                //     }
-                // };
-            },
-            success: (json) => {
-                const data = [];
-                if (json.result === 0) {
-                    if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
-                    json.data.list.forEach((item, index) => {
-                        // const fnFilter = (para) => {
-                        //     return para.id === item.id
-                        // };
-                        let tempStatus = "";
-                        if (item.status === 1) {
-                            tempStatus = "审核中"
-                        }
-                        if (item.status === 2) {
-                            tempStatus = "启用"
-                        }
-                        if (item.status === 3) {
-                            tempStatus = "审核失败"
-                        }
-                        if (item.status === 0) {
-                            tempStatus = "禁用"
-                        }
-                        // 广告位置
-                        let tempTypeName = "";
-                        // if (item.type === 1) {
-                        //     tempTypeName = "育儿资讯轮播"
-                        // }
-                        if (item.type === 3) {
-                            tempTypeName = "育儿资讯轮播"
-                        }
-                        if (item.type === 4) {
-                            tempTypeName = "首页轮播"
-                        }
-                        data.push({
-                            key: index.toString(),
-                            id: item.id,
-                            index: index + 1,
-                            sort: item.sort !== 0 ? item.sort : "",                            
-                            name: item.title,
-                            photo: item.photo,
-                            type: item.type,
-                            typeName: tempTypeName,
-                            cityName: item.cityName,
-                            cityId: item.cityId,
-                            linkAddress: item.linkAddress,
-                            createTime: item.createTime,
-                            statusCode: item.status,
-                            status: tempStatus
-                        });
-                    });
+        this.setState({loading: true});        
+        const params = {            
+            type: keyword ? keyword.type : this.props.keyword.type,// 广告位置            
+            title: keyword ? keyword.title : this.props.keyword.title,// 广告描述            
+            cityId: keyword ? keyword.cityCode : this.props.keyword.cityCode,// 城市
+            startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
+            endTime: keyword ? keyword.endTime : this.props.keyword.endTime,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize,
+        };
+        advList(params).then((json) => {
+            const data = [];
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        data: data,
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
+                    }, () => {
+                        this.getData();
                     });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    return
                 }
-            }
-        });
-    };
-
-    // 获取广告类型列表
-    getInstitutionTypeList = () => {
-        reqwest({
-            url: '/institution/getEducationTypeList',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: [
-                //         {id: 1, name: "001"}
-                //     ]
-                // };
-            },
-            success: (json) => {
-                const typeList = json.data.map((item) => {
-                    return {text: item.name, value: item.id}
+                json.data.data.list.forEach((item, index) => {                    
+                    let tempStatus = "";
+                    if (item.status === 1) {
+                        tempStatus = "审核中"
+                    }
+                    if (item.status === 2) {
+                        tempStatus = "启用"
+                    }
+                    if (item.status === 3) {
+                        tempStatus = "审核失败"
+                    }
+                    if (item.status === 0) {
+                        tempStatus = "禁用"
+                    }
+                    // 广告位置
+                    let tempTypeName = "";                    
+                    if (item.type === 3) {
+                        tempTypeName = "育儿资讯轮播"
+                    }
+                    if (item.type === 4) {
+                        tempTypeName = "首页轮播"
+                    }
+                    data.push({
+                        key: index.toString(),
+                        id: item.id,
+                        index: index + 1,
+                        sort: item.sort !== 0 ? item.sort : "",                            
+                        name: item.title,
+                        photo: item.photo,
+                        type: item.type,
+                        typeName: tempTypeName,
+                        cityName: item.cityName,
+                        cityId: item.cityId,
+                        linkAddress: item.linkAddress,
+                        createTime: item.createTime,
+                        statusCode: item.status,
+                        status: tempStatus
+                    });
                 });
-                if (json.result === 0) {
-                    this.setState({
-                        typeList: typeList
-                    })
-                }
-            }
-        });
-    };
-
-    //广告禁用
-    itemBan = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/institution/checkEducation',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                eId: id,
-                status: 0
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
                 this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("广告禁用成功");
-                    this.getData(this.props.keyword);
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
+                    loading: false,
+                    data: data,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
                     }
-                }
+                });
+            } else {
+                this.expectHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});  
+        })
+    };
+
+    // 设置排序
+    handleSort = (row) => {
+        this.setState({loading: true});
+        const data = {            
+            id: row.id,// 广告Id            
+            sort: Number(row.sort),// 排序
+        };
+        sortAdv(data).then((json) => {
+            if (json.data.result === 0) {
+                this.setState({loading: false});
+                this.getData(); //刷新数据
+            } else {
+                this.expectHandle(json.data);
+            }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
         });
     };
 
-    //广告启用
-    itemOpen = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/institution/checkEducation',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                eId: id,
-                status: 2
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("广告启用成功");
-                    this.getData(this.props.keyword);
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
-            }
-        });
-    };
-
-    //广告删除
+    // 广告删除
     itemDelete = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/banner/delete?id=' + id,
-            type: 'json',
-            method: 'delete',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("广告删除成功");
-                    this.getData(this.props.keyword);
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
+        this.setState({loading: true});
+        deleteAdv({id: id}).then((json) => {
+            if (json.data.result === 0) {
+                message.success("广告删除成功");
+                this.getData(this.props.keyword);
+            } else {
+                this.expectHandle(json.data);
             }
-        });
+        }).catch((err) => {
+            message.error("保存失败");
+            this.setState({loading: false});
+        })
     };
 
-    //表格参数变化处理
+    // 广告上架,下架
+    itemBan = (id, status) => {
+        this.setState({loading: true});
+        const data = {
+            id: id,
+            status: status === "上架" ? 3 : 2
+        };
+        putAwayAdv(data).then((json) => {
+             if (json.data.result === 0) {
+                message.success(status === "上架" ? "明星下架成功" : "明星上架成功");
+                this.getData();
+            } else {
+                this.expectHandle(json.data);
+            }
+        }).catch((err) => {
+            message.error("保存失败");
+            this.setState({loading: false});
+        })
+    };
+
+    // 异常处理
+    expectHandle = (data) => {
+        if (data.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (data.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(data.message);
+            this.setState({loading: false});
+        }
+    };
+
+    // 表格参数变化处理
     handleTableChange = (pagination, filters) => {
         const pager = {...this.state.pagination};
         pager.current = pagination.current;
@@ -3271,61 +1044,10 @@ class DataTable extends Component {
         }, () => {
             this.getData();
         });
-    };
-
-    // 设置排序
-    handleSort = (row) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/banner/updateSort',
-            type: 'json',
-            method: 'post',
-            data: {
-                // 广告Id
-                id: row.id,
-                // 排序
-                sort: Number(row.sort),
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        loading: false,
-                    });
-                    this.getData(); //刷新数据
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
-            }
-        });  
-    }
+    };    
 
     componentWillMount() {
-        this.getData();
-        // this.getInstitutionTypeList();
+        this.getData();        
     }
 
     componentWillReceiveProps(nextProps) {
@@ -3373,164 +1095,31 @@ class AdvManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
-            type: 0,
-            // 获取广告列表所需关键词
-            keyword: {
+            opObj: {},            
+            keyword: {// 获取广告列表所需关键词
                 type: null,
                 cityCode: "",
-                educationName: "",
-                // 初始化开始日期和结束日期
-                startTime: null,
+                title: "",                
+                startTime: null,// 初始化开始日期和结束日期
                 endTime: null,
             },
-            flag_add: false,
-            treeData: [],
-            // 日期禁选控制
-            startValue: null,
+            flag_add: false,            
+            startValue: null,// 日期禁选控制
             endValue: null,
-            endOpen: false,
-            // 地图控件对象
-            mapObj: {},
-            // 省市列表
-            provinceList: [],
-            // 当前城市的地区代码
-            cityCode: "",
+            endOpen: false,            
+            mapObj: {},// 地图控件对象            
+            provinceList: [],// 省市列表
         };
-        // this.treeData = [];
         this.optionsType = [
             <Option key={this.state.keyword.type} value={this.state.keyword.type}>{"全部广告位置"}</Option>,
             <Option key={3} value={3}>育儿资讯轮播 </Option>,
             <Option key={4} value={4}>首页轮播</Option>,
         ];
-        
-        this.optionsOfCity = [{value: "0", label: "全国"}];
-        this.optionsCity = [<Option key={this.state.keyword.cityCode} value={this.state.keyword.cityCode}>{"全部"}</Option>];
+        this.optionsOfCity = [{value: "0", label: "全国"}];       
     }
-
-    getData = () => {
-        this.refs.getDataCopy.getData();
-    };
-
-    // 获取广告类型列表
-    getInstitutionTypeList = () => {
-        reqwest({
-            url: '/sys/banner/list',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: [
-                //         {id: 1, name: ""},
-                //     ]
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    const data = [];
-                    json.data.list.forEach((item) => {             
-                        data.push({
-                            key: item.id,
-                            value: item.id,
-                            title: item.title,
-                        })
-                        this.optionsType.push(<Option key={item.id} value={item.id}>{item.title}</Option>)
-                    });
-                    console.log(data);
-                    this.setState({
-                        typeList: data
-                    }, () => {
-                        // this.advList();
-                    })
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
-    };
-
-    advList = () => {
-        // 广告位置选项生成
-        console.log(this.state.typeList)
-        this.state.typeList.forEach((item) => {
-            this.optionsType.push(<Option key={item.id} value={item.id}>{item.title}</Option>);
-        });
-    };
-
-    //广告位置设置
-    setType = (value) => {
-        console.log("selected:", value);
-        this.setState({
-            keyword: {
-                type: value,
-                cityCode: this.state.keyword.cityCode,
-                educationName: this.state.keyword.educationName,
-                startTime: this.state.keyword.startTime,
-                endTime: this.state.keyword.endTime,
-            }
-        })
-    };
-
-    // 城市列表 暂时不需要
-    cityList01 = () => {
-        reqwest({
-            url: './city.json',
-            type: 'json',
-            method: 'get',
-            success: (json) => {
-                // for (let item in json) {
-                //     console.log(item);
-                //     this.optionsCity.push(
-                //         // <OptGroup label={item}>
-                //             {json.item.formEach((item, index)=>{
-                //                 <Option key={item.id}>{item.name}</Option>
-                //             })}
-                //         // </OptGroup>
-                //     )
-                // }
-                Object.keys(json).map((key) => {
-                    json[key].forEach((item, index)=>{
-                        this.optionsCity.push(
-                            <Option key={item.id}>{item.name}</Option>
-                        ) 
-                    });
-                    return false;
-                });
-            }
-        });
-    }; 
-
-    //城市选择设置
-    setCity = (value) => {
-        console.log("selected:", value);
-        this.setState({
-            keyword: {
-                type: this.state.keyword.type,
-                cityCode: value[1] || value[0],
-                educationName: this.state.keyword.educationName,
-                startTime: this.state.keyword.startTime,
-                endTime: this.state.keyword.endTime,
-            }
-        })
-    };
 
     // 获取省市列表信息及当前城市地区代码
     getMapDate = () => {
-        console.log(12222)
         this.setState({
             mapObj: new window.AMap.Map('adv-mapContainer')
         }, () => {
@@ -3540,13 +1129,12 @@ class AdvManage extends Component {
                     level: 'country',
                     subdistrict: 2
                 });
-                districtSearch.search('中国', (status, result) => {
+                districtSearch.search('中国', (status, result) => {                    
                     this.setState({
                         provinceList: result.districtList[0].districtList
-                    }, () => {
-                        console.log(this.state.provinceList);
+                    }, () => {                                            
                         this.cityList();
-                    })
+                    });
                 })
             });
             // 获取当前城市地区代码
@@ -3563,22 +1151,19 @@ class AdvManage extends Component {
         })
     };
 
+    // 城市选项生成
     cityList = () => {
-        // 城市选项生成
-        console.log(this.state.provinceList)
-        this.state.provinceList.forEach((item) => {
-            let children = [];
-            if (item.districtList) {
-                item.districtList.forEach((subItem) => {
-                    children.push({value: subItem.adcode, label: subItem.name});
-                    // if (subItem.adcode === cityCode) {
-                    //     // 当前城市设为选中项
-                    //     currentCity = [item.adcode, subItem.adcode]
-                    // }
-                });
-            }
-            this.optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-        });
+        if (this.state.provinceList.length) {
+            this.state.provinceList.forEach((item) => {
+                let children = [];
+                if (item.districtList) {
+                    item.districtList.forEach((subItem) => {
+                        children.push({value: subItem.adcode, label: subItem.name});                    
+                    });
+                }
+                this.optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+            });
+        }        
     };
 
     // 获取当前登录人对此菜单的操作权限
@@ -3607,14 +1192,41 @@ class AdvManage extends Component {
         })
     };
 
-    // 名称关键词设置
+    //广告位置设置
+    setType = (value) => {
+        console.log("selected:", value);
+        this.setState({
+            keyword: {
+                type: value,
+                cityCode: this.state.keyword.cityCode,
+                educationName: this.state.keyword.educationName,
+                startTime: this.state.keyword.startTime,
+                endTime: this.state.keyword.endTime,
+            }
+        })
+    };
+
+    //城市选择设置
+    setCity = (value) => {
+        this.setState({
+            keyword: {
+                type: this.state.keyword.type,
+                cityCode: value[1] || value[0],
+                title: this.state.keyword.title,
+                startTime: this.state.keyword.startTime,
+                endTime: this.state.keyword.endTime,
+            }
+        })
+    };
+
+    // 描述关键词设置
     setName = (value) => {
         if (value !== this.state.keyword.educationName) {
             this.setState({
                 keyword: {
                     type: this.state.keyword.type,
                     cityCode: this.state.keyword.cityCode,
-                    educationName: value,
+                    title: value,
                     startTime: this.state.keyword.startTime,
                     endTime: this.state.keyword.endTime,
                 }
@@ -3627,7 +1239,9 @@ class AdvManage extends Component {
         this.setState({
             startValue: date,
             keyword: {
-                educationName: this.state.keyword.educationName,
+                type: this.state.keyword.type,
+                cityCode: this.state.keyword.cityCode,
+                title: this.state.keyword.title,
                 startTime: dateString,
                 endTime: this.state.keyword.endTime,
             }
@@ -3639,7 +1253,9 @@ class AdvManage extends Component {
         this.setState({
             endValue: date,
             keyword: {
-                educationName: this.state.keyword.educationName,
+                type: this.state.keyword.type,
+                cityCode: this.state.keyword.cityCode,
+                title: this.state.keyword.title,
                 startTime: this.state.keyword.startTime,
                 endTime: dateString,
             }
@@ -3677,13 +1293,8 @@ class AdvManage extends Component {
     };
 
     componentWillMount() {
-        // 获取广告位置列表(是写死的就两项)
-        // this.getInstitutionTypeList();
-        // this.cityList();
-        // 获取省份城市
-        this.getMapDate();
-        // 获取权限
-        this.setPower();
+        this.getMapDate();// 获取省份城市        
+        this.setPower();// 获取权限
         if (this.props.location.search) {
             this.props.history.push(this.props.location.pathname)
         }
@@ -3695,55 +1306,8 @@ class AdvManage extends Component {
             this.setFlag();
         }
     }
-    // 省份数据处理
-    handleTree = (data) => {
-        const tempResult = [];
-        const result = [];
-        
-        let data01 = data.provinceList;
-        let cityLists = data.cityList;
-        data01.forEach((item) => {
-            const temp = {
-                title: item.name,
-                key: item.id, 
-                id: item.id,             
-            };
-            tempResult.push(temp)
-        });
-        tempResult.forEach((item) => {
-            const fnFilter02 = (para) => {
-                return para.provinceId === item.id
-            };
-            let data02 = cityLists.filter(fnFilter02);
-            if (data02.length) {
-                item.children = [];
-                data02.forEach((subItem) => {
-                    const temp = {
-                        key: subItem.id,
-                        title: subItem.name,
-                        id: subItem.id,
-                    };
-                    item.children.push(temp)                
-                });
-                result.push(item)
-            }
-        });
-        console.log(result);
-        return result;
-    };
 
-    renderTreeNodes = data => data.map((item) => {
-        if (item.children) {
-          return (
-            <TreeNode title={item.title} key={item.key} dataRef={item}>
-              {this.renderTreeNodes(item.children)}
-            </TreeNode>
-          );
-        }
-        return <TreeNode {...item} />;
-    });
-
-    render() {
+    render() {       
         return (
             <div className="institutions">
                 {
@@ -3751,8 +1315,7 @@ class AdvManage extends Component {
                         <div>
                             <header className="clearfix">
                                 {/*广告位置筛选*/}
-                                <Select 
-                                    // defaultValue="全部广告位置"
+                                <Select
                                     style={{
                                         width: "150px",
                                         float: "left",
@@ -3769,36 +1332,26 @@ class AdvManage extends Component {
                                     onChange={this.setCity} 
                                     style={{width: "150px", float: "left", marginRight: "20px"}} 
                                     placeholder="请选择所属城市"
-                                    allowClear/>
-                                {/*<Select defaultValue="全部展示城市"
-                                        style={{
-                                            width: "150px",
-                                            float: "left",
-                                            marginRight: "20px"
-                                        }}
-                                        onChange={this.setCity}>
-                                    {this.optionsCity}
-                                </Select>*/}
+                                    allowClear/>                                
                                 {/*广告名称筛选*/}
                                 <Search
                                     placeholder="请输入描述信息"
                                     onSearch={this.setName}
                                     enterButton
-                                    style={{width: "240px", float: "left", marginRight: "20px"}}
-                                />
+                                    style={{width: "240px", float: "left", marginRight: "20px"}}/>
                                 {/*广告创建日期筛选*/}
                                 <span>日期筛选： </span>
-                                <DatePicker placeholder="请选择开始日期"
-                                            style={{width: "150px"}}
-                                            disabledDate={this.disabledStartDate}
-                                            onChange={this.setStartTime}
-                                            />
+                                <DatePicker 
+                                    placeholder="请选择开始日期"
+                                    style={{width: "150px"}}
+                                    disabledDate={this.disabledStartDate}
+                                    onChange={this.setStartTime}/>
                                 <span style={{margin: "0 10px"}}>至</span>
-                                <DatePicker placeholder="请选择结束日期"
-                                            style={{width: "150px"}}
-                                            disabledDate={this.disabledEndDate}
-                                            onChange={this.setEndTime}
-                                            />
+                                <DatePicker 
+                                    placeholder="请选择结束日期"
+                                    style={{width: "150px"}}
+                                    disabledDate={this.disabledEndDate}
+                                    onChange={this.setEndTime}/>
                                 {/*广告添加*/}
                                 <div className="add-button" style={{float: "right"}}>
                                     <ItemAdd 
@@ -3813,14 +1366,14 @@ class AdvManage extends Component {
                             {/*广告列表*/}
                             <div className="table-box">
                                 <DataTable 
-                                        ref="getDataCopy"
-                                        opObj={this.state.opObj}
-                                        provinceList={this.state.provinceList}
-                                        optionsType={this.optionsType}
-                                        typeList={this.state.typeList}
-                                        keyword={this.state.keyword}
-                                        flag_add={this.state.flag_add}
-                                        toLoginPage={this.toLoginPage}/>
+                                    ref="getDataCopy"
+                                    opObj={this.state.opObj}
+                                    provinceList={this.state.provinceList}
+                                    optionsType={this.optionsType}
+                                    typeList={this.state.typeList}
+                                    keyword={this.state.keyword}
+                                    flag_add={this.state.flag_add}
+                                    toLoginPage={this.toLoginPage}/>
                             </div>
                             {/*地图组件容器*/}
                             <div id="adv-mapContainer"/>                              

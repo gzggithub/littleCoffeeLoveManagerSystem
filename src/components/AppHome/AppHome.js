@@ -6,14 +6,13 @@ import {
 } from 'react-router-dom';
 import Category from './Category';
 import AdvManage from './AdvManage';
-import TeacherCertification from './TeacherCertification';
-import QualityCourse from './QualityCourse';
-import AdvPositionManage from './AdvPositionManage';
-import Banner from './Banner';
-import CrowdFunding from './CrowdFunding';
-import RecommendCourses from './RecommendCourses';
-import VideoCourses from './VideoCourses';
-import RecommendInstitutions from './RecommendInstitutuions';
+import StarManage from './StarManage';
+import NotificationManage from './NotificationManage';
+import SignList from './SignList';
+import StarCheck from './StarCheck';
+import CoffeeCircle from './CoffeeCircle';
+import EvaluationManage from './EvaluationManage';
+
 import {Layout, Menu} from 'antd';
 
 const {SubMenu} = Menu;
@@ -27,21 +26,21 @@ class AppHome extends Component {
             // 二级菜单组件列表
             menuList: [],
             // 二级菜单组件列表
-            menuList02: [],
+            // menuList02: [],
             // 二级菜单组件列表
-            menuList03: [],
+            // menuList03: [],
             // 高亮项索引
             highlight: "",
             openKeys: ['sub1'],
         };
         // 二级菜单列表
         this.menu = [];
-        this.menu02 = [];
-        this.menu03 = [];  
+        // this.menu02 = [];
+        // this.menu03 = [];  
     }
 
-    // 二级菜单组件列表生成
-    menuHandle = () => {
+    // 二级菜单组件列表生成 (暂时不用)
+    menuHandle02 = () => {
         let tempSubMenu = [];
         // 获取当前页面一级菜单下属二级菜单列表
         JSON.parse(sessionStorage.menuListOne).forEach((item) => {
@@ -72,7 +71,8 @@ class AppHome extends Component {
         });
         // 二级菜单组件列表写入
         this.setState({
-            menuList03: tempSubMenu
+            menuList: tempSubMenu
+            // menuList03: tempSubMenu
         });
         // 路由中缺失二级菜单信息时默认跳转至当前一级菜单下属第一项二级菜单并标为高亮
         if (this.props.location.pathname === "/index/app-home") {
@@ -88,6 +88,38 @@ class AppHome extends Component {
                     })                
                 }
             });
+        }
+    };
+
+    menuHandle = () => {
+        const tempMenuList = [];
+        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
+            if (item.url === "/index/app-home") {
+                this.menu = item.children;
+            }
+        });
+        this.menu.forEach((item, index) => {
+            if (item.url === this.props.location.pathname) {
+                this.setState({
+                    highlight: (index + 1).toString()
+                })
+            }
+            tempMenuList.push(
+                <Menu.Item key={index + 1} style={{textAlign: "center"}}>
+                    <Link to={item.url}>
+                        {item.name}
+                    </Link>
+                </Menu.Item>
+            )
+        });
+        this.setState({
+            menuList: tempMenuList
+        });
+        if (this.props.location.pathname === "/index/app-home") {
+            this.setState({
+                highlight: "1"
+            });
+            this.props.history.push(this.menu[0].url);
         }
     };
 
@@ -144,7 +176,7 @@ class AppHome extends Component {
             <Router>
                 <div className="app-home">
                     <Layout>
-                        <Sider width={200} style={{background: '#fff'}}>
+                        <Sider width={200} style={{background: '#fff', position: "fixed", top: "64px", left: "0",minHeight: 600}}>
                             <Menu
                                 mode="inline"
                                 openKeys={this.state.openKeys}
@@ -153,34 +185,57 @@ class AppHome extends Component {
                                 style={{height: '100%', borderRight: 0}}
                                 onClick={this.setHighlight}>
                                 {/*二级菜单栏*/}
-                                {this.state.menuList03}
-                                {/*<SubMenu key={"sub" + (3)} title={<span>名师入驻</span>}>
-                                    <Menu.Item key={8} style={{textAlign: "center"}}>
-                                        <Link to="/index/app-home/teacher-certification">
-                                            名师认证
+                                {/*this.state.menuList03*/}
+                                <SubMenu key={"sub" + (1)} title={<span>小咖爱</span>}>
+                                    <Menu.Item key={1} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/category">
+                                            分类管理
                                         </Link>
                                     </Menu.Item>
-                                    <Menu.Item key={9} style={{textAlign: "center"}}>
-                                        <Link to="/index/app-home/quality-course">
-                                            精品课程
+                                    <Menu.Item key={2} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/adv-manage">
+                                            广告管理
                                         </Link>
                                     </Menu.Item>
-                                </SubMenu>*/}
+                                    <Menu.Item key={3} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/star-manage">
+                                            明星管理
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item key={4} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/notification-manage">
+                                            通告管理
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item key={5} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/star-check">
+                                            明星审核
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item key={6} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/coffee-circle">
+                                            小咖圈管理
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item key={7} style={{textAlign: "center"}}>
+                                        <Link to="/index/app-home/evaluatioin-manage">
+                                            评论管理
+                                        </Link>
+                                    </Menu.Item>                                    
+                                </SubMenu>
                             </Menu>
                         </Sider>
                         {/*二级菜单路由组件映射表*/}
                         <Layout style={{padding: '24px'}}>
-                            <Content style={{background: '#fff', padding: "24px 24px 0", margin: 0, minHeight: 406}}>
+                            <Content style={{background: '#fff', padding: "24px 24px 0", margin: "0 0 0 200px", minHeight: 406}}>
                                 <Route path="/index/app-home/category" component={Category}/>
                                 <Route path="/index/app-home/adv-manage" component={AdvManage}/>
-                                <Route path="/index/app-home/teacher-certification" component={TeacherCertification}/>
-                                <Route path="/index/app-home/quality-course" component={QualityCourse}/>
-                                <Route path="/index/app-home/banner" component={Banner}/>
-                                <Route path="/index/app-home/crowdFunding" component={CrowdFunding}/>
-                                <Route path="/index/app-home/adv-position-manage" component={AdvPositionManage}/>
-                                <Route path="/index/app-home/recommend-courses" component={RecommendCourses}/>
-                                <Route path="/index/app-home/video-courses" component={VideoCourses}/>
-                                <Route path="/index/app-home/recommend-institutions" component={RecommendInstitutions}/>
+                                <Route path="/index/app-home/star-manage" component={StarManage}/>
+                                <Route path="/index/app-home/notification-manage" component={NotificationManage}/>
+                                <Route path="/index/app-home/sign-list/:id/:name" component={SignList}/>
+                                <Route path="/index/app-home/star-check" component={StarCheck}/>
+                                <Route path="/index/app-home/coffee-circle" component={CoffeeCircle}/>
+                                <Route path="/index/app-home/evaluatioin-manage" component={EvaluationManage}/>                                
                             </Content>
                         </Layout>
                     </Layout>

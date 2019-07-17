@@ -92,21 +92,35 @@ class BackUserManage extends Component {
             <Router>
                 <div className="backUser-manage">
                     <Layout>
-                        <Sider width={200} style={{background: '#fff'}}>
+                        <Sider width={200} style={{background: '#fff',position: "fixed", top: "64px", left: "0", minHeight: 600}}>
                             <Menu
                                 mode="inline"
                                 selectedKeys={[this.state.highlight]}
                                 defaultOpenKeys={['sub1']}
                                 style={{height: '100%', borderRight: 0}}
-                                onClick={this.setHighlight}
-                            >
+                                onClick={this.setHighlight}>
                                 <SubMenu key="sub1" title={<span>帐号管理</span>}>
-                                    {this.state.menuList}
+                                    {/*this.state.menuList*/}
+                                    <Menu.Item key={1} style={{textAlign: "center"}}>
+                                        <Link to="/index/backUser-manage/backUsers">
+                                            所有账号
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item key={2} style={{textAlign: "center"}}>
+                                        <Link to="/index/backUser-manage/Roles">
+                                            角色管理
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item key={3} style={{textAlign: "center"}}>
+                                        <Link to="/index/backUser-manage/Department">
+                                            部门管理
+                                        </Link>
+                                    </Menu.Item>
                                 </SubMenu>
                             </Menu>
                         </Sider>
                         <Layout style={{padding: '24px'}}>
-                            <Content style={{background: '#fff', padding: "24px 24px 0", margin: 0, minHeight: 406}}>
+                            <Content style={{background: '#fff', padding: "24px 24px 0", margin: "0 0 0 200px", minHeight: 406}}>
                                 <Route path="/index/backUser-manage/backUsers" component={BackUsers}/>
                                 <Route path="/index/backUser-manage/Roles" component={Roles}/>
                                 <Route path="/index/backUser-manage/Department" component={Department}/>

@@ -1,5 +1,8 @@
 @import '~antd/dist/antd.css';
+@import './static/css/AppHome/StarManage.css';
+@import './static/css/AppHome/SignList.css';
 @import './static/css/CheckManage/QualityCourseCheck.css';
+
 
 ul, li, ol, dl, dt, dd {
     list-style: none;

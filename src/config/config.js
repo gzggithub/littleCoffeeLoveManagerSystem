@@ -1,7 +1,10 @@
 // 第一种方式
-// export const  config = {
-//     baseUrl: 'http://sixsix.taoerxue.com.cn:0000'
-// }
+export const config = {
+    // 正式服务器图片地址
+    // photoUrl: 'https://image.taoerxue.com/'
+    // 测试服务器图片地址
+    photoUrl: 'http://image.taoerxue.cn/'
+}
 
 // 第二种方式
 global.config = {
@@ -13,7 +16,7 @@ global.config = {
 
 /* 公共的方法................................................................. */
 // 日期处理函数
-export function timeHandle (para) {
+export const timeHandle = (para)  => {
     const tempDate = new Date(para.replace("CST", "GMT+0800")),
         oMonthT = (tempDate.getMonth() + 1).toString(),
         oMonth = oMonthT.length <= 1 ? "0" + oMonthT : oMonthT,
@@ -29,7 +32,7 @@ export function timeHandle (para) {
 };
 
 // 时间日期处理
-export function dateHandle02 (para) {
+export const dateHandle02 = (para) => {
     const add0 = (m) => {
         return m < 10 ? '0' + m : m;
     }
@@ -50,7 +53,7 @@ function formatNumber (n) {
     return str[1] ? str : `0${str}`
 }
 
-export function formatTime (date) {
+export const formatTime = (date) => {
     const year = date.getFullYear()
     const month = date.getMonth() + 1
     const day = date.getDate()
@@ -66,13 +69,31 @@ export function formatTime (date) {
 }
 
 // 去除富文本的标签只获得文本内容
-export function removeTAG (str, len) {
+export const removeTAG = (str) => {
     let fn_result = str;
     fn_result = fn_result.replace(/(↵)/g, "");
     fn_result = fn_result.replace(/(&nbsp;)/g, "");
     fn_result = fn_result.replace("<html><head><title></title></head><body>", "");
     fn_result = fn_result.replace("</body></html>", "");
     return fn_result;
+};
+
+export const expectHandle = (code, message) => {
+    if (code === 901) {
+        message.error("请先登录");                        
+        toLoginPage();// 返回登陆页
+    } else if (code === 902) {
+        message.error("登录信息已过期，请重新登录");                        
+        toLoginPage();// 返回登陆页
+    } else {
+        message.error(message);
+        this.setState({loading: false});
+    }
+}
+
+function toLoginPage () {
+    sessionStorage.clear();
+    this.props.history.push('/')
 };
 
 export default {

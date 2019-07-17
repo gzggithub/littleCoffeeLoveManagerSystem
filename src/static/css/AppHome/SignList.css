@@ -1,0 +1,32 @@
+.sign-list-download .ant-modal-content .ant-modal-body {
+    min-height: 80px;
+    line-height: 80px;
+    text-align: center;
+}
+
+
+.sign-link-address div {
+    font-size: 20px;
+}
+
+.sign-link-address p {
+    font-size: 14px;
+    margin: 0;
+}
+
+.sign-list-download .ant-modal-content .ant-modal-footer {
+    text-align: center !important;
+}
+
+.sign-list-download .ant-modal-content .ant-modal-footer button:first-child {
+    width: 150px;
+    background: #FF9900;
+    border: none;
+}
+
+.sign-list-download .ant-modal-content .ant-modal-footer button:last-child {
+    width: 150px;
+    background: #C9C9C9;
+    border: none;
+    color: #fff;
+}
