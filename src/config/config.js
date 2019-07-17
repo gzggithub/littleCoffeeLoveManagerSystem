@@ -1,16 +1,10 @@
 // 第一种方式
-export const config = {
-    // 正式服务器图片地址
-    // photoUrl: 'https://image.taoerxue.com/'
-    // 测试服务器图片地址
+export const config = {    
     photoUrl: 'http://image.taoerxue.cn/'
 }
 
 // 第二种方式
-global.config = {
-    // 正式服务器图片地址
-    // photoUrl: 'https://image.taoerxue.com/'
-    // 测试服务器图片地址
+global.config = {    
     photoUrl: 'http://image.taoerxue.cn/'
 }
 
@@ -32,7 +26,7 @@ export const timeHandle = (para)  => {
 };
 
 // 时间日期处理
-export const dateHandle02 = (para) => {
+export function dateHandle02 (para) {
     const add0 = (m) => {
         return m < 10 ? '0' + m : m;
     }
@@ -53,7 +47,7 @@ function formatNumber (n) {
     return str[1] ? str : `0${str}`
 }
 
-export const formatTime = (date) => {
+export function formatTime (date) {
     const year = date.getFullYear()
     const month = date.getMonth() + 1
     const day = date.getDate()
@@ -69,7 +63,7 @@ export const formatTime = (date) => {
 }
 
 // 去除富文本的标签只获得文本内容
-export const removeTAG = (str) => {
+export function removeTag (str) {
     let fn_result = str;
     fn_result = fn_result.replace(/(↵)/g, "");
     fn_result = fn_result.replace(/(&nbsp;)/g, "");
@@ -78,7 +72,7 @@ export const removeTAG = (str) => {
     return fn_result;
 };
 
-export const expectHandle = (code, message) => {
+export function expectHandle (code, message) {
     if (code === 901) {
         message.error("请先登录");                        
         toLoginPage();// 返回登陆页
@@ -101,5 +95,5 @@ export default {
     dateHandle02,
     formatNumber,
     formatTime,
-    removeTAG
+    removeTag
 }

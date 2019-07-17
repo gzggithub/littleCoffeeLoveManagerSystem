@@ -19,9 +19,7 @@ import {
 } from 'antd';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
-import '../../config/config';
-import { configUrl, getToken, starList, saveStar, getStarDetail, updateStar, sortStar, putAwayStar, starTypeList } from '../../config';
-import reqwest from 'reqwest';
+import { configUrl, getToken, starList, saveStar, getStarDetail, updateStar, sortStar, putAwayStar, starTypeList, getStarList } from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -123,28 +121,35 @@ class EditableCell extends Component {
 // 新增、复制明星表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, handleSearch, allAuthorList, form, data, reqwestUploadToken, viewPic, picUpload, photoLoading, picUpload02, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, subjectList, feeType, setFeeType, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03 ,picUpload02, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        // 分类选项生成
-        const optionsOfSubject = [];
-        let currentSubject = [];
-        subjectList.forEach((item) => {
-            let children = [];
-            if (item.list) {
-                item.list.forEach((subItem) => {
-                    children.push({value: subItem.id, label: subItem.name});
-                    if (subItem.id === data.typeId) {// 当前分类设为选中项                        
-                        currentSubject = [item.id, subItem.id]
-                    }
-                });
-            }
-            optionsOfSubject.push({value: item.id, label: item.name, children: children});
-        });
+        // 城市选项生成
+        const optionsOfCity = [{value: "0", label: "全国"}];
+        let currentArea = [];
+        if (provinceList.length) {
+            provinceList.forEach((item) => {
+                let children = [];
+                if (item.districtList) {
+                    item.districtList.forEach((subItem) => {
+                        let subChildren = [];
+                        if (subItem.districtList) {
+                            subItem.districtList.forEach((thirdItem) => {
+                                subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
+                                if (Number(thirdItem.adcode) === data.areaId) {                          
+                                    currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];// 当前城市设为选中项
+                                }
+                            });
+                        }
+                        children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
+                    });
+                }
+                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+            });
+        }
 
         // 图片处理
         const beforeUpload = (file) => {
-            console.log("file--1212121")
             const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
             if (!isIMG) {
                 message.error('文件类型错误');
@@ -156,6 +161,8 @@ const ItemAddForm = Form.create()(
             reqwestUploadToken(file);
             return isIMG && isLt2M;
         };
+
+        // Avatar 头像
         const picHandleChange = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 picUpload(info.file);
@@ -164,9 +171,23 @@ const ItemAddForm = Form.create()(
         const uploadButton = (
             <div>
                 <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择头像</div>
             </div>
-        );        
+        );
+
+        //  生活照
+        const picHandleChange03 = (info) => {
+            setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
+                picUpload03(info.file);
+            }, 500);
+        };
+        const uploadButton03 = (
+            <div>
+                <Icon type={photoLoading03 ? 'loading' : 'plus'}/>
+                <div className="ant-upload-text" style={{display: photoLoading03 ? "none" : "block"}}>选择图片</div>
+            </div>
+        );
+        
 
         // 视频上传 处理
         const beforeUpload02 = (file) => {           
@@ -180,7 +201,7 @@ const ItemAddForm = Form.create()(
         const uploadButton02 = (
             <div>
                 <Icon style={{fontSize: "50px"}} type={videoLoading ? 'loading' : 'video-camera'}/>
-                <div className="ant-upload-text" style={{display: videoLoading ? "none" : "block"}}>添加课时</div>
+                <div className="ant-upload-text" style={{display: videoLoading ? "none" : "block"}}>添加视频</div>
             </div>
         );
 
@@ -192,7 +213,7 @@ const ItemAddForm = Form.create()(
                 tempVideoList.push(
                     <Col span={8} key={index+1}>
                         <div className="videoCol">
-                            <div className="chapter">第{item.sort || (videoList.length - index)}节</div>
+                            <div className="chapter">序号{item.sort || (videoList.length - index)}</div>
                             <div className="videoSize">{item.videoSize} M</div>
                             <video src={item.video} id="video" controls="controls" width="100%"></video>
                             <input className="videoCourseName" disabled={item.readOnly} onChange={(e) => onChangeCourseName(e.target.value, index)} defaultValue={item.name} placeholder="请输入明星名称"/>                       
@@ -211,54 +232,103 @@ const ItemAddForm = Form.create()(
                     </Col>)
             })
         }
-
-        // 作者选项生成
-        const optionsOfAllAuthorList = [];
-        if (allAuthorList.length) {
-            allAuthorList.forEach((item, index) => {                
-                optionsOfAllAuthorList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-            });
-        }
         
         return (
             <Modal
                 visible={visible}
-                title="添加明星"
+                title="添加"
                 width={1000}
                 onCancel={onCancel}
                 footer={[
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
-                destroyOnClose={true}
-            >
-                <div className="course-add course-form item-form quality-course-form">
+                destroyOnClose={true}>
+                <div className="course-add course-form item-form quality-course-form star-manage-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="courseName"  label="明星名称：">
+                                <FormItem className="courseName"  label="姓名：">
                                     {getFieldDecorator('courseName', {
                                         initialValue: data.name,                                      
                                         rules: [{
                                             required: true,
-                                            message: '明星名称不能为空',
+                                            message: '姓名不能为空',
                                         }],
                                     })(
-                                        <Input placeholder="请输入明星名称"/>
+                                        <Input placeholder="请输入姓名"/>
                                     )}
-                                </FormItem>                                
+                                </FormItem>
                             </Col>
-                            <Col span={8}>                                
-                                <FormItem className="typeId" label="所属分类：">
-                                    {getFieldDecorator('typeIds', {
-                                        initialValue: currentSubject,
+                            <Col span={8}>
+                                <FormItem className="gender"  label="性别：">
+                                    {getFieldDecorator('gender', {
+                                        initialValue: data.gender,                                      
                                         rules: [{
                                             required: true,
-                                            message: '所属分类不能为空',
+                                            message: '性别不能为空',
                                         }],
                                     })(
-                                        <Cascader options={optionsOfSubject} placeholder="请选择所属分类"/>                                        
+                                        <Select placeholder="请选择性别">
+                                            <Option value={0}>女</Option>
+                                            <Option value={1}>男</Option>
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="height"  label="身高：">
+                                    {getFieldDecorator('height', {
+                                        initialValue: data.height,
+                                        rules: [{
+                                            required: true,
+                                            message: '身高不能为空',
+                                        }],
+                                    })(
+                                        <InputNumber style={{width: "100%"}} placeholder="请填写身高"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="weight"  label="体重：">
+                                    {getFieldDecorator('weight', {
+                                        initialValue: data.weight,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '体重不能为空',
+                                        }],
+                                    })(
+                                        <InputNumber style={{width: "100%"}} placeholder="请填写体重"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="area"  label="所在地区：">
+                                    {getFieldDecorator('area', {
+                                        initialValue: data.areaId === 0 ? ["0"] : currentArea,
+                                        rules: [{
+                                            required: true,
+                                            message: '所在地区不能为空',
+                                        }],
+                                    })(
+                                        <Cascader options={optionsOfCity} placeholder="请选择所在地区"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="telephone"  label="联系方式：">
+                                    {getFieldDecorator('telephone', {
+                                        initialValue: data.telephone,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '联系方式不能为空',
+                                        }],
+                                    })(
+                                        <Input placeholder="请输入联系方式"/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -266,12 +336,12 @@ const ItemAddForm = Form.create()(
                         <div className="ant-line"></div>
                         <Row gutter={24}>
                             <Col span={24}>
-                                <FormItem className="certification"  label="明星图片：">
-                                    {getFieldDecorator('photo', {
+                                <FormItem className="avatar"  label="头像：">
+                                    {getFieldDecorator('avatar', {
                                         initialValue: viewPic,
                                         rules: [{
                                             required: true,
-                                            message: '明星图片不能为空',
+                                            message: '头像不能为空',
                                         }],
                                     })(
                                         <Upload
@@ -281,181 +351,56 @@ const ItemAddForm = Form.create()(
                                             accept="image/*"
                                             showUploadList={false}
                                             beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}
-                                        >
+                                            customRequest={picHandleChange}>
                                             {viewPic ? <img src={viewPic} alt=""/> : uploadButton}
                                         </Upload>                                        
                                     )}
-                                </FormItem> 
-                            </Col>
-                        </Row>
-                        <div className="ant-line"></div>
-                        <Row gutter={24}>
-                            <Col span={8}>
-                                <FormItem className="author"  label="作者：">
-                                    {getFieldDecorator('teacherId', {
-                                        initialValue: data.teacherId,
-                                        rules: [{
-                                            required: true,
-                                            message: '作者不能为空',
-                                        }],
-                                    })(                                        
-                                        <Select
-                                            showSearch
-                                            allowClear
-                                            style={{width: '100%'}}
-                                            placeholder="请选择"
-                                            onSearch={handleSearch}                                            
-                                            filterOption={false}
-                                            notFoundContent={null}>
-                                            {optionsOfAllAuthorList}
-                                        </Select>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="明星原价：">
-                                    {getFieldDecorator('originalPrice', {
-                                        initialValue: data.originalPrice,
-                                        rules: [{
-                                            required: true,
-                                            message: '明星原价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={2} step={100} style={{width: "100%"}} placeholder="请输入价格，支持两位小数"/>
-                                    )}
                                 </FormItem>
                             </Col>
-                            <Col span={8}>
-                                <FormItem className="price"  label="明星现价：">
-                                    {getFieldDecorator('price', {
-                                        initialValue: data.price,
-                                        rules: [{
-                                            required: true,
-                                            message: '明星现价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={2} step={100} style={{width: "100%"}} placeholder="请输入价格，支持两位小数"/>
-                                    )}
-                                </FormItem>
-                            </Col>
-                        </Row>
-                        <div className="ant-line"></div>
-                        <Row gutter={24}>
-                            <Col span={6}>
-                                <FormItem className="name" label="付费设置：">
-                                    {getFieldDecorator('isFree', {
-                                        initialValue: data.isCharge ? 1 : 2,
-                                        rules: [{
-                                            required: true,
-                                            message: '付费不能为空',
-                                        }],
-                                    })(
-                                        <RadioGroup buttonStyle="solid" onChange={(e) => {setFeeType(e.target.value)}}>
-                                            <Radio.Button value={1} style={{marginRight: "20px", borderRadius: "4px"}}>收费</Radio.Button>
-                                            <Radio.Button value={2} style={{marginRight: "20px", borderRadius: "4px"}}>免费</Radio.Button>
-                                        </RadioGroup>                                       
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="chapterChoose chapterChooseAdd" label="">
-                                    从 {getFieldDecorator('chargeJointCount', {
-                                        initialValue: data.isCharge ? data.chargeJointCount : '',
-                                        rules: [{
-                                            required: feeType === 1,
-                                            message: '章节不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={0} step={1} style={{width: "40%"}} placeholder="请输入正整数" />
-                                    )} 节开始收费
-                                </FormItem>
-                            </Col>
-                            <Col span={2}></Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="服务费：">
-                                    {getFieldDecorator('fee', {
-                                        initialValue: data.fee,
-                                        rules: [{
-                                            required: true,
-                                            message: '服务费不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={2} step={0.01} style={{width: "100%"}} placeholder="输入0.15即为服务费15%"/>
-                                    )}
-                                </FormItem>
-                            </Col>
-                            <div className="ant-line"></div>
-                        </Row>
+                        </Row>                        
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">明星详情</h4>
-                        <FormItem className="characteristic" label="明星简介：">
-                            {getFieldDecorator('characteristic', {
-                                initialValue: data.characteristic,
+                        <FormItem className="personalProfile" label="明星简介：">
+                            {getFieldDecorator('personalProfile', {
+                                initialValue: data.personalProfile,
                                 rules: [{
-                                    required: false,
-                                    message: '不能为空',
+                                    required: true,
+                                    message: '简介不能为空',
                                 }],
                             })(
-                                <TextArea 
-                                    className="ckeditor"
+                                <TextArea                                     
                                     style={{resize: "none"}}                                    
                                     placeholder="请填写明星简介"
-                                    autosize={{minRows: 5, maxRows: 10}}/>                                
-                            )}
-                        </FormItem>                        
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">购买须知</h4>
-                        <FormItem className="tips longItem" label="购买说明：">
-                            {getFieldDecorator('tips', {
-                                initialValue: data.tips,
-                                rules: [{
-                                    required: true,
-                                    message: '购买须知不能为空',
-                                }],
-                            })(
-                                <TextArea 
-                                    style={{resize: "none"}} 
-                                    placeholder="请填写明星购买须知"
-                                    autosize={{minRows: 5, maxRows: 10}}/>
+                                    autosize={{minRows: 5, maxRows: 30}}/>                                
                             )}
                         </FormItem>
                         <div className="ant-line"></div>
-                        <FormItem className="warmPrompt longItem" label="温馨提示：">
-                            {getFieldDecorator('warmPrompt', {
+                        <h4 className="add-form-title-h4">生活照</h4>
+                        <FormItem className="photo"  label="">
+                            {getFieldDecorator('photo', {
+                                initialValue: viewPic03,
                                 rules: [{
-                                    required: true,
-                                    message: '温馨提示不能为空',
+                                    required: false,
+                                    message: '明星图片不能为空',
                                 }],
-                                initialValue: data.warmPrompt || "如需要发票，请您在上课前向机构咨询",
                             })(
-                                <TextArea 
-                                    style={{resize: "none"}} 
-                                    placeholder="如需要发票，请您在上课前向机构咨询"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
+                                <Upload
+                                    name="file"
+                                    listType="picture-card"                                    
+                                    accept="image/*"
+                                    showUploadList={false}
+                                    beforeUpload={beforeUpload}
+                                    customRequest={picHandleChange03}>
+                                    {viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}
+                                </Upload>                                        
                             )}
-                        </FormItem>
+                        </FormItem> 
                         <div className="ant-line"></div>
-                        <FormItem className="official longItem" label="官方说明：">
-                            {getFieldDecorator('official', {
-                                rules: [{
-                                    required: true,
-                                    message: '官方说明不能为空',
-                                }],
-                                initialValue: data.official || "为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                            })(
-                                <TextArea 
-                                    style={{resize: "none"}} 
-                                    placeholder="为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">课时安排</h4>
+                        <h4 className="add-form-title-h4">视频作品</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="certification"  label="">
-                                    {getFieldDecorator('photo', {
+                                <FormItem className="'video"  label="">
+                                    {getFieldDecorator('video', {
                                         initialValue: viewVideo,
                                         rules: [{
                                             required: false,
@@ -469,8 +414,7 @@ const ItemAddForm = Form.create()(
                                             showUploadList={false}
                                             accept="video/*"
                                             beforeUpload={beforeUpload02}
-                                            customRequest={picHandleChange02}
-                                        >
+                                            customRequest={picHandleChange02}>
                                             {uploadButton02}
                                         </Upload>                                        
                                     )}
@@ -498,68 +442,21 @@ class ItemAdd extends Component {
             uploadToken: "",// 获取上传图片token
             viewPic: "",
             photoLoading: false,
+            viewPic03: "",
+            photoLoading03: false,
             // 视频上传
             viewVideo: "",
             videoList: [],
             videoLoading: false,
-            // 科目列表
-            subjectList: [],
-            // 明星项列表
-            lessonList: [],
-            // 作者
-            allAuthorList: [],
-            // 付费设置状态
-            feeType: null,
             // 提交按钮状态变量
-            loading: false,
-            readOnly: true,       
+            loading: false,       
         };
-        this.editor = ""
     }
 
-    // 根据输入作者名字模糊查找作者列表
-    handleSearch = (value) => {
-        reqwest({
-            url: '/sys/excellentCourse/getTeacher',
-            type: 'json',
-            method: 'get',
-            data: {
-                searchKey: value,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    if (json.data.length) {
-                        this.setState({
-                            allAuthorList: json.data
-                        });
-                    }
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
-    };
-
     // 获取明星基本信息
-    getData = () => {       
+    getData = () => {
         getStarDetail({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
-                // 已有所属分类写入                    
-                json.data.data.typeId = json.data.data.excellentCourseType.typeId;                
-                // 富文本数据写入
-                this.editor.setData(json.data.data.characteristic);
                 // 信息写入
                 this.setState({
                     data: json.data.data,
@@ -575,34 +472,13 @@ class ItemAdd extends Component {
         });
     };
 
-    // 获取科目列表
-    getSubjectList = () => {
-        starTypeList().then((json) => {
-            if (json.data.result === 0) {                    
-                this.setState({
-                    subjectList: json.data.data
-                });
-            } else {
-                this.exceptHandle(json.data);
-            }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
-    };
-
     showModal = (props, event) => {
-        this.getSubjectList();
-        this.handleSearch();
         if (props === 1) {// 复制明星            
             this.getData();
         } else if (props === 2) {                       
             this.setState({data: {}});
         }        
-        this.setState({visible: true});      
-        setTimeout(()=> {
-           this.editor = window.CKEDITOR.replace(document.getElementById('characteristic'));
-        });
+        this.setState({visible: true}); 
     };
 
     // 倒计时
@@ -625,41 +501,29 @@ class ItemAdd extends Component {
         }, secondsToGo * 1000);
     };
 
-    // 明星类型设置
-    setFeeType = (value) => {
-        this.setState({
-            feeType: value
-        });
-    };
-
     // 图片处理    
-    reqwestUploadToken = (file) => { // 请求上传凭证，需要后端提供接口
+    reqwestUploadToken = () => { // 请求上传凭证，需要后端提供接口
         getToken().then((json) => {
             if (json.data.result === 0) {
                     this.setState({
                         uploadToken: json.data.data,
                     })
                 } else {
-                    this.exceptHandle(json.data);
+                    this.props.exceptHandle(json.data);
                 }
         }).catch((err) => {
             message.error("发送失败");
         });
     };
-    
-    // 图片上传
+
+    // 头像上传
     picUpload = (para) => {
         const _this = this;
-        this.setState({
-            photoLoading: true,
-        });
-
+        this.setState({photoLoading: true});
         const file = para;
         const key = UUID.create().toString().replace(/-/g, "");
         const token = this.state.uploadToken;
-        const config = {
-            region: qiniu.region.z0
-        };
+        const config = {region: qiniu.region.z0};
         const observer = {
             next (res) {console.log(res)},
             error (err) {
@@ -679,7 +543,35 @@ class ItemAdd extends Component {
         const observable = qiniu.upload(file, key, token, config);
         observable.subscribe(observer); // 上传开始        
     };
-    
+
+    // 图片上传
+    picUpload03 = (para) => {
+        const _this = this;
+        this.setState({photoLoading03: true});
+        const file = para;
+        const key = UUID.create().toString().replace(/-/g, "");
+        const token = this.state.uploadToken;
+        const config = {region: qiniu.region.z0};
+        const observer = {
+            next (res) {console.log(res)},
+            error (err) {
+                console.log(err)
+                message.error(err.message ? err.message : "图片提交失败");
+                _this.setState({photoLoading03: false})
+            }, 
+            complete (res) {
+                console.log(res);
+                message.success("图片提交成功");
+                _this.setState({
+                    viewPic03: configUrl.photoUrl + res.key || "",           
+                    photoLoading03: false,
+                })
+            }
+        }
+        const observable = qiniu.upload(file, key, token, config);
+        observable.subscribe(observer); // 上传开始        
+    };
+   
     // 视频上传
     picUpload02 = (para) => {
         const _this = this;
@@ -688,9 +580,7 @@ class ItemAdd extends Component {
             message.error("视频最多上传25个");
             return
         } else {
-            this.setState({
-                videoLoading: true,
-            });
+            this.setState({videoLoading: true});
             const file = para;
             const key = UUID.create().toString().replace(/-/g,"");
             const token = this.state.uploadToken;
@@ -786,18 +676,13 @@ class ItemAdd extends Component {
             this.setState({
                 data: {},               
                 viewPic: "",
-                photoList: [],
                 photoLoading: false,
+                viewPic03: "",
+                photoLoading03: false,
                 viewVideo: '',
                 videoList: [],
-                videoLoading: false,
-                allAuthorList: [],
-                feeType: null,
-                subjectList: [],
-                lessonListInit: [],
-                lessonList: [],
-                confirmLoading: false,
-                readOnly: true,
+                videoLoading: false,               
+                loading: false,
             });
             form.resetFields();
         });
@@ -809,18 +694,20 @@ class ItemAdd extends Component {
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             if (err) {return;}
             // let { viewPic, allAuthorList, videoList} = this.state;
-            // 明星图片校验与写入
+            // 头像校验与写入
             if (this.state.viewPic) {
-                values.photo = this.state.viewPic.slice(global.config.photoUrl.length);
+                values.avatar = this.state.viewPic.slice(configUrl.photoUrl.length);
+            } else {
+                message.error("头像未选择");
+                return false;
+            }
+            // 明星图片校验与写入
+            if (this.state.viewPic03) {
+                values.photo = this.state.viewPic03.slice(configUrl.photoUrl.length);
             } else {
                 message.error("图片未选择");
                 return false;
             }
-            // 过滤作者
-            const fnFilter = (para) => {
-                return para.id = values.teacherId
-            }
-            let tempAuther = this.state.allAuthorList.filter(fnFilter);          
             
             // 明星视频写入与校验
             const tempVideoList = [];
@@ -832,35 +719,21 @@ class ItemAdd extends Component {
                         name: item.name,
                         sort: item.sort,
                         duration: item.duration,
-                        video: item.video.slice(global.config.photoUrl.length)
+                        video: item.video.slice(configUrl.photoUrl.length)
                     })
                 })
             }
             console.log(tempVideoList);
-            // 富文本内容处理            
-            values.characteristic = this.editor.getData();
-            console.log(values.characteristic);
-            // let tempCharacteristic = this.removeTAG(values.characteristi);
-            // if (!tempCharacteristic) {
-            //     message.error('明星简介不能为空');
-            //     return
-            // }
             const result = {
-                name: values.courseName,
-                typeId: values.typeIds[1],
-                pic: values.photo,
-                teacherId: tempAuther[0].id,
-                teacherName: tempAuther[0].name,
-                originalPrice: values.originalPrice.toFixed(2),
-                price: values.price.toFixed(2),
-                fee: values.fee.toFixed(2),
-                isFree: values.isFree,
-                chargeJointCount: values.chargeJointCount,
-                characteristic: values.characteristic,
-                tips: values.tips,
-                warmPrompt: values.warmPrompt,
-                official: values.official,
-                lesson: JSON.stringify(tempVideoList),
+                name: values.name,
+                gender: values.gender,
+                height: values.height,
+                weight: values.height,
+                telephone: values.telephone,
+                avatar: values.avatar,
+                personalProfile: values.personalProfile,
+                photo: values.photo,
+                lesson: JSON.stringify(tempVideoList)
             };
             this.setState({loading: true});
             saveStar(result).then((json) => {
@@ -904,28 +777,25 @@ class ItemAdd extends Component {
                     ref={this.saveFormRef}                 
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
-                    onCreate={this.handleCreate}
-                    handleSearch={this.handleSearch}
-                    allAuthorList={this.state.allAuthorList}                    
+                    onCreate={this.handleCreate}                                        
                     data={this.state.data}
-                    subjectList={this.state.subjectList}
-                    reqwestUploadToken={this.reqwestUploadToken}
-                    viewPic={this.state.viewPic}                    
+                    provinceList={this.props.provinceList}                   
+                    reqwestUploadToken={this.reqwestUploadToken}                                        
                     picUpload={this.picUpload}
-                    photoLoading={this.state.photoLoading}                  
+                    viewPic={this.state.viewPic}
+                    photoLoading={this.state.photoLoading}
+                    picUpload03={this.picUpload03}
+                    viewPic03={this.state.viewPic03}
+                    photoLoading03={this.state.photoLoading03}                 
                     picUpload02={this.picUpload02}
                     viewVideo={this.state.viewVideo}                  
                     videoList={this.state.videoList}
                     setVideoList={this.setVideoList}
                     videoLoading={this.state.videoLoading}
-                    editVideo={this.editVideo}
-                    readOnly={this.state.readOnly}
+                    editVideo={this.editVideo}                   
                     deleteVideo={this.deleteVideo}
                     onChangeCourseName={this.onChangeCourseName}
-                    onChangeSort={this.onChangeSort}
-                    feeType={this.state.feeType}
-                    setFeeType={this.setFeeType}
-                    lessonList={this.state.lessonList}
+                    onChangeSort={this.onChangeSort}               
                     confirmLoading={this.state.loading}
                 />                
             </div>
@@ -936,24 +806,32 @@ class ItemAdd extends Component {
 // 明星信息编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, editVideo, deleteVideo, onChangeCourseName, onChangeSort, handleSearch, allAuthorList, form, data, reqwestUploadToken, viewPic, picUpload, photoLoading, picUpload02, viewVideo, videoList, videoLoading, subjectList, feeType, setFeeType, confirmLoading} = props;
+        const {visible, onCancel, onCreate, editVideo, deleteVideo, onChangeCourseName, onChangeSort, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03, picUpload02, viewVideo, videoList, videoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        // 分类选项生成
-        const optionsOfSubject = [];
-        let currentSubject = [];
-        subjectList.forEach((item) => {
-            let children = [];
-            if (item.list) {
-                item.list.forEach((subItem) => {
-                    children.push({value: subItem.id, label: subItem.name});
-                    if (subItem.id === data.typeId) {// 当前分类设为选中项                        
-                        currentSubject = [item.id, subItem.id]
-                    }
-                });
-            }
-            optionsOfSubject.push({value: item.id, label: item.name, children: children});
-        });
+        // 城市选项生成
+        const optionsOfCity = [{value: "0", label: "全国"}];
+        let currentArea = [];
+        if (provinceList.length) {
+            provinceList.forEach((item) => {
+                let children = [];
+                if (item.districtList) {
+                    item.districtList.forEach((subItem) => {
+                        let subChildren = [];
+                        if (subItem.districtList) {
+                            subItem.districtList.forEach((thirdItem) => {
+                                subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
+                                if (Number(thirdItem.adcode) === data.areaId) {                          
+                                    currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];// 当前城市设为选中项
+                                }
+                            });
+                        }
+                        children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
+                    });
+                }
+                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+            });
+        }
 
         // 图片处理
         const beforeUpload = (file) => {
@@ -980,7 +858,21 @@ const ItemEditForm = Form.create()(
         const uploadButton = (
             <div>
                 <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择头像</div>
+            </div>
+        );
+
+        const picHandleChange03 = (info) => {
+            // 渲染的问题，加个定时器延迟半秒
+            setTimeout(()=>{
+                picUpload03(info.file);
+            }, 500);
+        };
+
+        const uploadButton03 = (
+            <div>
+                <Icon type={photoLoading03 ? 'loading' : 'plus'}/>
+                <div className="ant-upload-text" style={{display: photoLoading03 ? "none" : "block"}}>选择图片</div>
             </div>
         );
 
@@ -1030,54 +922,103 @@ const ItemEditForm = Form.create()(
                     </Col>)
             })
         }
-
-        // 作者选项生成
-        const optionsOfAllAuthorList = [];
-        if (allAuthorList.length) {
-            allAuthorList.forEach((item, index) => {                
-                optionsOfAllAuthorList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-            });
-        }
         
         return (
             <Modal
                 visible={visible}
-                title="编辑明星"
+                title="编辑"
                 width={1000}
                 onCancel={onCancel}
                 footer={[
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
-                destroyOnClose={true}
-            >
-                <div className="course-add course-form item-form quality-course-form">
+                destroyOnClose={true}>
+                <div className="course-add course-form item-form quality-course-form star-manage-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="courseName"  label="明星名称：">
-                                    {getFieldDecorator('courseName', {
+                                <FormItem className="courseName"  label="姓名：">
+                                    {getFieldDecorator('name', {
                                         initialValue: data.name,                                      
                                         rules: [{
                                             required: true,
-                                            message: '明星名称不能为空',
+                                            message: '姓名不能为空',
                                         }],
                                     })(
-                                        <Input placeholder="请输入明星名称"/>
+                                        <Input placeholder="请输入姓名"/>
                                     )}
-                                </FormItem>                                
+                                </FormItem>
                             </Col>
-                            <Col span={8}>                                
-                                <FormItem className="typeId" label="所属分类：">
-                                    {getFieldDecorator('typeIds', {
-                                        initialValue: currentSubject,
+                            <Col span={8}>
+                                <FormItem className="gender"  label="性别：">
+                                    {getFieldDecorator('gender', {
+                                        initialValue: data.gender,                                      
                                         rules: [{
                                             required: true,
-                                            message: '所属分类不能为空'                                           
+                                            message: '性别不能为空',
                                         }],
                                     })(
-                                        <Cascader options={optionsOfSubject} placeholder="请选择所属分类"/>
+                                        <Select placeholder="请选择性别">
+                                            <Option value={0}>女</Option>
+                                            <Option value={1}>男</Option>
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="height"  label="身高：">
+                                    {getFieldDecorator('height', {
+                                        initialValue: data.height,
+                                        rules: [{
+                                            required: true,
+                                            message: '身高不能为空',
+                                        }],
+                                    })(
+                                        <InputNumber style={{width: "100%"}} placeholder="请填写身高"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="weight"  label="体重：">
+                                    {getFieldDecorator('weight', {
+                                        initialValue: data.weight,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '体重不能为空',
+                                        }],
+                                    })(
+                                        <InputNumber style={{width: "100%"}} placeholder="请填写体重"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="area"  label="所在地区：">
+                                    {getFieldDecorator('area', {
+                                        initialValue: data.areaId === 0 ? ["0"] : currentArea,
+                                        rules: [{
+                                            required: true,
+                                            message: '所在地区不能为空',
+                                        }],
+                                    })(
+                                        <Cascader options={optionsOfCity} placeholder="请选择所在地区"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="telephone"  label="联系方式：">
+                                    {getFieldDecorator('telephone', {
+                                        initialValue: data.telephone,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '联系方式不能为空',
+                                        }],
+                                    })(
+                                        <Input placeholder="请输入联系方式"/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -1085,12 +1026,12 @@ const ItemEditForm = Form.create()(
                         <div className="ant-line"></div>
                         <Row gutter={24}>
                             <Col span={24}>
-                                <FormItem className="certification"  label="明星图片：">
-                                    {getFieldDecorator('photo', {
+                                <FormItem className="avatar"  label="头像：">
+                                    {getFieldDecorator('avatar', {
                                         initialValue: viewPic,
                                         rules: [{
                                             required: true,
-                                            message: '明星图片不能为空',
+                                            message: '头像不能为空',
                                         }],
                                     })(
                                         <Upload
@@ -1100,181 +1041,56 @@ const ItemEditForm = Form.create()(
                                             accept="image/*"
                                             showUploadList={false}
                                             beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}
-                                        >
+                                            customRequest={picHandleChange}>
                                             {viewPic ? <img src={viewPic} alt=""/> : uploadButton}
                                         </Upload>                                        
                                     )}
-                                </FormItem> 
-                            </Col>
-                        </Row>
-                        <div className="ant-line"></div>
-                        <Row gutter={24}>
-                            <Col span={8}>
-                                <FormItem className="author"  label="作者：">
-                                    {getFieldDecorator('teacherId', {
-                                        initialValue: data.teacherId,
-                                        rules: [{
-                                            required: true,
-                                            message: '作者不能为空',
-                                        }],
-                                    })(                                        
-                                        <Select
-                                            showSearch
-                                            allowClear
-                                            style={{width: '100%'}}
-                                            placeholder="请选择"
-                                            onSearch={handleSearch}                                            
-                                            filterOption={false}
-                                            notFoundContent={null}>
-                                            {optionsOfAllAuthorList}
-                                        </Select>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="明星原价：">
-                                    {getFieldDecorator('originalPrice', {
-                                        initialValue: data.originalPrice,
-                                        rules: [{
-                                            required: true,
-                                            message: '明星原价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={2} step={100} style={{width: "100%"}} placeholder="请输入价格，支持两位小数"/>
-                                    )}
                                 </FormItem>
                             </Col>
-                            <Col span={8}>
-                                <FormItem className="price"  label="明星现价：">
-                                    {getFieldDecorator('price', {
-                                        initialValue: data.price,
-                                        rules: [{
-                                            required: true,
-                                            message: '明星现价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={2} step={100} style={{width: "100%"}} placeholder="请输入价格，支持两位小数"/>
-                                    )}
-                                </FormItem>
-                            </Col>
-                        </Row>
-                        <div className="ant-line"></div>
-                        <Row gutter={24}>
-                            <Col span={6}>
-                                <FormItem className="name" label="付费设置：">
-                                    {getFieldDecorator('isFree', {
-                                        initialValue: data.isCharge ? 1 : 2,
-                                        rules: [{
-                                            required: true,
-                                            message: '付费不能为空',
-                                        }],
-                                    })(
-                                        <RadioGroup buttonStyle="solid" onChange={(e) => {setFeeType(e.target.value)}}>
-                                            <Radio.Button value={1} style={{marginRight: "20px", borderRadius: "4px"}}>收费</Radio.Button>
-                                            <Radio.Button value={2} style={{marginRight: "20px", borderRadius: "4px"}}>免费</Radio.Button>
-                                        </RadioGroup>                                       
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="chapterChoose chapterChooseAdd" label="">
-                                    从 {getFieldDecorator('chargeJointCount', {
-                                        initialValue: data.isCharge ? data.chargeJointCount : '',
-                                        rules: [{
-                                            required: feeType === 1,
-                                            message: '章节不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={0} step={1} style={{width: "40%"}} placeholder="请输入正整数" />
-                                    )} 节开始收费
-                                </FormItem>
-                            </Col>
-                            <Col span={2}></Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="服务费：">
-                                    {getFieldDecorator('fee', {
-                                        initialValue: data.fee,
-                                        rules: [{
-                                            required: true,
-                                            message: '服务费不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber min={0} precision={2} step={0.01} style={{width: "100%"}} placeholder="输入0.15即为服务费15%"/>
-                                    )}
-                                </FormItem>
-                            </Col>
-                            <div className="ant-line"></div>
-                        </Row>
+                        </Row>                        
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">明星详情</h4>
-                        <FormItem className="sketch" label="明星简介：">
-                            {getFieldDecorator('characteristic', {
-                                initialValue: data.characteristic,
+                        <FormItem className="personalProfile" label="明星简介：">
+                            {getFieldDecorator('personalProfile', {
+                                initialValue: data.personalProfile,
                                 rules: [{
                                     required: true,
-                                    message: '不能为空',
+                                    message: '简介不能为空',
                                 }],
                             })(
-                                <TextArea 
-                                    className="ckeditor"
+                                <TextArea                                     
                                     style={{resize: "none"}}                                    
                                     placeholder="请填写明星简介"
-                                    autosize={{minRows: 5, maxRows: 10}}/>                                
-                            )}
-                        </FormItem>                        
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">购买须知</h4>
-                        <FormItem className="tips longItem" label="购买说明：">
-                            {getFieldDecorator('tips', {
-                                initialValue: data.tips,
-                                rules: [{
-                                    required: true,
-                                    message: '购买须知不能为空',
-                                }],
-                            })(
-                                <TextArea 
-                                    style={{resize: "none"}} 
-                                    placeholder="请填写明星购买须知"
-                                    autosize={{minRows: 5, maxRows: 10}}/>
+                                    autosize={{minRows: 5, maxRows: 30}}/>                                
                             )}
                         </FormItem>
                         <div className="ant-line"></div>
-                        <FormItem className="warmPrompt longItem" label="温馨提示：">
-                            {getFieldDecorator('warmPrompt', {
+                        <h4 className="add-form-title-h4">生活照</h4>
+                        <FormItem className="photo"  label="">
+                            {getFieldDecorator('photo', {
+                                initialValue: viewPic03,
                                 rules: [{
-                                    required: true,
-                                    message: '温馨提示不能为空',
+                                    required: false,
+                                    message: '明星图片不能为空',
                                 }],
-                                initialValue: data.warmPrompt || "如需要发票，请您在上课前向机构咨询",
                             })(
-                                <TextArea 
-                                    style={{resize: "none"}} 
-                                    placeholder="如需要发票，请您在上课前向机构咨询"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
+                                <Upload
+                                    name="file"
+                                    listType="picture-card"                                    
+                                    accept="image/*"
+                                    showUploadList={false}
+                                    beforeUpload={beforeUpload}
+                                    customRequest={picHandleChange03}>
+                                    {viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}
+                                </Upload>                                        
                             )}
-                        </FormItem>
+                        </FormItem> 
                         <div className="ant-line"></div>
-                        <FormItem className="official longItem" label="官方说明：">
-                            {getFieldDecorator('official', {
-                                rules: [{
-                                    required: true,
-                                    message: '官方说明不能为空',
-                                }],
-                                initialValue: data.official || "为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                            })(
-                                <TextArea 
-                                    style={{resize: "none"}} 
-                                    placeholder="为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">课时安排</h4>
+                        <h4 className="add-form-title-h4">视频作品</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="certification"  label="">
-                                    {getFieldDecorator('photo', {
+                                <FormItem className="'video"  label="">
+                                    {getFieldDecorator('video', {
                                         initialValue: viewVideo,
                                         rules: [{
                                             required: false,
@@ -1288,8 +1104,7 @@ const ItemEditForm = Form.create()(
                                             showUploadList={false}
                                             accept="video/*"
                                             beforeUpload={beforeUpload02}
-                                            customRequest={picHandleChange02}
-                                        >
+                                            customRequest={picHandleChange02}>
                                             {uploadButton02}
                                         </Upload>                                        
                                     )}
@@ -1312,61 +1127,22 @@ class ItemEdit extends Component {
         this.state = {
             visible: false,
             // 明星基本信息
-            data: {},
-            // 科目列表
-            subjectList: [],
+            data: {},         
             // 明星图片相关变量            
             uploadToken: "",// 获取上传图片token
             viewPic: "",
             photoLoading: false,
+            viewPic03: "",
+            photoLoading03: false,
             // 视频上传
             viewVideo: "",
             videoList: [],
-            videoLoading: false,            
-            // 作者
-            allAuthorList: [],
-            // 付费设置状态
-            feeType: null,
+            videoLoading: false,
             // 提交按钮状态变量
             loading: false,                  
         };
         this.editor = ""
     }
-
-    // 根据输入作者名字模糊查找作者列表
-    handleSearch = (value) => {
-        reqwest({
-            url: '/sys/excellentCourse/getTeacher',
-            type: 'json',
-            method: 'get',
-            data: {
-                searchKey: value,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    if (json.data.length) {
-                        this.setState({
-                            allAuthorList: json.data
-                        });
-                    }
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
-    };
 
     // 获取明星基本信息
     getData = () => {
@@ -1383,23 +1159,8 @@ class ItemEdit extends Component {
                     videoList: json.data.data.lesson
                 });
             } else {
-                this.exceptHandle(json.data);                
-            }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
-    };
-
-    // 获取科目列表
-    getSubjectList = () => {
-        starTypeList().then((json) => {
-            if (json.data.result === 0) {                    
-                this.setState({
-                    subjectList: json.data.data
-                });
-            } else {
-                this.exceptHandle(json.data);
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});              
             }
         }).catch((err) => {
             message.error("获取失败");
@@ -1408,20 +1169,8 @@ class ItemEdit extends Component {
     };
 
     showModal = () => {
-        this.getSubjectList();
-        this.handleSearch();
         this.getData();       
-        this.setState({visible: true});      
-        setTimeout(()=> {
-           this.editor = window.CKEDITOR.replace(document.getElementById('characteristic'));                      
-        });
-    };
-
-    // 付费设置
-    setFeeType = (value) => {
-        this.setState({
-            feeType: value
-        });
+        this.setState({visible: true});
     };
 
     // 图片处理    
@@ -1432,26 +1181,21 @@ class ItemEdit extends Component {
                         uploadToken: json.data.data,
                     })
                 } else {
-                    this.exceptHandle(json.data);
+                    this.props.exceptHandle(json.data);
                 }
         }).catch((err) => {
             message.error("发送失败");
         });
     };
     
-    // 图片上传
+    // 头像上传
     picUpload = (para) => {
         const _this = this;
-        this.setState({
-            photoLoading: true,
-        });
-
+        this.setState({photoLoading: true});
         const file = para;
         const key = UUID.create().toString().replace(/-/g, "");
         const token = this.state.uploadToken;
-        const config = {
-            region: qiniu.region.z0
-        };
+        const config = {region: qiniu.region.z0};
         const observer = {
             next (res) {console.log(res)},
             error (err) {
@@ -1463,8 +1207,36 @@ class ItemEdit extends Component {
                 console.log(res);
                 message.success("图片提交成功");
                 _this.setState({
-                    viewPic: global.config.photoUrl + res.key || "",           
+                    viewPic: configUrl.photoUrl + res.key || "",           
                     photoLoading: false,
+                })
+            }
+        }
+        const observable = qiniu.upload(file, key, token, config);
+        observable.subscribe(observer); // 上传开始        
+    };
+
+    // 图片上传
+    picUpload03 = (para) => {
+        const _this = this;
+        this.setState({photoLoading03: true});
+        const file = para;
+        const key = UUID.create().toString().replace(/-/g, "");
+        const token = this.state.uploadToken;
+        const config = {region: qiniu.region.z0};
+        const observer = {
+            next (res) {console.log(res)},
+            error (err) {
+                console.log(err)
+                message.error(err.message ? err.message : "图片提交失败");
+                _this.setState({photoLoading03: false})
+            }, 
+            complete (res) {
+                console.log(res);
+                message.success("图片提交成功");
+                _this.setState({
+                    viewPic03: configUrl.photoUrl + res.key || "",           
+                    photoLoading03: false,
                 })
             }
         }
@@ -1474,33 +1246,23 @@ class ItemEdit extends Component {
     
     // 视频上传
     picUpload02 = (para) => {
-        console.log(para);
-        console.log(para.size/1024/1024);
         const _this = this;
         const videoSize = (para.size/1024/1024).toFixed(2);
         if (this.state.videoList.length >= 15) {
             message.error("视频最多上传15个");
             return
         } else {
-            this.setState({
-                videoLoading: true,
-            });
+            this.setState({videoLoading: true});
             const file = para;
             const key = UUID.create().toString().replace(/-/g,"");
             const token = this.state.uploadToken;
-            const config = {
-                region: qiniu.region.z0
-            };
+            const config = {region: qiniu.region.z0};
             const observer = {
-                next (res) {
-                    console.log(res);
-                },
+                next (res) {console.log(res);},
                 error (err) {
                     console.log(err)
                     message.error(err.message ? err.message : "视频提交失败");
-                    _this.setState({
-                        videoLoading: false,
-                    })
+                    _this.setState({videoLoading: false});
                 }, 
                 complete (res) {
                     console.log(res);
@@ -1508,9 +1270,9 @@ class ItemEdit extends Component {
                     let videoList = _this.state.videoList;
                     videoList.unshift({
                         duration: 10,
-                        name: "测试2",
-                        sort: 1,
-                        video: global.config.photoUrl + res.key,
+                        name: "",
+                        sort: 0,
+                        video: configUrl.photoUrl + res.key,
                         videoSize: videoSize
                     });
                     _this.setState({
@@ -1585,7 +1347,7 @@ class ItemEdit extends Component {
                 videoLoading: false,                
                 allAuthorList: [],
                 feeType: null,                                
-                confirmLoading: false,
+                loading: false,
             });
             this.editor = ""
             form.resetFields();
@@ -1618,7 +1380,7 @@ class ItemEdit extends Component {
                         name: item.name,
                         sort: item.sort,
                         duration: item.duration,
-                        video: item.video.slice(global.config.photoUrl.length)
+                        video: item.video.slice(configUrl.photoUrl.length)
                     })
                 })
             }
@@ -1661,18 +1423,18 @@ class ItemEdit extends Component {
         });
     };
 
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false})
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");                        
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");                        
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else {
+    //         message.error(json.message);
+    //         this.setState({loading: false})
+    //     }
+    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1686,16 +1448,16 @@ class ItemEdit extends Component {
                     ref={this.saveFormRef}                 
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
-                    onCreate={this.handleCreate}
-                    handleSearch={this.handleSearch}
-                    allAuthorList={this.state.allAuthorList}                    
-                    data={this.state.data}                                                    
-                    checkSubjectType={this.checkSubjectType}
-                    subjectList={this.state.subjectList}
+                    onCreate={this.handleCreate}                                   
+                    data={this.state.data}
+                    provinceList={this.props.provinceList}
                     reqwestUploadToken={this.reqwestUploadToken}
-                    viewPic={this.state.viewPic}                    
+                    viewPic={this.state.viewPic}
                     picUpload={this.picUpload}
-                    photoLoading={this.state.photoLoading}                  
+                    photoLoading={this.state.photoLoading}
+                    viewPic03={this.state.viewPic03}
+                    picUpload03={this.picUpload03}
+                    photoLoading03={this.state.photoLoading03}
                     picUpload02={this.picUpload02}
                     viewVideo={this.state.viewVideo}                  
                     videoList={this.state.videoList}                    
@@ -1703,9 +1465,7 @@ class ItemEdit extends Component {
                     editVideo={this.editVideo}
                     deleteVideo={this.deleteVideo}
                     onChangeCourseName={this.onChangeCourseName}
-                    onChangeSort={this.onChangeSort}
-                    feeType={this.state.feeType}
-                    setFeeType={this.setFeeType}                    
+                    onChangeSort={this.onChangeSort}                                       
                     confirmLoading={this.state.loading}
                 />                
             </a>
@@ -1725,7 +1485,7 @@ const ItemDetailsForm = Form.create()(
                 tempVideoList.push(
                     <Col span={8} key={index+1}>
                         <div className="video">
-                            <div className="chapter">第{item.sort}节</div>
+                            <div className="chapter">序号{item.sort}</div>
                             <div className="videoSource">                                
                                 <div className="videoSrc">
                                     <video controls="controls" width="100%">
@@ -1750,201 +1510,141 @@ const ItemDetailsForm = Form.create()(
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form">
                     <Form layout="vertical">
-                        <h4 className="add-form-title-h4">基本信息</h4>
+                        <h4 className="add-form-title-h4">基础信息</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="courseName"  label="明星名称：">
+                                <FormItem className="courseName"  label="姓名：">
                                     {getFieldDecorator('courseName', {
-                                        initialValue: data.name,
+                                        initialValue: data.name,                                      
                                         rules: [{
                                             required: true,
-                                            message: '明星名称不能为空',
+                                            message: '姓名不能为空',
                                         }],
                                     })(
-                                        <Input disabled placeholder="请输入明星名称"/>
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="typeId" label="所属分类：">
-                                    {getFieldDecorator('typeIds', {
-                                        initialValue: data.typeIds,
-                                        rules: [{
-                                            required: true,
-                                            message: '所属分类不能为空'
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入所属分类"/>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={24}>
-                                <FormItem className="certification"  label="明星图片：">
-                                    {getFieldDecorator('pic', {
-                                        initialValue: data.pic,
-                                        rules: [{
-                                            required: true,
-                                            message: '明星图片不能为空',
-                                        }],
-                                    })(
-                                        <div className="coursePhoto">                                            
-                                            <img src={data.pic} alt=""/>
-                                        </div>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="author"  label="作者：">
-                                    {getFieldDecorator('author', {
-                                        initialValue: data.teacherName,
-                                        rules: [{
-                                            required: true,
-                                            message: '作者不能为空',
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入作者"/>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="明星原价：">
-                                    {getFieldDecorator('originalPrice', {
-                                        initialValue: data.originalPrice,
-                                        rules: [{
-                                            required: true,
-                                            message: '明星原价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
+                                        <Input disabled placeholder="请输入姓名"/>
                                     )}
                                 </FormItem>
                             </Col>
                             <Col span={8}>
-                                <FormItem className="price"  label="明星现价：">
-                                    {getFieldDecorator('price', {
-                                        initialValue: data.price,
+                                <FormItem className="gender"  label="性别：">
+                                    {getFieldDecorator('gender', {
+                                        initialValue: data.gender,                                      
                                         rules: [{
                                             required: true,
-                                            message: '明星现价不能为空',
+                                            message: '性别不能为空',
                                         }],
                                     })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
+                                        <Select disabled placeholder="请选择性别">
+                                            <Option value={0}>女</Option>
+                                            <Option value={1}>男</Option>
+                                        </Select>
                                     )}
                                 </FormItem>
-                            </Col>
-                            <Col span={6}>
-                                <FormItem className="name" label="付费设置：">
-                                    {getFieldDecorator('name', {
-                                        initialValue: data.isCharge ? 1 : 2,
-                                        rules: [{
-                                            required: true,
-                                            message: '付费不能为空',
-                                        }],
-                                    })(
-                                        <RadioGroup disabled buttonStyle="solid">
-                                            <Radio.Button value={1} style={{marginRight: "20px", borderRadius: "4px"}}>收费</Radio.Button>
-                                            <Radio.Button value={2} style={{marginRight: "20px", borderRadius: "4px"}}>免费</Radio.Button>
-                                        </RadioGroup>                                       
-                                    )}
-                                </FormItem>                                
                             </Col>
                             <Col span={8}>
-                                <FormItem className="chapterChoose" label="">
-                                    从 {getFieldDecorator('chapter', {
-                                        initialValue: data.isCharge ? data.chargeJointCount : '',
+                                <FormItem className="height"  label="身高：">
+                                    {getFieldDecorator('height', {
+                                        initialValue: data.height,
                                         rules: [{
                                             required: true,
-                                            message: '章节不能为空',
+                                            message: '身高不能为空',
                                         }],
                                     })(
-                                        <InputNumber disabled min={0} precision={0} step={100} style={{width: "40%",marginTop: "6px"}} placeholder="请输入正整数" />
-                                    )} 节开始收费
-                                </FormItem>
-                            </Col>
-                            <Col span={2}></Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="服务费：">
-                                    {getFieldDecorator('fee', {
-                                        initialValue: data.fee,
-                                        rules: [{
-                                            required: true,
-                                            message: '服务费不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
+                                        <InputNumber disabled style={{width: "100%"}} placeholder="请填写身高"/>
                                     )}
                                 </FormItem>
                             </Col>
-                            <div className="ant-line"></div>
                         </Row>
                         <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">明星详情</h4>
                         <Row gutter={24}>
-                            <Col span={24}>
-                                <FormItem className="characteristic" label="明星简介：">
-                                    {getFieldDecorator('characteristic', {
-                                        initialValue: data.characteristic,
+                            <Col span={8}>
+                                <FormItem className="weight"  label="体重：">
+                                    {getFieldDecorator('weight', {
+                                        initialValue: data.weight,                                      
                                         rules: [{
                                             required: true,
-                                            message: '明星简介不能为空',
+                                            message: '体重不能为空',
                                         }],
-                                    })(                                        
-                                        <div className="courseDescription" style={{border: "1px solid #e5e3e0",padding: "10px"}} dangerouslySetInnerHTML={{__html: data.characteristic}}></div>
+                                    })(
+                                        <InputNumber disabled style={{width: "100%"}} placeholder="请填写体重"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="area"  label="所在地区：">
+                                    {getFieldDecorator('area', {
+                                        // initialValue: data.areaId === 0 ? ["0"] : currentArea,
+                                        rules: [{
+                                            required: true,
+                                            message: '所在地区不能为空',
+                                        }],
+                                    })(
+                                        <Cascader disabled  placeholder="请选择所在地区"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="telephone"  label="联系方式：">
+                                    {getFieldDecorator('telephone', {
+                                        initialValue: data.telephone,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '联系方式不能为空',
+                                        }],
+                                    })(
+                                        <Input disabled placeholder="请输入联系方式"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={24}>
+                                <FormItem className="avatar"  label="头像：">
+                                    {getFieldDecorator('avatar', {
+                                        // initialValue: viewPic,
+                                        rules: [{
+                                            required: true,
+                                            message: '头像不能为空',
+                                        }],
+                                    })(
+                                        <img src="" alt=""/>
                                     )}
                                 </FormItem>
                             </Col>
                         </Row>                        
                         <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">购买须知</h4>
-                        <FormItem className="tips longItem" label="购买说明：">
-                            {getFieldDecorator('tips', {
-                                initialValue: data.tips,
+                        <h4 className="add-form-title-h4">明星详情</h4>
+                        <FormItem className="personalProfile" label="明星简介：">
+                            {getFieldDecorator('personalProfile', {
+                                initialValue: data.personalProfile,
                                 rules: [{
                                     required: true,
-                                    message: '购买须知不能为空',
+                                    message: '简介不能为空',
                                 }],
                             })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="请填写明星购买须知"
-                                    autosize={{minRows: 5, maxRows: 10}}/>
+                                <TextArea                                     
+                                    style={{resize: "none"}}
+                                    disabled                                    
+                                    placeholder="请填写明星简介"
+                                    autosize={{minRows: 5, maxRows: 30}}/>                                
                             )}
                         </FormItem>
                         <div className="ant-line"></div>
-                        <FormItem className="warmPrompt longItem" label="温馨提示：">
-                            {getFieldDecorator('warmPrompt', {
+                        <h4 className="add-form-title-h4">生活照</h4>
+                        <FormItem className="photo"  label="">
+                            {getFieldDecorator('photo', {
+                                // initialValue: viewPic03,
                                 rules: [{
-                                    required: true,
-                                    message: '温馨提示不能为空',
+                                    required: false,
+                                    message: '明星图片不能为空',
                                 }],
-                                initialValue: data.warmPrompt || "如需要发票，请您在上课前向机构咨询",
                             })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="如需要发票，请您在上课前向机构咨询"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
+                                <img src="" alt=""/>
                             )}
-                        </FormItem>
+                        </FormItem> 
                         <div className="ant-line"></div>
-                        <FormItem className="official longItem" label="官方说明：">
-                            {getFieldDecorator('official', {
-                                rules: [{
-                                    required: true,
-                                    message: '官方说明不能为空',
-                                }],
-                                initialValue: data.official || "为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">课时安排</h4>
+                        <h4 className="add-form-title-h4">视频作品</h4>
                         <Row gutter={24}>
                             {tempVideoList}                           
                         </Row>                       
@@ -1967,7 +1667,7 @@ class ItemDetails extends Component {
     };
 
     // 获取明星基本信息
-    getData = () => {        
+    getData = () => {
         getStarDetail({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
                 // 已有所属分类写入
@@ -1978,7 +1678,8 @@ class ItemDetails extends Component {
                     videoList: json.data.lesson,
                 });
             } else {
-                this.props.exceptHandle(json.data);                
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});            
             }
         }).catch((err) => {
             message.error("获取失败");
@@ -1988,18 +1689,14 @@ class ItemDetails extends Component {
 
     showModal = () => {        
         this.getData();
-        this.setState({
-            visible: true,
-        })
+        this.setState({visible: true});
     };
 
     handleCancel = () => {
         this.setState({
             visible: false,
-            loading: true,           
-            // 明星课时列表
-            videoList: [],
-            // 明星基本信息
+            loading: true,
+            videoList: [],            
             data: "",
         });
     };
@@ -2096,14 +1793,18 @@ class DataTable extends Component {
                             {/*明星详情*/}
                             <ItemDetails 
                                 id={record.id}
-                                opStatus={this.props.opObj.select}
-                                exceptHandle={this.exceptHandle}
+                                opStatus={this.props.opObj.select}                                
+                                uploadToken={this.props.uploadToken}
+                                exceptHandle={this.props.exceptHandle}
                                 toLoginPage={this.props.toLoginPage}/>
                              {/*明星编辑*/}
                             <ItemEdit 
                                 id={record.id} 
                                 recapture={this.getData}
                                 opStatus={this.props.opObj.modify}
+                                uploadToken={this.props.uploadToken}
+                                provinceList={this.props.provinceList}
+                                exceptHandle={this.props.exceptHandle}
                                 toLoginPage={this.props.toLoginPage}/>                           
                             {/*明星下架*/}
                             <Popconfirm 
@@ -2141,7 +1842,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
         };
-        starList().then((json) => {
+        starList(params).then((json) => {
             const data = [];
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
@@ -2196,7 +1897,8 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.exceptHandle(json.data);
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});
             }
         }).catch((err) => {
             message.error("获取失败");
@@ -2216,7 +1918,8 @@ class DataTable extends Component {
                 this.setState({loading: false});
                 this.getData();
             } else {
-                this.exceptHandle(json.data)
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});
             }
         }).catch((err) => {
             message.error("获取失败");
@@ -2236,7 +1939,8 @@ class DataTable extends Component {
                 message.success(status === "上架" ? "明星下架成功" : "明星上架成功");
                 this.getData();
             } else {
-                this.exceptHandle(json.data);
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});
             }
         }).catch((err) => {
             message.error("获取失败");
@@ -2244,18 +1948,18 @@ class DataTable extends Component {
         });
     };
 
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false})
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");                        
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");                        
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else {
+    //         message.error(json.message);
+    //     }
+    //     this.setState({loading: false});
+    // };
 
     // 表格参数变化处理
     handleTableChange = (pagination, filters) => {
@@ -2339,17 +2043,61 @@ class StarManage extends Component {
             startValue: null,
             endValue: null,
             flag_add: false,
+            mapObj: {},// 地图控件对象
+            provinceList: [],// 省市列表
         };
         this.optionsGender = [
-            <Option key={0}>{"全部"}</Option>,
-            <Option key={1}>男</Option>,
-            <Option key={2}>女</Option>,
-        ];      
+            <Option key="全部" value="全部">{"全部"}</Option>,
+            <Option key="0" value="0">女</Option>,
+            <Option key="1" value="1">男</Option>,
+        ];              
     };
 
-    getData = () => {
-        this.refs.getDataCopy.getData();
+    // 获取省市列表信息及当前城市地区代码
+    getMapDate = () => {
+        this.setState({
+            mapObj: new window.AMap.Map('star-mapContainer')
+        }, () => {
+            // 获取省区列表
+            this.state.mapObj.plugin('AMap.DistrictSearch', () => {
+                var districtSearch = new window.AMap.DistrictSearch({
+                    level: 'country',
+                    subdistrict: 3 // 1:省，2:市，3:区，4:街道
+                });
+                districtSearch.search('中国', (status, result) => {               
+                    this.setState({
+                        provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
+                    });
+                })
+            });
+            // 获取当前城市地区代码
+            this.state.mapObj.plugin('AMap.CitySearch', () => {
+                var citySearch = new window.AMap.CitySearch();
+                citySearch.getLocalCity((status, result) => {
+                    if (status === 'complete' && result.info === 'OK') {
+                        this.setState({
+                            cityCode: result.adcode
+                        })
+                    }
+                })
+            })
+        })
     };
+
+    // 城市选项生成
+    // cityList = () => {
+    //     if (this.state.provinceList.length) {
+    //         this.state.provinceList.forEach((item) => {
+    //             let children = [];
+    //             if (item.districtList) {
+    //                 item.districtList.forEach((subItem) => {
+    //                     children.push({value: subItem.adcode, label: subItem.name});                    
+    //                 });
+    //             }
+    //             this.optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+    //         });
+    //     }        
+    // };
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
@@ -2454,7 +2202,34 @@ class StarManage extends Component {
         this.props.history.push('/')
     };
 
+    // uploadToken = () => { // 请求上传凭证，需要后端提供接口
+    //     // 如何返回变量
+    //     getToken().then((json) => {
+    //         if (json.data.result === 0) {                 
+    //            uploadToken =  json.data.data;
+    //         } else {
+    //             this.exceptHandle(json.data);
+    //         }
+    //         // return uploadToken;
+    //     }).catch((err) => {
+    //         message.error("发送失败");
+    //     });
+    // };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+        }
+    };
+
     componentWillMount() {
+        this.getMapDate();// 获取省份城市
         this.setPower();
         if (this.props.location.search) {
             this.props.history.push(this.props.location.pathname)
@@ -2507,19 +2282,23 @@ class StarManage extends Component {
                                 <div className="star-add-button">
                                     <ItemAdd
                                         opStatus={this.state.opObj.add}
-                                        recapture={this.getData}
+                                        provinceList={this.state.provinceList}
+                                        recapture={this.getData}                                        
+                                        exceptHandle={this.exceptHandle}
                                         toLoginPage={this.toLoginPage}/>
                                 </div>
                             </header>
                             {/*明星列表*/}
                             <div className="table-box">                                
-                                <DataTable
+                                <DataTable                                    
                                     opObj={this.state.opObj}
-                                    keyword={this.state.keyword}
-                                    ref="getDataCopy"
+                                    keyword={this.state.keyword}                                    
+                                    provinceList={this.state.provinceList}                                   
+                                    exceptHandle={this.exceptHandle}
                                     flag_add={this.state.flag_add}
                                     toLoginPage={this.toLoginPage}/>
                             </div>
+                            <div id="star-mapContainer"/>
                         </div>
                         :
                         <p>暂无查询权限</p>                        

@@ -6,12 +6,16 @@ import {
     Popconfirm,
     message,
     Form,
+    Row,
+    Col,
+    Modal,
+    Button,
 } from 'antd';
-import '../../config/config';
-import reqwest from 'reqwest';
+import { coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
+const {TextArea} = Input;
 
 //单元格
 const Cell = ({value}) => (
@@ -107,6 +111,305 @@ class EditableCell extends Component {
     }
 }
 
+// 明星信息编辑表单
+const ItemEditForm = Form.create()(
+    (props) => {
+        const {visible, onCancel, onCreate, form, data, confirmLoading} = props;
+        const {getFieldDecorator} = form;
+        
+        return (
+            <Modal
+                visible={visible}
+                title="编辑明星"
+                width={1000}
+                onCancel={onCancel}
+                footer={[
+                    <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
+                    <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
+                ]}
+                destroyOnClose={true}>
+                <div className="course-add course-form item-form quality-course-form">
+                    <Form layout="vertical">
+                        <h4 className="add-form-title-h4">基础信息</h4>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="name"  label="发帖人：">
+                                    {getFieldDecorator('name', {
+                                        initialValue: data.name,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '发帖人不能为空',
+                                        }],
+                                    })(
+                                        <Input placeholder="请输入发帖人"/>
+                                    )}
+                                </FormItem>                                
+                            </Col>                            
+                        </Row>
+                        <div className="ant-line"></div>
+                        <h4 className="add-form-title-h4">明星详情</h4>
+                        <FormItem className="content" label="明星简介：">
+                            {getFieldDecorator('content', {
+                                initialValue: data.content,
+                                rules: [{
+                                    required: true,
+                                    message: '不能为空',
+                                }],
+                            })(
+                                <TextArea 
+                                    className="ckeditor"
+                                    style={{resize: "none"}}                                    
+                                    placeholder="请填写明星简介"
+                                    autosize={{minRows: 5, maxRows: 10}}/>                                
+                            )}
+                        </FormItem>                        
+                        <div className="ant-line"></div>                     
+                    </Form>
+                </div>
+            </Modal>
+        )
+    }
+);
+
+// 明星信息编辑明星组件
+class ItemEdit extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            visible: false,
+            // 明星基本信息
+            data: {},
+            // 提交按钮状态变量
+            loading: false,                  
+        };
+        this.editor = ""
+    }
+
+    // 获取明星基本信息
+    getData = () => {
+        coffeeDetail({id: this.props.id}).then((json) => {
+             if (json.data.result === 0) {
+                // 已有所属分类写入                    
+                json.data.data.typeId = json.data.data.excellentCourseType.typeId;                
+                // 富文本数据写入
+                this.editor.setData(json.data.data.characteristic);
+                // 信息写入
+                this.setState({
+                    data: json.data.data,
+                    viewPic: json.data.data.pic,
+                    videoList: json.data.data.lesson
+                });
+            } else {
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});              
+            }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
+        });
+    };
+
+    showModal = () => {
+        this.getData();       
+        this.setState({visible: true});      
+        setTimeout(()=> {
+           this.editor = window.CKEDITOR.replace(document.getElementById('content'));                      
+        });
+    };
+
+    // 取消处理
+    handleCancel = () => {
+        const form = this.form;
+        this.setState({
+            visible: false
+        }, () => {
+            this.setState({
+                data: {},                                      
+                loading: false,
+            });
+            this.editor = ""
+            form.resetFields();
+        });
+    };
+
+    // 确认处理
+    handleCreate = () => {
+        const form = this.form;        
+        form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
+            if (err) {return;}
+            
+            // 富文本内容处理
+            values.content = this.editor.getData();
+            console.log(values.riches)
+            const result = {
+                id: this.props.id,
+                name: values.name,                
+                content: values.content,               
+            };
+            this.setState({loading: true});
+            updateCoffee(result).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("编辑明星成功");
+                    this.handleCancel();
+                    this.props.recapture();                            
+                } else {
+                    message.error(json.message);                        
+                    this.setState({loading: false});
+                }
+            }).catch((err) => {
+                message.error("获取失败");
+                this.setState({loading: false});
+            });
+        });
+    };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false})
+        }
+    };
+
+    saveFormRef = (form) => {
+        this.form = form;
+    };
+
+    render() {
+        return (
+             <a style={{display: this.props.opStatus ? "inline" : "none"}}>
+                <span onClick={this.showModal}>编辑</span>                
+                <ItemEditForm
+                    ref={this.saveFormRef}                 
+                    visible={this.state.visible}
+                    onCancel={this.handleCancel}
+                    onCreate={this.handleCreate}                                   
+                    data={this.state.data}                        
+                    confirmLoading={this.state.loading}
+                />                
+            </a>
+        );
+    }
+}
+
+// 明星详情表单
+const ItemDetailsForm = Form.create()(
+    (props) => {
+        const {visible, onCancel, form, data, confirmLoading} = props;
+        const {getFieldDecorator} = form;
+
+        return (
+            <Modal
+                visible={visible}
+                title="详情"
+                width={1000}
+                onCancel={onCancel}
+                footer={null}
+                destroyOnClose={true}
+                confirmLoading={confirmLoading}>
+                <div className="institutionCheck-form">
+                    <Form layout="vertical">
+                        <h4 className="add-form-title-h4">基本信息</h4>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="courseName"  label="发帖人：">
+                                    {getFieldDecorator('courseName', {
+                                        initialValue: data.name,
+                                        rules: [{
+                                            required: true,
+                                            message: '发帖人不能为空',
+                                        }],
+                                    })(
+                                        <Input disabled placeholder="请输入发帖人"/>
+                                    )}
+                                </FormItem>                                
+                            </Col>                            
+                            <div className="ant-line"></div>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={24}>
+                                <FormItem className="characteristic" label="内容：">
+                                    {getFieldDecorator('characteristic', {
+                                        initialValue: data.characteristic,
+                                        rules: [{
+                                            required: true,
+                                            message: '内容不能为空',
+                                        }],
+                                    })(                                        
+                                        <div className="courseDescription" style={{border: "1px solid #e5e3e0",padding: "10px"}} dangerouslySetInnerHTML={{__html: data.characteristic}}></div>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>                        
+                        <div className="ant-line"></div>                                        
+                    </Form>
+                </div>
+            </Modal>
+        );
+    }
+);
+
+// 明星详情组件
+class ItemDetails extends Component {
+    state = {
+        visible: false,
+        loading: true,
+        // 明星基本信息
+        data: "",
+    };
+
+    // 获取明星基本信息
+    getData = () => {
+        coffeeDetail({id: this.props.id}).then((json) => {
+             if (json.data.result === 0) {
+                this.setState({
+                    loading: false,
+                    data: json.data,
+                    videoList: json.data.lesson,
+                });
+            } else {
+                this.props.exceptHandle(json.data);
+                this.setState({loading: false});            
+            }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
+        });
+    };
+
+    showModal = () => {        
+        this.getData();
+        this.setState({visible: true});
+    };
+
+    handleCancel = () => {
+        this.setState({
+            visible: false,
+            loading: true,
+            videoList: [],            
+            data: "",
+        });
+    };
+
+    render() {
+        return (           
+            <a style={{display: this.props.opStatus ? "inline" : "none"}}>
+                <span onClick={this.showModal}>详情</span>
+                <ItemDetailsForm 
+                    ref={this.saveFormRef}
+                    visible={this.state.visible}                                       
+                    data={this.state.data}
+                    onCancel={this.handleCancel}/>
+            </a>
+        );
+    }
+}
 
 //评价列表
 class DataTable extends Component {
@@ -170,11 +473,22 @@ class DataTable extends Component {
                 title: '操作',
                 dataIndex: '操作',
                 className: 'operating',
-                width: 150,
+                width: 200,
                 render: (text, record) => {
                     return (
-                        <div className="editable-row-operations">                                                    
-                            {/*评价删除*/}
+                        <div className="editable-row-operations">
+                            {/*详情*/}
+                            <ItemDetails
+                                id={record.id}
+                                opStatus={this.props.opObj.select}
+                                toLoginPage={this.props.toLoginPage}/>
+                             {/*编辑*/}
+                            <ItemEdit 
+                                id={record.id} 
+                                recapture={this.getData}
+                                opStatus={this.props.opObj.modify}
+                                toLoginPage={this.props.toLoginPage}/>                                                    
+                            {/*删除*/}
                             <Popconfirm 
                                 title="确认删除?"
                                 placement="topRight"
@@ -198,180 +512,147 @@ class DataTable extends Component {
         return (
             <Cell value={text}/>
         );
-    };    
+    };
 
     //获取本页信息
     getData = (keyword) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/comment/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                // 评价内容
-                content: keyword ? keyword.content : this.props.keyword.content,
-                beginDate: keyword ? keyword.startTime : this.props.keyword.startTime,
-                endDate: keyword ? keyword.endTime : this.props.keyword.endTime,
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                const data = [];
-                if (json.result === 0) {
-                    if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
-                    json.data.list.forEach((item, index) => {
-                        let tempCommentType = "";
-                        if (item.commentType === 0) {
-                            tempCommentType = "课程"
-                        }
-                        if (item.commentType === 1) {
-                            tempCommentType = "机构"
-                        }
-                        if (item.commentType === 2) {
-                            tempCommentType = "育儿"
-                        }
-                        if (item.commentType === 3) {
-                            tempCommentType = "资讯"
-                        }
-                        
-                        data.push({
-                            key: index.toString(),
-                            id: item.id,
-                            index: index + 1,                        
-                            nickname: item.nickname,
-                            star: item.star,
-                            content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
-                            content_detail: item.content,
-                            photo: item.resourceList,
-                            targetId: item.targetId,                   
-                            targetName: item.targetName,
-                            createTime: item.createTime,
-                            commentTypeCode: item.commentType,
-                            commentType: tempCommentType,
-                            userId: item.userId,
-                        });
-                    });
+        this.setState({loading: true});
+        const params = {            
+            content: keyword ? keyword.content : this.props.keyword.content,// 评价内容
+            beginDate: keyword ? keyword.startTime : this.props.keyword.startTime,
+            endDate: keyword ? keyword.endTime : this.props.keyword.endTime,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize,
+        };
+        coffeeList(params).then((json) => {
+            const data = [];
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        data: data,
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
+                    }, () => {
+                        this.getData();
                     });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false})
-                    }
+                    return
                 }
+                json.data.data.list.forEach((item, index) => {
+                    let tempCommentType = "";
+                    if (item.commentType === 0) {
+                        tempCommentType = "课程"
+                    }
+                    if (item.commentType === 1) {
+                        tempCommentType = "机构"
+                    }
+                    if (item.commentType === 2) {
+                        tempCommentType = "育儿"
+                    }
+                    if (item.commentType === 3) {
+                        tempCommentType = "资讯"
+                    }
+                    
+                    data.push({
+                        key: index.toString(),
+                        id: item.id,
+                        index: index + 1,                        
+                        nickname: item.nickname,
+                        star: item.star,
+                        content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
+                        content_detail: item.content,
+                        photo: item.resourceList,
+                        targetId: item.targetId,                   
+                        targetName: item.targetName,
+                        createTime: item.createTime,
+                        commentTypeCode: item.commentType,
+                        commentType: tempCommentType,
+                        userId: item.userId,
+                    });
+                });
+                this.setState({
+                    loading: false,
+                    data: data,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
+                    }
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
         });
     };
 
     // 设置排序
     handleSort = (row) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/banner/updateSort',
-            type: 'json',
-            method: 'post',
-            data: {                
-                id: row.id,// 广告Id                
-                sort: Number(row.sort),// 排序
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
+        this.setState({loading: true});
+        sortCoffee({
+            id: row.id,// 广告Id
+            sort: Number(row.sort),// 排序
+        }).then((json) => {
+            if (json.result === 0) {
                 this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        loading: false,
-                    });
-                    this.getData(); //刷新数据
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false});
-                    }
-                }
+                this.getData(); //刷新数据
+            } else {
+                this.exceptHandle(json.data);
             }
-        });  
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
+        });
+    };
+
+    // 设置浏览数
+    setViewNum = (row) => {
+        this.setState({loading: true});
+        viewNum({
+            id: row.id,
+            sort: Number(row.sort),// 浏览数
+        }).then((json) => {
+            if (json.result === 0) {
+                this.setState({loading: false});
+                this.getData(); //刷新数据
+            } else {
+                this.exceptHandle(json.data);
+            }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
+        });
     };
 
     //评价删除
     itemDelete = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/comment/delete?id=' + id,
-            type: 'json',
-            method: 'delete',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("评价删除成功");
-                    this.getData(this.props.keyword);
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false});
-                    }
-                }
+        this.setState({loading: true});
+        deleteCoffee({id: id}).then((json) => {
+            if (json.data.result === 0) {
+                message.success("评价删除成功");
+                this.getData(this.props.keyword);
+            } else {
+                this.exceptHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("删除失败");
+            this.setState({loading: false});
         });
+    };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
     };
 
     //表格参数变化处理
@@ -439,7 +720,12 @@ class CoffeeCircle extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
+            opObj: {
+                select: true,
+                add: true,
+                modify: true,
+                delete: true,
+            },
             // 获取评价列表所需关键词
             keyword: {
                 content: "",
@@ -564,9 +850,9 @@ class CoffeeCircle extends Component {
 
     render() {
         return (
-            <div className="institutions">
+            <div className="institutions coffee-circle">
                 {
-                    // this.state.opObj.select ?
+                    this.state.opObj.select ?
                         <div>
                             <header className="clearfix" style={{height: "50px", lineHeight: "50px", background: "#FFF"}}>                               
                                 {/*评价名称筛选*/}
@@ -599,8 +885,8 @@ class CoffeeCircle extends Component {
                                     toLoginPage={this.toLoginPage}/>
                             </div>                               
                         </div>
-                        // :
-                        // <p>暂无查询权限</p>
+                        :
+                        <p>暂无查询权限</p>
                 }
             </div>  
         )

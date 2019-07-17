@@ -22,3 +22,7 @@
     margin-top: 30px;
     margin-bottom: 10px;
 }
+
+.course-form.star-manage-form .ant-form-item.personalProfile .ant-form-explain {
+    top: 108%;
+}

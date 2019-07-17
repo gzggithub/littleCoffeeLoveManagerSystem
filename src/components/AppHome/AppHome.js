@@ -7,11 +7,11 @@ import {
 import Category from './Category';
 import AdvManage from './AdvManage';
 import StarManage from './StarManage';
-import NotificationManage from './NotificationManage';
+import NoticeManage from './NoticeManage';
 import SignList from './SignList';
 import StarCheck from './StarCheck';
 import CoffeeCircle from './CoffeeCircle';
-import EvaluationManage from './EvaluationManage';
+import CommentManage from './CommentManage';
 
 import {Layout, Menu} from 'antd';
 
@@ -203,7 +203,7 @@ class AppHome extends Component {
                                         </Link>
                                     </Menu.Item>
                                     <Menu.Item key={4} style={{textAlign: "center"}}>
-                                        <Link to="/index/app-home/notification-manage">
+                                        <Link to="/index/app-home/notice-manage">
                                             通告管理
                                         </Link>
                                     </Menu.Item>
@@ -218,7 +218,7 @@ class AppHome extends Component {
                                         </Link>
                                     </Menu.Item>
                                     <Menu.Item key={7} style={{textAlign: "center"}}>
-                                        <Link to="/index/app-home/evaluatioin-manage">
+                                        <Link to="/index/app-home/comment-manage">
                                             评论管理
                                         </Link>
                                     </Menu.Item>                                    
@@ -231,11 +231,11 @@ class AppHome extends Component {
                                 <Route path="/index/app-home/category" component={Category}/>
                                 <Route path="/index/app-home/adv-manage" component={AdvManage}/>
                                 <Route path="/index/app-home/star-manage" component={StarManage}/>
-                                <Route path="/index/app-home/notification-manage" component={NotificationManage}/>
+                                <Route path="/index/app-home/notice-manage" component={NoticeManage}/>
                                 <Route path="/index/app-home/sign-list/:id/:name" component={SignList}/>
                                 <Route path="/index/app-home/star-check" component={StarCheck}/>
                                 <Route path="/index/app-home/coffee-circle" component={CoffeeCircle}/>
-                                <Route path="/index/app-home/evaluatioin-manage" component={EvaluationManage}/>                                
+                                <Route path="/index/app-home/comment-manage" component={CommentManage}/>                                
                             </Content>
                         </Layout>
                     </Layout>

@@ -12,8 +12,8 @@ import {
     DatePicker,
     InputNumber,
 } from 'antd';
-import config from '../../config/config';
-import reqwest from 'reqwest';
+import { checkList, checkDetail, check, checkOpinion } from '../../config';
+import common from '../../config/config';
 
 const TabPane = Tabs.TabPane;
 const Search = Input.Search;
@@ -61,14 +61,13 @@ const ItemCheckForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form quality-course-check-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">明星申请信息</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="courseName"  label="课程名称：">
+                                <FormItem className="courseName"  label="姓名：">
                                     {getFieldDecorator('courseName', {
                                         initialValue: data.name,
                                         rules: [{
@@ -314,7 +313,7 @@ class ItemCheck extends Component {
         feeType: 4,
         feeType01: 2,
         visible: false,       
-        confirmLoading: false, 
+        loading: false, 
     };
 
     showModal = () => {
@@ -324,45 +323,18 @@ class ItemCheck extends Component {
 
     // 获取本页信息
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/checkDetail',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
+        checkDetail({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {
+                json.data.data.characteristic = common.removeTag(json.data.data.characteristic)
                 this.setState({
-                    loading: false
+                    data: json.data.data,
+                    videoList: json.data.data.lesson,
                 });
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    // 已有所属分类写入                    
-                    json.data.typeIds = json.data.excellentCourseType.parentTypeName + '/' + json.data.excellentCourseType.typeName;
-                    json.data.characteristic = config.removeTAG(json.data.characteristic)
-                    this.setState({
-                        data: json.data,
-                        videoList: json.data.lesson,
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+            } else {
+                this.props.exceptHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("获取失败");
         });
     };
 
@@ -388,7 +360,7 @@ class ItemCheck extends Component {
                 videoList: [],
                 feetype: 4,
                 feetype01: 2,
-                confirmLoading: false
+                loading: false
             });
             form.resetFields();
         });
@@ -404,49 +376,25 @@ class ItemCheck extends Component {
                 message.error("驳回意见不能为空");
                 return
             }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/excellentCourse/check',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    id: this.props.id,
-                    fee: values.fee,
-                    checkStatus: values.checkStatus,
-                    checkOpinion: values.opinion
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    });
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("审核成功");
-                        this.handleCancel();
-                        this.props.recapture();
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            this.setState({loading: true});            
+            const data = {
+                id: this.props.id,               
+                checkStatus: values.checkStatus,
+                checkOpinion: values.opinion
+            };
+            check(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("审核成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.props.exceptHandle(json.data);
+                    this.setState({loading: false});
                 }
-            })
+            }).catch((err) => {
+                message.error("保存失败");
+                this.setState({loading: false});
+            });
         });
     };
 
@@ -469,7 +417,7 @@ class ItemCheck extends Component {
                     feeType={this.state.feeType}
                     setFeeType01={this.setFeeType01}
                     feeType01={this.state.feeType01}
-                    confirmLoading={this.state.confirmLoading}
+                    confirmLoading={this.state.loading}
                 />
             </a>
         );
@@ -484,34 +432,16 @@ class ItemOpinion extends Component {
     };
 
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/getCheckOpinion',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {message.error("获取失败");},
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        data: json.data,
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+        checkOpinion({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {
+                this.setState({
+                    data: json.data.data,
+                });
+            } else {
+                this.props.exceptHandle(json.data);                
             }
+        }).catch((err) => {
+            message.error("获取失败");
         });
     };
 
@@ -612,13 +542,15 @@ class DataTable extends Component {
                         <div className="editable-row-operations">
                             {/*驳回意见（副表状态为审核驳回的机构展示此项）*/}
                             <ItemOpinion
-                                id={record.id} 
+                                id={record.id}
+                                exceptHandle={this.exceptHandle}
                                 toLoginPage={this.props.toLoginPage}                                
                                 status={this.props.type === 1 && this.props.opObjDeny.checkOpinion}/>                            
                             {/*审核（副表状态为待审核，当前登录人为超级管理员或运营人员时展示此项）*/}
                             <ItemCheck 
                                 id={record.id}                                
-                                recapture={this.getData} 
+                                recapture={this.getData}
+                                exceptHandle={this.exceptHandle}
                                 toLoginPage={this.props.toLoginPage}                                
                                 status={this.props.type === 0 && this.props.opObjReady.checkExcellectCourse}/>                            
                         </div>
@@ -637,100 +569,87 @@ class DataTable extends Component {
 
     //获取本页信息
     getData = (type, keyword) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/excellentCourse/checkList',
-            type: 'json',
-            method: 'get',
-            data: {
-                status: type === undefined ? this.props.type : type,
-                name: keyword === undefined ? this.props.keyword.courseName : keyword.courseName,
-                startTime: keyword === undefined ? this.props.keyword.startTime : keyword.startTime,
-                endTime: keyword === undefined ? this.props.keyword.endTime : keyword.endTime,
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({
-                    loading: false
-                });
-            },
-            success: (json) => {
-                const data = [];
-                if (json.result === 0) {
-                    if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
-                    json.data.list.forEach((item, index) => {
-                        let tempStatus = '';
-                        if (item.checkStatus === 1) {
-                            tempStatus = "未审核";
-                        } else if (item.checkStatus === 2) {
-                            tempStatus = "需重审";
-                        } else if (item.checkStatus === 3) {
-                            tempStatus = "已驳回";
-                        } else if (item.checkStatus === 4) {
-                            tempStatus = "不通过";
-                        } else if (item.checkStatus === 5) {
-                            tempStatus = '通过'
-                        }
-                        data.push({
-                            key: index.toString(),
-                            id: item.id,                           
-                            index: index + 1,                           
-                            courseName: item.name,
-                            teacherName: item.teacherName,
-                            nickName: item.nickname,
-                            telephone: item.appUserPhone,                                                     
-                            typeName: item.typeNameStr,                          
-                            createTime: item.createTime,
-                            photo: item.pic,                           
-                            statusCode: item.checkStatus,
-                            status: tempStatus,
-                        });
-                    });
+        this.setState({loading: true});
+        const params = {
+            status: type === undefined ? this.props.type : type,
+            name: keyword === undefined ? this.props.keyword.courseName : keyword.courseName,
+            startTime: keyword === undefined ? this.props.keyword.startTime : keyword.startTime,
+            endTime: keyword === undefined ? this.props.keyword.endTime : keyword.endTime,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize
+        };
+        checkList(params).then((json) => {
+            const data = [];
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        data: data,
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
+                    }, () => {
+                        this.getData();
                     });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    return
                 }
+                json.data.data.list.forEach((item, index) => {
+                    let tempStatus = '';
+                    if (item.checkStatus === 1) {
+                        tempStatus = "未审核";
+                    } else if (item.checkStatus === 2) {
+                        tempStatus = "需重审";
+                    } else if (item.checkStatus === 3) {
+                        tempStatus = "已驳回";
+                    } else if (item.checkStatus === 4) {
+                        tempStatus = "不通过";
+                    } else if (item.checkStatus === 5) {
+                        tempStatus = '通过'
+                    }
+                    data.push({
+                        key: index.toString(),
+                        id: item.id,                           
+                        index: index + 1,                           
+                        courseName: item.name,
+                        teacherName: item.teacherName,
+                        nickName: item.nickname,
+                        telephone: item.appUserPhone,                                                     
+                        typeName: item.typeNameStr,                          
+                        createTime: item.createTime,
+                        photo: item.pic,                           
+                        statusCode: item.checkStatus,
+                        status: tempStatus,
+                    });
+                });
+                this.setState({
+                    loading: false,
+                    data: data,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
+                    }
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
         });
     };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");
+            this.props.toLoginPage();
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");
+            this.props.toLoginPage();
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    }
 
     //页码变化处理
     handleTableChange = (pagination) => {

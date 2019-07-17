@@ -6,8 +6,7 @@ import {
     Popconfirm,
     message
 } from 'antd';
-import '../../config/config';
-import reqwest from 'reqwest';
+import { commentList, deleteComment } from '../../config';
 
 const Search = Input.Search;
 
@@ -93,134 +92,105 @@ class DataTable extends Component {
 
     //获取本页信息
     getData = (keyword) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/comment/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                // 评价内容
-                content: keyword ? keyword.content : this.props.keyword.content,
-                beginDate: keyword ? keyword.startTime : this.props.keyword.startTime,
-                endDate: keyword ? keyword.endTime : this.props.keyword.endTime,
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                const data = [];
-                if (json.result === 0) {
-                    if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
-                    json.data.list.forEach((item, index) => {
-                        let tempCommentType = "";
-                        if (item.commentType === 0) {
-                            tempCommentType = "课程"
-                        }
-                        if (item.commentType === 1) {
-                            tempCommentType = "机构"
-                        }
-                        if (item.commentType === 2) {
-                            tempCommentType = "育儿"
-                        }
-                        if (item.commentType === 3) {
-                            tempCommentType = "资讯"
-                        }
-                        
-                        data.push({
-                            key: index.toString(),
-                            id: item.id,
-                            index: index + 1,                        
-                            nickname: item.nickname,
-                            star: item.star,
-                            content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
-                            content_detail: item.content,
-                            photo: item.resourceList,
-                            targetId: item.targetId,                   
-                            targetName: item.targetName,
-                            createTime: item.createTime,
-                            commentTypeCode: item.commentType,
-                            commentType: tempCommentType,
-                            userId: item.userId,
-                        });
-                    });
+        this.setState({loading: true});
+        const params = {            
+            content: keyword ? keyword.content : this.props.keyword.content,// 评价内容
+            beginDate: keyword ? keyword.startTime : this.props.keyword.startTime,
+            endDate: keyword ? keyword.endTime : this.props.keyword.endTime,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize,
+        };
+        commentList(params).then((json) => {
+            const data = [];
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        data: data,
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
+                    }, () => {
+                        this.getData();
                     });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false})
-                    }
+                    return
                 }
+                json.data.data.list.forEach((item, index) => {
+                    let tempCommentType = "";
+                    if (item.commentType === 0) {
+                        tempCommentType = "课程"
+                    }
+                    if (item.commentType === 1) {
+                        tempCommentType = "机构"
+                    }
+                    if (item.commentType === 2) {
+                        tempCommentType = "育儿"
+                    }
+                    if (item.commentType === 3) {
+                        tempCommentType = "资讯"
+                    }
+                    
+                    data.push({
+                        key: index.toString(),
+                        id: item.id,
+                        index: index + 1,                        
+                        nickname: item.nickname,
+                        star: item.star,
+                        content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
+                        content_detail: item.content,
+                        photo: item.resourceList,
+                        targetId: item.targetId,                   
+                        targetName: item.targetName,
+                        createTime: item.createTime,
+                        commentTypeCode: item.commentType,
+                        commentType: tempCommentType,
+                        userId: item.userId,
+                    });
+                });
+                this.setState({
+                    loading: false,
+                    data: data,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
+                    }
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("获取失败");
+            this.setState({loading: false});
         });
     };
 
     //评价删除
     itemDelete = (id) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/comment/delete?id=' + id,
-            type: 'json',
-            method: 'delete',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("删除失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("评价删除成功");
-                    this.getData(this.props.keyword);
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false});
-                    }
-                }
+        this.setState({loading: true});
+        deleteComment({id: id}).then((json) => {
+            if (json.data.result === 0) {
+                message.success("评价删除成功");
+                this.getData(this.props.keyword);
+            } else {
+                this.exceptHandle(json.data);
             }
+        }).catch((err) => {
+            message.error("删除失败");
+            this.setState({loading: false});
         });
+    };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
     };
 
     //表格参数变化处理
@@ -265,7 +235,10 @@ class EvaluationManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
+            opObj: {
+                select: true,
+                delete: true,
+            },
             // 获取评价列表所需关键词
             keyword: {
                 content: "",
@@ -390,9 +363,9 @@ class EvaluationManage extends Component {
 
     render() {
         return (
-            <div className="institutions">
+            <div className="institutions comment">
                 {
-                    // this.state.opObj.select ?
+                    this.state.opObj.select ?
                         <div>
                             <header className="clearfix" style={{height: "50px", lineHeight: "50px", background: "#FFF"}}>                               
                                 {/*评价名称筛选*/}
@@ -425,8 +398,8 @@ class EvaluationManage extends Component {
                                     toLoginPage={this.toLoginPage}/>
                             </div>                               
                         </div>
-                        // :
-                        // <p>暂无查询权限</p>
+                        :
+                        <p>暂无查询权限</p>
                 }
             </div>  
         )

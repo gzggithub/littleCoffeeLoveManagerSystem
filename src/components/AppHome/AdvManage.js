@@ -1095,19 +1095,19 @@ class AdvManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},            
+            opObj: {},
             keyword: {// 获取广告列表所需关键词
                 type: null,
                 cityCode: "",
-                title: "",                
+                title: "",
                 startTime: null,// 初始化开始日期和结束日期
                 endTime: null,
             },
-            flag_add: false,            
+            flag_add: false,
             startValue: null,// 日期禁选控制
             endValue: null,
-            endOpen: false,            
-            mapObj: {},// 地图控件对象            
+            endOpen: false,
+            mapObj: {},// 地图控件对象
             provinceList: [],// 省市列表
         };
         this.optionsType = [
@@ -1332,7 +1332,7 @@ class AdvManage extends Component {
                                     onChange={this.setCity} 
                                     style={{width: "150px", float: "left", marginRight: "20px"}} 
                                     placeholder="请选择所属城市"
-                                    allowClear/>                                
+                                    allowClear/>
                                 {/*广告名称筛选*/}
                                 <Search
                                     placeholder="请输入描述信息"
