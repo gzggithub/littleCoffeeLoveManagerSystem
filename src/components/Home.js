@@ -6,12 +6,6 @@ import {
 } from 'react-router-dom';
 import AppHome from './AppHome/AppHome';
 import BackUserManage from './BackUserManage/BackUserManage';
-import EduManage from './EduManage/EduManage';
-import OrderManage from './OrderManage/OrderManage';
-import CheckManage from './CheckManage/CheckManage';
-import FinancialManage from './FinancialManage/FinancialManage';
-import UserManage from './UserManage/UserManage';
-import SysManage from './SysManage/SysManage';
 
 import {
     Layout,
@@ -475,14 +469,8 @@ class Home extends Component {
                         
                     </Layout>
                     {/*一级菜单路由组件映射表*/}
-                    <Route path="/index/app-home" component={AppHome}/>        
-                    <Route path="/index/edu-manage" component={EduManage}/>
-                    <Route path="/index/order-manage" component={OrderManage}/>                    
-                    <Route path="/index/check-manage" component={CheckManage}/>                    
-                    <Route path="/index/financial-manage" component={FinancialManage}/>
-                    <Route path="/index/user-manage" component={UserManage}/>
-                    <Route path="/index/backUser-manage" component={BackUserManage}/>                   
-                    <Route path="/index/sys-manage" component={SysManage}/> 
+                    <Route path="/index/app-home" component={AppHome}/> 
+                    <Route path="/index/backUser-manage" component={BackUserManage}/> 
                     <Layout>
                         <Footer className="footer">
                             <div className="version-infor">Copyright © www.taoerxue.com, All Rights Reserved.</div>

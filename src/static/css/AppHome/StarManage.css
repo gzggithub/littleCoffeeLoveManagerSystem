@@ -26,3 +26,16 @@
 .course-form.star-manage-form .ant-form-item.personalProfile .ant-form-explain {
     top: 108%;
 }
+
+.star-manage-form .ant-col.ant-col-8 {
+    position: relative;
+}
+
+.star-manage-form .ant-col.ant-col-8 .tip-help {
+    width: 90px;
+    position: absolute ;
+    top: 8px;
+    right: 0;
+    font-size: 12px;
+    color: #ACACAC;
+}

@@ -11,6 +11,8 @@ import {
     message,
     DatePicker,
     InputNumber,
+    Select,
+    Cascader,
 } from 'antd';
 import { checkList, checkDetail, check, checkOpinion } from '../../config';
 import common from '../../config/config';
@@ -20,6 +22,7 @@ const Search = Input.Search;
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 const {TextArea} = Input;
+const {Option} = Select;
 
 // 单元格
 const Cell = ({value}) => (
@@ -69,123 +72,131 @@ const ItemCheckForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="courseName"  label="姓名：">
                                     {getFieldDecorator('courseName', {
-                                        initialValue: data.name,
+                                        initialValue: data.name,                                      
                                         rules: [{
                                             required: true,
-                                            message: '课程名称不能为空',
+                                            message: '姓名不能为空',
                                         }],
                                     })(
-                                        <Input disabled placeholder="请输入课程名称"/>
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="typeName"  label="所属分类：">
-                                    {getFieldDecorator('typeName', {
-                                        initialValue: data.typeIds,
-                                        rules: [{
-                                            required: true,
-                                            message: '分类不能为空',
-                                        }],
-                                    })(   
-                                        <Input disabled placeholder="请输入所属分类"/>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={24}>
-                                <FormItem className="certification"  label="课程图片：">
-                                    {getFieldDecorator('pic', {
-                                        initialValue: data.pic,
-                                        rules: [{
-                                            required: true,
-                                            message: '课程图片不能为空',
-                                        }],
-                                    })(
-                                        <div className="coursePhoto">                                            
-                                            <img src={data.pic} alt=""/>
-                                        </div>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="author"  label="作者：">
-                                    {getFieldDecorator('author', {
-                                        initialValue: data.author,
-                                        rules: [{
-                                            required: true,
-                                            message: '作者不能为空',
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入作者"/>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="课程原价：">
-                                    {getFieldDecorator('originalPrice', {
-                                        initialValue: data.originalPrice,
-                                        rules: [{
-                                            required: true,
-                                            message: '课程原价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
+                                        <Input disabled placeholder="请输入姓名"/>
                                     )}
                                 </FormItem>
                             </Col>
                             <Col span={8}>
-                                <FormItem className="price"  label="课程现价：">
-                                    {getFieldDecorator('price', {
-                                        initialValue: data.price,
+                                <FormItem className="gender"  label="性别：">
+                                    {getFieldDecorator('gender', {
+                                        initialValue: data.gender,                                      
                                         rules: [{
                                             required: true,
-                                            message: '课程现价不能为空',
+                                            message: '性别不能为空',
                                         }],
                                     })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
+                                        <Select disabled placeholder="请选择性别">
+                                            <Option value={0}>女</Option>
+                                            <Option value={1}>男</Option>
+                                        </Select>
                                     )}
                                 </FormItem>
                             </Col>
-                            <Col span={6}>
-                                <FormItem className="name" label="付费设置：">
-                                    {getFieldDecorator('name', {
-                                        initialValue: data.isCharge ? 1 : 2,
+                            <Col span={8}>
+                                <FormItem className="height"  label="身高：">
+                                    {getFieldDecorator('height', {
+                                        initialValue: data.height,
                                         rules: [{
                                             required: true,
-                                            message: '付费不能为空',
+                                            message: '身高不能为空',
                                         }],
                                     })(
-                                        <RadioGroup disabled buttonStyle="solid" onChange={(e) => setFeeType01(e.target.value)}>
-                                            <Radio.Button value={1} style={{marginRight: "20px", borderRadius: "4px"}}>收费</Radio.Button>
-                                            <Radio.Button value={2} style={{marginRight: "20px", borderRadius: "4px"}}>免费</Radio.Button>
-                                        </RadioGroup>                                       
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="chapterChoose" label="">
-                                    从 {getFieldDecorator('chapter', {
-                                        initialValue: data.isCharge ? data.chargeJointCount : '',
-                                        rules: [{
-                                            required: feeType01 === 1,
-                                            message: '章节不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={0} step={100} style={{width: "40%"}} placeholder="请输入正整数" />
-                                    )} 节开始收费
+                                        <InputNumber disabled style={{width: "90%"}} placeholder="请填写身高"/>
+                                    )} CM
                                 </FormItem>
                             </Col>
                         </Row>
                         <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">课程详情</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="characteristic" label="课程简介：">
+                                <FormItem className="weight"  label="体重：">
+                                    {getFieldDecorator('weight', {
+                                        initialValue: data.weight,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '体重不能为空',
+                                        }],
+                                    })(
+                                        <InputNumber disabled style={{width: "90%"}} placeholder="请填写体重"/>
+                                    )} KG
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="area"  label="所在地区：">
+                                    {getFieldDecorator('area', {
+                                        // initialValue: data.areaId === 0 ? ["0"] : currentArea,
+                                        rules: [{
+                                            required: true,
+                                            message: '所在地区不能为空',
+                                        }],
+                                    })(
+                                        <Cascader disabled  placeholder="请选择所在地区"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="telephone"  label="联系方式：">
+                                    {getFieldDecorator('telephone', {
+                                        initialValue: data.telephone,                                      
+                                        rules: [{
+                                            required: true,
+                                            message: '联系方式不能为空',
+                                        }],
+                                    })(
+                                        <Input disabled placeholder="请输入联系方式"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={24}>
+                                <FormItem className="avatar"  label="头像：">
+                                    {getFieldDecorator('avatar', {
+                                        initialValue: data.pic,
+                                        rules: [{
+                                            required: true,
+                                            message: '头像不能为空',
+                                        }],
+                                    })(
+                                        <div className="professionCertification">                                            
+                                            <img src={data.pic} alt=""/>
+                                        </div>
+                                    )}
+                                </FormItem>                                
+                            </Col>
+                        </Row>                        
+                        <div className="ant-line"></div>
+                        {/*<FormItem className="personalProfile" label="明星简介：">
+                            {getFieldDecorator('personalProfile', {
+                                initialValue: data.personalProfile,
+                                rules: [{
+                                    required: true,
+                                    message: '简介不能为空',
+                                }],
+                            })(
+                                <TextArea                                     
+                                    style={{resize: "none"}}
+                                    disabled                                    
+                                    placeholder="请填写明星简介"
+                                    autosize={{minRows: 5, maxRows: 30}}/>                                
+                            )}
+                        </FormItem>*/}
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="characteristic" label="个人简介：">
                                     {getFieldDecorator('characteristic', {
                                         initialValue: data.characteristic,
                                         rules: [{
                                             required: true,
-                                            message: '课程简介不能为空',
+                                            message: '个人简介不能为空',
                                         }],
                                     })(
                                         <div style={{bordr: "1px solid #e5e4e3"}} className="courseDescription" dangerouslySetInnerHTML={{__html: data.characteristic}}></div>
@@ -194,56 +205,6 @@ const ItemCheckForm = Form.create()(
                             </Col>
                         </Row>
                         
-                        <div className="ant-line"></div>                        
-
-                        <h4 className="add-form-title-h4">购买须知</h4>
-                        <FormItem className="tips longItem" label="购买说明：">
-                            {getFieldDecorator('tips', {
-                                initialValue: data.tips,
-                                rules: [{
-                                    required: true,
-                                    message: '购买须知不能为空',
-                                }],
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="请填写课程购买须知"
-                                    autosize={{minRows: 5, maxRows: 10}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <FormItem className="warmPrompt longItem" label="温馨提示：">
-                            {getFieldDecorator('warmPrompt', {
-                                rules: [{
-                                    required: true,
-                                    message: '温馨提示不能为空',
-                                }],
-                                initialValue: data.warmPrompt || "如需要发票，请您在上课前向机构咨询",
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="如需要发票，请您在上课前向机构咨询"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <FormItem className="official longItem" label="官方说明：">
-                            {getFieldDecorator('official', {
-                                rules: [{
-                                    required: true,
-                                    message: '官方说明不能为空',
-                                }],
-                                initialValue: data.official || "为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">课时安排</h4>
                         <Row gutter={24}>
@@ -269,21 +230,8 @@ const ItemCheckForm = Form.create()(
                                     )}
                                 </FormItem>                            
                             </Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="服务费：">
-                                    {getFieldDecorator('fee', {
-                                        initialValue: data.fee,
-                                        rules: [{
-                                            required: feeType === 4,
-                                            message: '服务费不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled={data.fee} min={0} precision={2} step={0.01} style={{width: "100%"}} placeholder="输入0.15即为服务费15%"/>
-                                    )}
-                                </FormItem>
-                            </Col>
-                            <div className="ant-line"></div>
-                        </Row>                      
+                        </Row>  
+                        <div className="ant-line"></div>                    
                         <FormItem className="opinion" label="不通过/驳回原因：">
                             {getFieldDecorator('opinion', {
                                 rules: [{

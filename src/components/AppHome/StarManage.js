@@ -7,6 +7,7 @@ import {
     Form,
     Select,
     Upload,
+    Tooltip,
     Icon,
     message,
     Row,
@@ -25,7 +26,6 @@ const Search = Input.Search;
 const FormItem = Form.Item;
 const {TextArea} = Input;
 const {Option} = Select;
-const RadioGroup = Radio.Group;
 
 //单元格
 const Cell = ({value}) => (
@@ -249,8 +249,8 @@ const ItemAddForm = Form.create()(
                         <h4 className="add-form-title-h4">基础信息</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="courseName"  label="姓名：">
-                                    {getFieldDecorator('courseName', {
+                                <FormItem className="name"  label="姓名：">
+                                    {getFieldDecorator('name', {
                                         initialValue: data.name,                                      
                                         rules: [{
                                             required: true,
@@ -260,6 +260,11 @@ const ItemAddForm = Form.create()(
                                         <Input placeholder="请输入姓名"/>
                                     )}
                                 </FormItem>
+                                <div className="tip-help">
+                                    <Tooltip title="请输入真实姓名">
+                                        <Icon type="alert" /> 填写帮助
+                                    </Tooltip>
+                                </div>
                             </Col>
                             <Col span={8}>
                                 <FormItem className="gender"  label="性别：">
@@ -286,8 +291,8 @@ const ItemAddForm = Form.create()(
                                             message: '身高不能为空',
                                         }],
                                     })(
-                                        <InputNumber style={{width: "100%"}} placeholder="请填写身高"/>
-                                    )}
+                                        <InputNumber style={{width: "90%"}} step={1} precision={2} placeholder="请填写身高"/>
+                                    )} CM
                                 </FormItem>
                             </Col>
                         </Row>
@@ -302,8 +307,8 @@ const ItemAddForm = Form.create()(
                                             message: '体重不能为空',
                                         }],
                                     })(
-                                        <InputNumber style={{width: "100%"}} placeholder="请填写体重"/>
-                                    )}
+                                        <InputNumber style={{width: "90%"}} step={0.1} precision={3} placeholder="请填写体重"/>
+                                    )} KG
                                 </FormItem>
                             </Col>
                             <Col span={8}>
@@ -950,6 +955,11 @@ const ItemEditForm = Form.create()(
                                         <Input placeholder="请输入姓名"/>
                                     )}
                                 </FormItem>
+                                <div className="tip-help">
+                                    <Tooltip title="请输入真实姓名">
+                                        <Icon type="alert" /> 填写帮助
+                                    </Tooltip>
+                                </div>
                             </Col>
                             <Col span={8}>
                                 <FormItem className="gender"  label="性别：">
@@ -976,8 +986,8 @@ const ItemEditForm = Form.create()(
                                             message: '身高不能为空',
                                         }],
                                     })(
-                                        <InputNumber style={{width: "100%"}} placeholder="请填写身高"/>
-                                    )}
+                                        <InputNumber style={{width: "90%"}} precision={2} placeholder="请填写身高"/>
+                                    )} CM
                                 </FormItem>
                             </Col>
                         </Row>
@@ -992,8 +1002,8 @@ const ItemEditForm = Form.create()(
                                             message: '体重不能为空',
                                         }],
                                     })(
-                                        <InputNumber style={{width: "100%"}} placeholder="请填写体重"/>
-                                    )}
+                                        <InputNumber style={{width: "90%"}} precision={3} placeholder="请填写体重"/>
+                                    )} KG
                                 </FormItem>
                             </Col>
                             <Col span={8}>
@@ -1550,8 +1560,8 @@ const ItemDetailsForm = Form.create()(
                                             message: '身高不能为空',
                                         }],
                                     })(
-                                        <InputNumber disabled style={{width: "100%"}} placeholder="请填写身高"/>
-                                    )}
+                                        <InputNumber disabled style={{width: "90%"}} placeholder="请填写身高"/>
+                                    )} CM
                                 </FormItem>
                             </Col>
                         </Row>
@@ -1566,8 +1576,8 @@ const ItemDetailsForm = Form.create()(
                                             message: '体重不能为空',
                                         }],
                                     })(
-                                        <InputNumber disabled style={{width: "100%"}} placeholder="请填写体重"/>
-                                    )}
+                                        <InputNumber disabled style={{width: "90%"}} placeholder="请填写体重"/>
+                                    )} KG
                                 </FormItem>
                             </Col>
                             <Col span={8}>
@@ -1602,7 +1612,7 @@ const ItemDetailsForm = Form.create()(
                             <Col span={24}>
                                 <FormItem className="avatar"  label="头像：">
                                     {getFieldDecorator('avatar', {
-                                        // initialValue: viewPic,
+                                        initialValue: data.pic,
                                         rules: [{
                                             required: true,
                                             message: '头像不能为空',
@@ -1634,7 +1644,7 @@ const ItemDetailsForm = Form.create()(
                         <h4 className="add-form-title-h4">生活照</h4>
                         <FormItem className="photo"  label="">
                             {getFieldDecorator('photo', {
-                                // initialValue: viewPic03,
+                                initialValue: data.pic,
                                 rules: [{
                                     required: false,
                                     message: '明星图片不能为空',
