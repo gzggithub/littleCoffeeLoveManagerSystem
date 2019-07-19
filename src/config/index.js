@@ -70,15 +70,15 @@ export const resetPassword = data => {
 
 /*-------------------------------分类管理-------------------------------*/
 // 列表
-export const getOrgTypePage = params => {
+export const getOrgTypeList = params => {
     setAuthorization();
-    return axios.get(api.getOrgTypePage, {params: params});
+    return axios.get(api.getOrgTypeList, {params: params});
 }
 
 // 添加
-export const saveOrgType = data => {
+export const addOrgType = data => {
     setAuthorization();
-    return axios.post(api.saveOrgType, createPostParams(data));
+    return axios.post(api.addOrgType, createPostParams(data));
 }
 
 // 删除

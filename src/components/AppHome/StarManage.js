@@ -121,7 +121,7 @@ class EditableCell extends Component {
 // 新增、复制明星表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03 ,picUpload02, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03 ,picUpload02, picList, setPicList, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
         // 城市选项生成
@@ -175,6 +175,20 @@ const ItemAddForm = Form.create()(
             </div>
         );
 
+        
+        // 已上传图片列表
+        const photoExist = [];
+        picList.forEach((item, index) => {
+            photoExist.push(
+                <div className="photoExist-item clearfix" key={index + 1}>
+                    <img src={item.path} alt=""/>
+                    <div className="remove">
+                        <Button type="dashed"
+                                shape="circle" icon="minus" onClick={() => setPicList(index)}/>
+                    </div>
+                </div>
+            )
+        });
         //  生活照
         const picHandleChange03 = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
@@ -325,9 +339,9 @@ const ItemAddForm = Form.create()(
                                 </FormItem>
                             </Col>
                             <Col span={8}>
-                                <FormItem className="telephone"  label="联系方式：">
-                                    {getFieldDecorator('telephone', {
-                                        initialValue: data.telephone,                                      
+                                <FormItem className="phone"  label="联系方式：">
+                                    {getFieldDecorator('phone', {
+                                        initialValue: data.phone,                                      
                                         rules: [{
                                             required: true,
                                             message: '联系方式不能为空',
@@ -388,16 +402,19 @@ const ItemAddForm = Form.create()(
                                     required: false,
                                     message: '明星图片不能为空',
                                 }],
-                            })(
-                                <Upload
-                                    name="file"
-                                    listType="picture-card"                                    
-                                    accept="image/*"
-                                    showUploadList={false}
-                                    beforeUpload={beforeUpload}
-                                    customRequest={picHandleChange03}>
-                                    {viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}
-                                </Upload>                                        
+                            })( 
+                                <div className="itemBox">
+                                    {photoExist}
+                                    <Upload
+                                        name="file"
+                                        listType="picture-card"
+                                        accept="image/*"
+                                        showUploadList={false}
+                                        beforeUpload={beforeUpload}
+                                        customRequest={picHandleChange03}>
+                                        {viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}
+                                    </Upload>
+                                </div>                       
                             )}
                         </FormItem> 
                         <div className="ant-line"></div>
@@ -567,7 +584,10 @@ class ItemAdd extends Component {
             complete (res) {
                 console.log(res);
                 message.success("图片提交成功");
+                let tempPicList = [];
+                tempPicList.push({path: configUrl.photoUrl + res.key});
                 _this.setState({
+                    picList: tempPicList,
                     viewPic03: configUrl.photoUrl + res.key || "",           
                     photoLoading03: false,
                 })
@@ -575,6 +595,14 @@ class ItemAdd extends Component {
         }
         const observable = qiniu.upload(file, key, token, config);
         observable.subscribe(observer); // 上传开始        
+    };
+
+    setPicList = (index) => {
+        let data = this.state.picList;
+        data.splice(index, 1);
+        this.setState({
+            picList: data
+        });
     };
    
     // 视频上传
@@ -713,6 +741,27 @@ class ItemAdd extends Component {
                 message.error("图片未选择");
                 return false;
             }
+
+            console.log(this.props.provinceList);
+            let provinceName = '';
+            let cityName = '';
+            let areaName = '';
+            let currentAreaName = [];
+            if (this.props.provinceList.length) {
+                this.props.provinceList.forEach((item) => {                    
+                    if (item.districtList) {
+                        item.districtList.forEach((subItem) => {
+                            if (subItem.districtList) {
+                                subItem.districtList.forEac((thirdItem) => {
+                                    if (thirdItem.adcode === values.area[3]) {
+                                        currentAreaName = [item.name, subItem.name, thirdItem.name]
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            }
             
             // 明星视频写入与校验
             const tempVideoList = [];
@@ -724,7 +773,8 @@ class ItemAdd extends Component {
                         name: item.name,
                         sort: item.sort,
                         duration: item.duration,
-                        video: item.video.slice(configUrl.photoUrl.length)
+                        // video: item.video.slice(configUrl.photoUrl.length)
+                        resource: item.video.slice(configUrl.photoUrl.length)
                     })
                 })
             }
@@ -734,11 +784,17 @@ class ItemAdd extends Component {
                 gender: values.gender,
                 height: values.height,
                 weight: values.height,
-                telephone: values.telephone,
-                avatar: values.avatar,
-                personalProfile: values.personalProfile,
-                photo: values.photo,
-                lesson: JSON.stringify(tempVideoList)
+                provinceId: values.area[0],
+                // provinceName: values.provinceName,
+                cityId: values.area[1],
+                // cityName: values.cityName,
+                areaId: values.area[2],
+                // areaName: values.areaName,
+                phone: values.phone,
+                photo: values.avatar,
+                desc: values.personalProfile,
+                piclist: [values.photo],
+                videoList: JSON.stringify(tempVideoList)
             };
             this.setState({loading: true});
             saveStar(result).then((json) => {
@@ -774,6 +830,7 @@ class ItemAdd extends Component {
     };
 
     render() {
+        console.log(this.props.provinceList);
         return (
             <div style={{display: this.props.opStatus ? "block" : "none"}}>
                 <Button onClick={() => {this.showModal(1)}}>复制</Button>
@@ -791,6 +848,8 @@ class ItemAdd extends Component {
                     photoLoading={this.state.photoLoading}
                     picUpload03={this.picUpload03}
                     viewPic03={this.state.viewPic03}
+                    picList={this.state.picList}
+                    setPicList={this.setPicList}
                     photoLoading03={this.state.photoLoading03}                 
                     picUpload02={this.picUpload02}
                     viewVideo={this.state.viewVideo}                  
@@ -1743,8 +1802,7 @@ class DataTable extends Component {
                 showSizeChanger: true
             },
         };
-        // 机构管理员列配置
-        this.columns = [
+        this.columns = [// 列配置
             {
                 title: '序号',
                 dataIndex: 'index',

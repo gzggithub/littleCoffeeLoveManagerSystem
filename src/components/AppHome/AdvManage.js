@@ -1095,7 +1095,13 @@ class AdvManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
+            opObj: {
+                add: true,
+                delete: true,
+                modify: true,
+                select: true,
+                putAway: true
+            },
             keyword: {// 获取广告列表所需关键词
                 type: null,
                 cityCode: "",
@@ -1131,7 +1137,7 @@ class AdvManage extends Component {
                 });
                 districtSearch.search('中国', (status, result) => {                    
                     this.setState({
-                        provinceList: result.districtList[0].districtList
+                        provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
                     }, () => {                                            
                         this.cityList();
                     });
@@ -1280,7 +1286,7 @@ class AdvManage extends Component {
         return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
     };
 
-    setFlag = () => {
+    setFlag = () => { // 刷新table 
         this.setState({
             flag_add: !this.state.flag_add
         })
@@ -1359,7 +1365,7 @@ class AdvManage extends Component {
                                         optionsOfCity={this.optionsOfCity}
                                         provinceList={this.state.provinceList}
                                         optionsType={this.optionsType}
-                                        recapture={this.getData}
+                                        recapture={this.setFlag}
                                         toLoginPage={this.toLoginPage}/>
                                 </div>
                             </header>

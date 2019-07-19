@@ -11,7 +11,7 @@ import {
     Popconfirm,
     Spin
 } from 'antd';
-import { configUrl, getOrgTypePage, getToken, saveOrgType, deleteOrgType, getOrgTypeDetail, updateOrgType, sortOrgType } from '../../config';
+import { configUrl, getOrgTypeList, getToken, addOrgType, deleteOrgType, getOrgTypeDetail, updateOrgType, sortOrgType } from '../../config';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 
@@ -157,8 +157,7 @@ const ItemAddForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="category-add category-form">
                     <Form layout="vertical">
                         <FormItem className="name" {...formItemLayout_12} label="类型名称：">
@@ -285,7 +284,7 @@ class ItemAdd extends Component {
                 icon: this.state.viewPic.slice(configUrl.photoUrl.length),
                 background: values.background
             };
-            saveOrgType(data).then((json) => {
+            addOrgType(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("类型添加成功");
                     this.handleCancel();
@@ -395,9 +394,9 @@ const ItemEditForm = Form.create()(
                                         <Input placeholder="请输入类型名称"/>
                                     )}
                                 </FormItem>
-                                <FormItem className="color" {...formItemLayout_12} label="开始渐变色：">
-                                    {getFieldDecorator('gradientRampStar', {
-                                        initialValue: data.gradientRampStar,
+                                <FormItem className="color" {...formItemLayout_12} label="背景色：">
+                                    {getFieldDecorator('background', {
+                                        initialValue: data.backgroundColor,
                                         rules: [{
                                             required: true,
                                             message: '颜色不能为空',
@@ -405,18 +404,7 @@ const ItemEditForm = Form.create()(
                                     })(
                                         <Input type="color" placeholder="请拾取颜色"/>
                                     )}
-                                </FormItem>
-                                <FormItem className="color" {...formItemLayout_12} label="结束渐变色：">
-                                    {getFieldDecorator('gradientRampEnd', {
-                                        initialValue: data.gradientRampEnd,
-                                        rules: [{
-                                            required: true,
-                                            message: '颜色不能为空',
-                                        }],
-                                    })(
-                                        <Input type="color" placeholder="请拾取颜色"/>
-                                    )}
-                                </FormItem>
+                                </FormItem>                                
                                 <FormItem className="photo" {...formItemLayout_12} label="图片：">
                                     {getFieldDecorator('photo', {
                                         initialValue: viewPic,
@@ -431,8 +419,7 @@ const ItemEditForm = Form.create()(
                                             className="avatar-uploader"
                                             showUploadList={false}
                                             beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}
-                                        >
+                                            customRequest={picHandleChange}>
                                             {viewPic ? <img src={viewPic} alt=""/> : uploadButton}
                                         </Upload>
                                     )}
@@ -453,7 +440,7 @@ class ItemEdit extends Component {
         viewPic: "",
         // 图片提交按钮状态变量
         photoLoading: false,
-        confirmLoading: false
+        loading: false
     };
 
     getData = () => {
@@ -464,15 +451,7 @@ class ItemEdit extends Component {
                     viewPic: json.data.data.photo,
                 });
             }else{
-                if (json.data.code === 901) {
-                    message.error("请先登录");
-                    this.props.toLoginPage();
-                } else if (json.data.code === 902) {
-                    message.error("登录信息已过期，请重新登录");
-                    this.props.toLoginPage();
-                } else {
-                    message.error(json.data.message);
-                }
+                this.exceptHandle(json.data);
             }
         }).catch((err) => {
             message.error("发送失败");
@@ -492,16 +471,7 @@ class ItemEdit extends Component {
                     uploadToken: json.data.data,
                 });
             } else {
-                if (json.data.code === 901) {
-                    message.error("请先登录");                        
-                    this.props.toLoginPage();// 返回登陆页
-                } else if (json.data.code === 902) {
-                    message.error("登录信息已过期，请重新登录");                        
-                    this.props.toLoginPage();// 返回登陆页
-                } else {
-                    message.error(json.data.message);
-                    this.setState({loading: false});
-                }
+                this.exceptHandle(json.data);
             }
         }).catch((err) => {
             message.error("发送失败");
@@ -545,7 +515,7 @@ class ItemEdit extends Component {
                 data: {},
                 viewPic: "",               
                 photoLoading: false,
-                confirmLoading: false
+                loading: false
             });
         });
     };
@@ -564,38 +534,38 @@ class ItemEdit extends Component {
             }
             const result = {
                 id: this.props.id,
-                parentId: 0,
                 name: values.name,
-                gradientRampStar: values.gradientRampStar,
-                gradientRampEnd: values.gradientRampEnd,
-                photo: values.photo,                
+                background: values.background,
+                icon: values.photo,                
             };            
-            this.setState({
-                confirmLoading: true
-            });
+            this.setState({loading: true});
             updateOrgType(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("编辑成功");
                     this.handleCancel();
                     this.props.recapture()
                 } else {
-                    if (json.data.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.data.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.data.message);
-                        this.setState({confirmLoading: false});
-                    }
+                   this.exceptHandle(json.data);
                 }
             }).catch((err) => {
                 message.error("保存失败");
-                this.setState({confirmLoading: false});
+                this.setState({loading: false});
             });
         });
     };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");
+            this.props.toLoginPage();
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");
+            this.props.toLoginPage();
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    }
 
     saveFormRef = (form) => {
         this.form = form;
@@ -615,7 +585,7 @@ class ItemEdit extends Component {
                     picUpload01={this.picUpload01}
                     viewPic={this.state.viewPic}
                     photoLoading={this.state.photoLoading}                    
-                    confirmLoading={this.state.confirmLoading}
+                    confirmLoading={this.state.loading}
                 />
             </a>
         );
@@ -652,15 +622,15 @@ class DataTable extends Component {
             {
                 title: '分类名称',
                 dataIndex: 'name',
-                width: '20%',
+                width: '40%',
                 render: (text, record) => this.renderColumns(text, record, 'name')
             },
-            {
-                title: '状态',
-                dataIndex: 'status',
-                width: '10%',
-                render: (text, record) => this.renderColumns(text, record, 'name')
-            },
+            // {
+            //     title: '状态',
+            //     dataIndex: 'status',
+            //     width: '10%',
+            //     render: (text, record) => this.renderColumns(text, record, 'name')
+            // },
             // {
             //     title: 'Icon',
             //     dataIndex: 'photo',
@@ -680,7 +650,7 @@ class DataTable extends Component {
                                 id={record.id} 
                                 parentId={record.parentId} 
                                 recapture={this.getData}                                      
-                                opStatus={this.props.opObj.modify && record.parentId === 0}
+                                opStatus={this.props.opObj.modify}
                                 toLoginPage={this.props.toLoginPage}/>                                               
                             <Popconfirm 
                                 title="确认删除?"
@@ -750,7 +720,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
-        getOrgTypePage(params)
+        getOrgTypeList(params)
         .then((json) => {
             if (json.data.result === 0) {
                 this.setState({
@@ -885,9 +855,10 @@ class Category extends Component {
         super(props);
         this.state = {
             opObj: {
-                add: true,
-                select: true,
+                add: true,                
                 delete: true,
+                modify: true,
+                select: true,
             },
             flag_add: false
         }

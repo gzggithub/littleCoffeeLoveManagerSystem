@@ -459,7 +459,7 @@ class DataTable extends Component {
             },
             {
                 title: '运营浏览数',
-                dataIndex: 'readSort',
+                dataIndex: 'operateNum',
                 width: 130,
                 editable: true,
             },
@@ -519,8 +519,8 @@ class DataTable extends Component {
         this.setState({loading: true});
         const params = {            
             content: keyword ? keyword.content : this.props.keyword.content,// 评价内容
-            beginDate: keyword ? keyword.startTime : this.props.keyword.startTime,
-            endDate: keyword ? keyword.endTime : this.props.keyword.endTime,
+            beginTime: keyword ? keyword.startTime : this.props.keyword.startTime,
+            endTime: keyword ? keyword.endTime : this.props.keyword.endTime,
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
@@ -539,35 +539,17 @@ class DataTable extends Component {
                     return
                 }
                 json.data.data.list.forEach((item, index) => {
-                    let tempCommentType = "";
-                    if (item.commentType === 0) {
-                        tempCommentType = "课程"
-                    }
-                    if (item.commentType === 1) {
-                        tempCommentType = "机构"
-                    }
-                    if (item.commentType === 2) {
-                        tempCommentType = "育儿"
-                    }
-                    if (item.commentType === 3) {
-                        tempCommentType = "资讯"
-                    }
-                    
                     data.push({
                         key: index.toString(),
                         id: item.id,
-                        index: index + 1,                        
+                        index: index + 1,
+                        sort: item.sort ? item.sort : '',
                         nickname: item.nickname,
-                        star: item.star,
                         content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
                         content_detail: item.content,
-                        photo: item.resourceList,
-                        targetId: item.targetId,                   
-                        targetName: item.targetName,
-                        createTime: item.createTime,
-                        commentTypeCode: item.commentType,
-                        commentType: tempCommentType,
-                        userId: item.userId,
+                        viewNum: item.viewNum,
+                        operateNum: item.num ? item.num : '',
+                        createTime: item.createTime,                        
                     });
                 });
                 this.setState({

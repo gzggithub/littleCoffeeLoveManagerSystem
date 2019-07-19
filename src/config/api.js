@@ -15,14 +15,14 @@ export  default {
     // 登录
     login: `${base}/user/login`,
     // 退出
-    loginOut: `${base}/user/loginOut`,
+    loginOut: `${base}/cs/user/loginOut`,
     // 重置密码    
-    resetPassword: `${base}/user/resetPassword`,
+    resetPassword: `${base}/cs/user/resetPassword`,
     /*-------------------------------分类管理-------------------------------*/
     // 列表
-    getOrgTypePage: `${base}/cs/annunciateType/list`,    
+    getOrgTypeList: `${base}/cs/annunciateType/list`,    
     // 添加
-    saveOrgType: `${base}/cs/annunciateType/save`,
+    addOrgType: `${base}/cs/annunciateType/save`,
     // 删除
     deleteOrgType: `${base}/cs/annunciateType/delete`,
     // 编辑
@@ -33,132 +33,136 @@ export  default {
     sortOrgType: `${base}/cs/annunciateType/updateSort`,
     /*-------------------------------广告管理-------------------------------*/
     // 列表
-    advList: `${base}/sys/banner/list`,
+    advList: `${base}/cs/banner/list`,
     // 添加
-    saveAdv: `${base}/sys/banner/save`,
+    saveAdv: `${base}/cs/banner/save`,
     // 删除
-    deleteAdv: `${base}/sys/banner/delete`,
+    deleteAdv: `${base}/cs/banner/delete`,
     // 编辑
-    updateAdv: `${base}/sys/banner/update`,
+    updateAdv: `${base}/cs/banner/update`,
     // 详情
-    getAdvDetail: `${base}/sys/banner/getDetail`,    
+    getAdvDetail: `${base}/cs/banner/getById`,    
     // 排序
-    sortAdv: `${base}/sys/banner/updateSort`,
+    sortAdv: `${base}/cs/banner/updateSort`,
     // 上、下架
-    putAwayAdv: `${base}/sys/banner/putAway`,
+    putAwayAdv: `${base}/cs/banner/putAway`,
     /*-------------------------------明星管理-------------------------------*/
     // 列表
-    starList: `${base}/sys/excellentCourse/list`,
+    starList: `${base}/cs/star/list`,
     // 添加
-    saveStar: `${base}/sys/excellentCourse/save`,
+    saveStar: `${base}/cs/star/save`,
     // 删除
-    deleteStar: `${base}/sys/banner/delete`,
+    // deleteStar: `${base}/cs/star/delete`,
     // 编辑
-    updateStar: `${base}/sys/excellentCourse/update`,
+    updateStar: `${base}/cs/star/update`,
     // 详情
-    getStarDetail: `${base}/sys/excellentCourse/detail`,
+    getStarDetail: `${base}/cs/star/getById`,
     // 复制
-    NewestStar: `${base}/sys/excellentCourse/detail`,
+    NewestStar: `${base}/cs/star/getNewest`,
     // 排序
-    sortStar: `${base}/sys/excellentCourse/updateSort`,
+    sortStar: `${base}/cs/star/updateSort`,
     // 上、下架
-    putAwayStar: `${base}/sys/excellentCourse/putAway`,
+    putAwayStar: `${base}/cs/star/putAway`,
     // 所属分类列表
-    starTypeList: `${base}/sys/orgType/list`,
+    starTypeList: `${base}/cs/star/list`,
     // 列表项
-    getStarList: `${base}/sys/excellentCourse/getTeacher`,
+    getStarList: `${base}/cs/star/list`,
     /*-------------------------------通告管理-------------------------------*/
     // 列表
-    noticeList: `${base}/sys/excellentCourse/list`,
+    noticeList: `${base}/cs/annunciate/list`,
     // 添加
-    addNotice: `${base}/sys/excellentCourse/save`,
+    addNotice: `${base}/cs/annunciate/save`,
     // 编辑
-    updateNotice: `${base}/sys/excellentCourse/save`,
+    updateNotice: `${base}/cs/annunciate/update`,
     // 详情
-    noticeDetail: `${base}/sys/excellentCourse/checkDetail`,
-    // 排序
-    sortNotice: `${base}/sys/excellentCourse/updateSort`,
+    noticeDetail: `${base}/cs/annunciate/getById`,
+    // 复制
+    NewestNotice: `${base}/cs/annunciate/getNewest`,   
     // 结束
-    noticeOver: `${base}/sys/excellentCourse/check`,
+    noticeOver: `${base}/cs/annunciate/finish`,
     // 往期回顾
-    pastReview: `${base}/sys/excellentCourse/check`,
+    pastReview: `${base}/cs/annunciate/finish`,
     /*-------------------------------报名名单-------------------------------*/
     // 列表
-    signList: `${base}/sys/excellentCourse/checkList`,
+    signList: `${base}/cs/annunciateApply/list`,
     // 详情
-    signDetail: `${base}/sys/excellentCourse/checkDetail`,
+    signDetail: `${base}/cs/annunciateApply/getById`,
     // 下载
     downloadSignList: `${base}/sys/excellentCourse/getCheckOpinion`,
     /*-------------------------------明星审核-------------------------------*/
     // 列表
-    checkList: `${base}/sys/excellentCourse/checkList`,
+    checkList: `${base}/cs/starCache/list`,
     // 详情
-    checkDetail: `${base}/sys/excellentCourse/checkDetail`,
+    checkDetail: `${base}/cs/starCache/getById`,
     // 审核
-    check: `${base}/sys/excellentCourse/check`,
+    check: `${base}/cs/starCache/check`,
     // 驳回意见
     checkOpinion: `${base}/sys/excellentCourse/getCheckOpinion`,
     /*------------------------------小咖圈管理------------------------------*/
     // 列表
-    coffeeList: `${base}/sys/comment/list`,
+    coffeeList: `${base}/cs/social/list`,
     // 删除
-    deleteCoffee: `${base}/sys/comment/delete`,
+    deleteCoffee: `${base}/cs/social/delete`,
     // 编辑
-    updateCoffee: `${base}/sys/excellentCourse/update`,
+    updateCoffee: `${base}/cs/social/update`,
     // 详情
-    coffeeDetail: `${base}/sys/excellentCourse/detail`,
+    coffeeDetail: `${base}/cs/social/getById`,
     // 排序
-    sortCoffee: `${base}/sys/excellentCourse/updateSort`,
+    sortCoffee: `${base}/cs/social/updateSort`,
     // 浏览数
-    viewNum: `${base}/sys/excellentCourse/updateSort`,
+    viewNum: `${base}/cs/social/updateVisitorNum`,
     /*-------------------------------评论管理-------------------------------*/
     // 列表
-    commentList: `${base}/sys/comment/list`,
+    commentList: `${base}/cs/socialComment/list`,
     // 删除
-    deleteComment: `${base}/sys/comment/delete`,
+    deleteComment: `${base}/cs/socialComment/delete`,
     /*-------------------------------所有账号-------------------------------*/
     // 列表
-    accountList: `${base}/sys/comment/list`,
+    accountList: `${base}/cs/user/list`,
     // 添加
-    addAccouont: `${base}/sys/excellentCourse/save`,
+    addAccouont: `${base}/cs/user/save`,
     // 删除
-    deleteAccount: `${base}/sys/comment/delete`,
+    deleteAccount: `${base}/cs/user/delete`,
     // 编辑
-    updateAccount: `${base}/sys/excellentCourse/update`,
+    updateAccount: `${base}/cs/user/update`,
     // 详情
-    accountDetail: `${base}/sys/excellentCourse/detail`,
+    accountDetail: `${base}/cs/user/getById`,
     // 重置密码
-    resetPwd: `${base}/sys/excellentCourse/updateSort`,
+    resetPwd: `${base}/cs/user/resetPassword`,
     /*-------------------------------部门管理-------------------------------*/
     // 列表
-    departmentList: `${base}/sys/comment/list`,
+    departmentList: `${base}/cs/department/list`,
     // 添加
-    addDepartment: `${base}/sys/excellentCourse/save`,
+    addDepartment: `${base}/cs/department/save`,
     // 删除
-    deleteDepartment: `${base}/sys/comment/delete`,
+    deleteDepartment: `${base}/cs/department/delete`,
     // 编辑
-    updateDepartment: `${base}/sys/excellentCourse/update`,
+    updateDepartment: `${base}/cs/department/update`,
     // 详情
-    departmentDetail: `${base}/sys/excellentCourse/detail`,
+    departmentDetail: `${base}/cs/department/getById`,
+    // 成员列表
+    departmentUserList: `${base}/cs/department/userList`,
+    // 下属人员
+    subordinateMember: `${base}/cs/department/getDepartmentUser`,
     /*-------------------------------角色管理-------------------------------*/
     // 列表
-    roleList: `${base}/sys/comment/list`,
+    roleList: `${base}/cs/role/list`,
     // 添加
-    addRole: `${base}/sys/excellentCourse/save`,
+    addRole: `${base}/cs/role/save`,
     // 删除
-    deleteRole: `${base}/sys/comment/delete`,
+    deleteRole: `${base}/cs/role/delete`,
     // 编辑
-    updateRole: `${base}/sys/excellentCourse/update`,
+    updateRole: `${base}/cs/role/update`,
     // 详情
-    roleDetail: `${base}/sys/excellentCourse/detail`,
+    roleDetail: `${base}/cs/role/getById`,
     // 成员列表
-    memberList: `${base}/sys/excellentCourse/detail`,
+    memberList: `${base}/cs/role/getRolePage`,
     // 添加人员
-    addMember: `${base}/sys/excellentCourse/detail`,
+    addMember: `${base}/cs/role/bindUserRole`,
     // 获取权限项
-    getPermissionList: `${base}/sys/excellentCourse/detail`,
+    getPermissionList: `${base}/cs/role/getRoleListByUserId`,
     // 获取已有权限
-    getPermission: `${base}/sys/excellentCourse/detail`,
+    getPermission: `${base}/cs/role/getInfoByRoleId`,
     // 设置权限
-    setPermission: `${base}/sys/excellentCourse/detail`,
+    setPermission: `${base}/cs/role/updateJurisdiction`,
 }

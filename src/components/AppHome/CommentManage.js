@@ -94,9 +94,9 @@ class DataTable extends Component {
     getData = (keyword) => {
         this.setState({loading: true});
         const params = {            
-            content: keyword ? keyword.content : this.props.keyword.content,// 评价内容
-            beginDate: keyword ? keyword.startTime : this.props.keyword.startTime,
-            endDate: keyword ? keyword.endTime : this.props.keyword.endTime,
+            context: keyword ? keyword.content : this.props.keyword.content,// 评价内容
+            beginTime: keyword ? keyword.startTime : this.props.keyword.startTime,
+            endTime: keyword ? keyword.endTime : this.props.keyword.endTime,
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
