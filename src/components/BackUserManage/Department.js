@@ -1222,7 +1222,12 @@ class DepartmentManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
+            opObj: {
+                select: true,
+                add: true,
+                modify: true,
+                delete: true
+            },
             flag_add: false
         }
     };

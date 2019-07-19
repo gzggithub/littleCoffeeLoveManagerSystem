@@ -171,8 +171,8 @@ const ItemAddForm = Form.create()(
                                 <Input placeholder="请输入类型名称"/>
                             )}
                         </FormItem>
-                        <FormItem className="color" {...formItemLayout_12} label="开始渐变色：">
-                            {getFieldDecorator('gradientRampStar', {
+                        <FormItem className="background" {...formItemLayout_12} label="背景色：">
+                            {getFieldDecorator('background', {
                                 rules: [{
                                     required: true,
                                     message: '颜色不能为空',
@@ -180,17 +180,7 @@ const ItemAddForm = Form.create()(
                             })(
                                 <Input type="color" placeholder="请拾取颜色"/>
                             )}
-                        </FormItem>
-                        <FormItem className="color" {...formItemLayout_12} label="结束渐变色：">
-                            {getFieldDecorator('gradientRampEnd', {
-                                rules: [{
-                                    required: true,
-                                    message: '颜色不能为空',
-                                }],
-                            })(
-                                <Input type="color" placeholder="请拾取颜色"/>
-                            )}
-                        </FormItem>
+                        </FormItem>                        
                         <FormItem className="photo" {...formItemLayout_12} label="图片：">
                             {getFieldDecorator('photo', {
                                 rules: [{
@@ -224,7 +214,7 @@ class ItemAdd extends Component {
             visible: false,
             viewPic: "",            
             photoLoading: false, // 图片提交状态变量           
-            confirmLoading: false
+            loading: false
         };
     }
 
@@ -242,16 +232,7 @@ class ItemAdd extends Component {
                         uploadToken: json.data.data,
                     })
                 } else {
-                    if (json.data.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.data.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.data.message);
-                        this.setState({loading: false});
-                    }
+                    this.exceptHandle(json.data);
                 }
         }).catch((err) => {
             message.error("发送失败");
@@ -287,32 +268,22 @@ class ItemAdd extends Component {
 
     handleCancel = () => {
         this.setState({
-            visible: false
-        }, () => {
-            this.setState({
-                viewPic: "",
-                photoLoading: false,
-                confirmLoading: false
-            });
+            visible: false,
+            viewPic: "",
+            photoLoading: false,
+            loading: false
         });
     };
 
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });            
+            if (err) {return;}
+            this.setState({loading: true});            
             const data = {
                 name: values.name,
-                parentId: 0,
-                photo: this.state.viewPic.slice(configUrl.photoUrl.length),
-                gradientRampStar: values.gradientRampStar,
-                gradientRampEnd: values.gradientRampEnd,
-                sort: 0,
+                icon: this.state.viewPic.slice(configUrl.photoUrl.length),
+                background: values.background
             };
             saveOrgType(data).then((json) => {
                 if (json.data.result === 0) {
@@ -320,23 +291,27 @@ class ItemAdd extends Component {
                     this.handleCancel();
                     this.props.setFlag();
                 } else {
-                    if (json.data.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.data.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.data.message);
-                        this.setState({confirmLoading: false});
-                    }
+                    this.exceptHandle(json.data);
                 }
             }).catch((err) => {
                 message.error("保存失败");
-                this.setState({confirmLoading: false});
+                this.setState({loading: false});
             })
         });
     };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");
+            this.props.toLoginPage();
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");
+            this.props.toLoginPage();
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    }
 
     saveFormRef = (form) => {
         this.form = form;
@@ -356,7 +331,7 @@ class ItemAdd extends Component {
                     picUpload01={this.picUpload01}
                     viewPic={this.state.viewPic}
                     photoLoading={this.state.photoLoading}                    
-                    confirmLoading={this.state.confirmLoading}/>                
+                    confirmLoading={this.state.loading}/>                
             </div>
         );
     }

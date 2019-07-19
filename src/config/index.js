@@ -82,9 +82,9 @@ export const saveOrgType = data => {
 }
 
 // 删除
-export const deleteOrgType = data => {
+export const deleteOrgType = params => {
     setAuthorization();
-    return axios.post(api.deleteOrgType, createPostParams(data));
+    return axios.delete(api.deleteOrgType, {params: params});
 }
 
 // 编辑

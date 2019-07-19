@@ -2,7 +2,7 @@
   "name": "project",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://www.taoerxue.com.cn",
+  "proxy": "http://192.168.166.161:8080",
   "homepage": ".",
   "dependencies": {
     "antd": "^3.16.1",
@@ -13,8 +13,7 @@
     "react-audio-player": "^0.11.0",
     "react-dom": "^16.2.0",
     "react-router-dom": "^4.2.2",
-    "uuid-js": "^0.7.5",
-    "wangeditor": "^3.1.1"
+    "uuid-js": "^0.7.5"
   },
   "devDependencies": {
     "moment": "^2.20.1",

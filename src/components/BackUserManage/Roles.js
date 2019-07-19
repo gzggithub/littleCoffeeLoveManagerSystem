@@ -399,8 +399,7 @@ class ItemAddMember extends Component {
             method: 'post',
             headers: {
                 Authorization: sessionStorage.token
-            },
-            // data: result,
+            },           
             data: {
                 name: departmentName,
                 orgId: this.props.orgId,
@@ -1017,9 +1016,9 @@ class RoleAuthority extends Component {
         visible: false,
         // 可用权限菜单列表，即当前登录人权限菜单列表
         menuList: [],
-        // 该岗位权限菜单列表
+        // 该角色权限菜单列表
         menuListExist: [],
-        // 该岗位初始权限菜单列表
+        // 该角色初始权限菜单列表
         menuListExistInit: [],
         confirmLoading: false
     };
@@ -1129,90 +1128,21 @@ class RoleAuthority extends Component {
     // 获取可用权限菜单列表
     getMenuList = () => {
         reqwest({
-            // url: '/menu/getSysMenuByUserId', 
             url: '/admin/user/getMenuListByUserId',
             type: 'json',
             method: 'get',
-            data: {
-                // id: this.props.id
-            },
             headers: {
                 Authorization: sessionStorage.token
             },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: [
-                //         {id: 111, name: "xx", parentId: 0, url: "/index/xx", status: true},
-                //         {id: 1, name: "APP首页", parentId: 0, url: "/index/app-home", status: false},
-                //         {id: 2, name: "科目管理", parentId: 1, url: "/index/app-home/subjects", status: false},
-                //         {id: 28, name: "新增", parentId: 2, url: "/index/app-home/subjects", status: false},
-                //         {id: 29, name: "修改", parentId: 2, url: "/index/app-home/subjects", status: false},
-                //         {id: 30, name: "删除", parentId: 2, url: "/index/app-home/subjects", status: false},
-                //         {id: 31, name: "查询", parentId: 2, url: "/index/app-home/subjects", status: false},
-                //         {id: 3, name: "众筹名师讲堂", parentId: 1, url: "/index/app-home/crowdFunding", status: false},
-                //         {id: 4, name: "推荐课程", parentId: 1, url: "/index/app-home/recommend-courses", status: false},
-                //         {id: 5, name: "视频课程", parentId: 1, url: "/index/app-home/video-courses", status: false},
-                //         {id: 6, name: "用户管理", parentId: 0, url: "/index/user-manage", status: false},
-                //         {id: 7, name: "所有用户", parentId: 6, url: "/index/user-manage/users", status: false},
-                //         {id: 8, name: "机构管理", parentId: 0, url: "/index/institution-manage", status: false},
-                //         {
-                //             id: 9,
-                //             name: "所有机构",
-                //             parentId: 8,
-                //             url: "/index/institution-manage/institutions",
-                //             status: false
-                //         },
-                //         {id: 10, name: "老师管理", parentId: 8, url: "/index/institution-manage/teachers", status: false},
-                //         {id: 11, name: "课程管理", parentId: 8, url: "/index/institution-manage/courses", status: false},
-                //         {id: 12, name: "资讯管理", parentId: 0, url: "/index/information-manage", status: false},
-                //         {
-                //             id: 13,
-                //             name: "资讯列表",
-                //             parentId: 12,
-                //             url: "/index/information-manage/information",
-                //             status: false
-                //         },
-                //         {
-                //             id: 14,
-                //             name: "资讯频道",
-                //             parentId: 12,
-                //             url: "/index/information-manage/information-channel",
-                //             status: false
-                //         },
-                //         {id: 15, name: "商城管理", parentId: 0, url: "/index/mall-manage", status: false},
-                //         {id: 16, name: "订单管理", parentId: 15, url: "/index/mall-manage/orders", status: false},
-                //         {id: 17, name: "发货管理", parentId: 15, url: "/index/mall-manage/delivery", status: false},
-                //         {id: 18, name: "商品管理", parentId: 15, url: "/index/mall-manage/goods", status: false},
-                //         {id: 19, name: "财务管理", parentId: 0, url: "/index/financial-manage", status: false},
-                //         {id: 20, name: "我的财务", parentId: 19, url: "/index/financial-manage/finance", status: false},
-                //         {
-                //             id: 21,
-                //             name: "应收账款",
-                //             parentId: 19,
-                //             url: "/index/financial-manage/accounts-receivable",
-                //             status: false
-                //         },
-                //         {id: 22, name: "银行卡", parentId: 19, url: "/index/financial-manage/bankcards", status: false},
-                //         {id: 23, name: "账号管理", parentId: 0, url: "/index/backUser-manage", status: false},
-                //         {id: 24, name: "所有账号", parentId: 23, url: "/index/backUser-manage/backUsers", status: false},
-                //         {id: 25, name: "岗位管理", parentId: 23, url: "/index/backUser-manage/roles", status: false},
-                //         {id: 26, name: "系统菜单", parentId: 0, url: "/index/menu-manage", status: false},
-                //         {id: 27, name: "菜单管理", parentId: 26, url: "/index/menu-manage/menus", status: false}
-                //     ]
-                // };
-            },
+            error: (XMLHttpRequest) => {},
             success: (json) => {
                 if (json.result === 0) {
                     console.log(json.data)
-                    console.log(JSON.parse(sessionStorage.menuListData));
+                    // console.log(JSON.parse(sessionStorage.menuListData));
                     this.setState({
-                        // 对原始权限菜单列表进行处理后写入
-                        // menuList: this.dataHandle(JSON.parse(sessionStorage.menuListData)),
-                        menuList: this.dataHandle(json.data),
-                        // menuList: JSON.parse(sessionStorage.menuListOne),
-                    })
-                    console.log(this.state.menuList);
+                        // 对原始权限菜单列表进行处理后写入                        
+                        menuList: this.dataHandle(json.data)                        
+                    });                    
                 } else {
                     message.error(json.message);
                 }
@@ -1220,7 +1150,7 @@ class RoleAuthority extends Component {
         })
     };
 
-    // 获取该岗位当前权限菜单列表
+    // 获取该角色当前权限菜单列表
     getMenuListExist = () => {
         reqwest({
             url: '/admin/role/getInfoByRoleId',
@@ -2034,7 +1964,6 @@ class ItemEdit extends Component {
 const NumDetailForm = Form.create()(
     (props) => {
         const {visible, onCancel, confirmLoading, loading, data, columns, pagination} = props;
-        // const {getFieldDecorator} = form;
 
         return (
             <Modal
@@ -2042,11 +1971,9 @@ const NumDetailForm = Form.create()(
                 title="部门成员"
                 width={600}
                 onCancel={onCancel}
-                // onOk={onCreate}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}
-                footer={null}
-            >
+                footer={null}>
                 <div className="table-box">                    
                     <Table bordered
                       loading={loading}
@@ -2068,7 +1995,7 @@ class NumDetail extends Component {
         data: [],
         pagination: {
             current: 1,
-            pageSize: Number(localStorage.institutionPageSize) || 10,
+            pageSize: 10,
             pageSizeOptions: ["5", "10", "15", "20"],
             showQuickJumper: true,
             showSizeChanger: true
@@ -2128,18 +2055,7 @@ class NumDetail extends Component {
                 })
             },
             success: (json) => {
-                if (json.result === 0) {
-                    // const memberList = [];
-                    // json.data.userList.forEach((item, index) => {
-                    //     memberList.push({
-                    //         id: item.id,
-                    //         userId: item.userId,
-                    //         departmentId: item.departmentId,
-                    //         userName: item.userName,
-                    //         // phone: item.phone || "暂无",
-                    //         departmentName: item.departmentName
-                    //     })
-                    // })
+                if (json.result === 0) {                    
                     this.setState({
                         data: json.data.list,
                         loading: false,
@@ -2175,66 +2091,9 @@ class NumDetail extends Component {
             this.setState({
                 confirmLoading: false,
                 loading: false,
+                data: [],
             });
         })       
-    };
-
-    handleCreate = () => {
-        const form = this.form;
-        form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/menu/saveSysMenu',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    name: values.name,
-                    parentId: this.props.id,
-                    url: values.url,
-                    type: 1
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("子部门添加成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.recapture();
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
-                }
-            });
-        });
     };
 
     saveFormRef = (form) => {
@@ -2248,8 +2107,7 @@ class NumDetail extends Component {
                 <NumDetailForm
                     ref={this.saveFormRef}
                     visible={this.state.visible}
-                    onCancel={this.handleCancel}
-                    // onCreate={this.handleCreate}
+                    onCancel={this.handleCancel}                    
                     confirmLoading={this.state.confirmLoading}
                     loading={this.state.loading}
                     data={this.state.data}
@@ -2365,30 +2223,6 @@ class DataTable extends Component {
         return (
             <Cell value={text}/>
         )
-    };
-
-    // 日期处理函数
-    dateHandle = (para) => {
-        const tempDate = new Date(para.replace("CST", "GMT+0800")),
-            oMonthT = (tempDate.getMonth() + 1).toString(),
-            oMonth = oMonthT.length <= 1 ? "0" + oMonthT : oMonthT,
-            oDayT = tempDate.getDate().toString(),
-            oDay = oDayT.length <= 1 ? "0" + oDayT : oDayT,
-            oYear = tempDate.getFullYear().toString(),
-            oTime = oYear + '-' + oMonth + '-' + oDay;
-        return oTime;
-    };
-
-    dateHandle02 = (para) => {
-        const add0 = (m) => {
-            return m < 10 ? '0' + m : m;
-        }
-        //shijianchuo是整数，否则要parseInt转换
-        const time = new Date(para),
-            y = time.getFullYear(),
-            m = time.getMonth()+1,
-            d = time.getDate();
-        return y + '-' + add0(m) + '-' + add0(d);
     };
 
     //获取本页信息
@@ -2553,11 +2387,17 @@ class Roles extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
+            opObj: {
+                select: true,
+                add: true,
+                modify: true,
+                delete: true,
+                bindUserRole: true,
+                updateJurisdiction: true,                
+            },
             // 获取信息列表所需关键词
-            keyword: {
-                // 岗位名称
-                roleName: ''
+            keyword: {                
+                roleName: ''// 角色名称
             },
             flag_add: false
         }
@@ -2639,7 +2479,7 @@ class Roles extends Component {
                                             float: "left"
                                         }}
                                 />
-                                {/*岗位添加*/}
+                                {/*角色添加*/}
                                 <div className="add-button" style={{float: "right"}}>
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add} 
@@ -2647,7 +2487,7 @@ class Roles extends Component {
                                         toLoginPage={this.toLoginPage}/>
                                 </div>
                             </header>
-                            {/*岗位列表*/}
+                            {/*角色列表*/}
                             <div className="table-box">
                                 <DataTable 
                                     opObj={this.state.opObj} 

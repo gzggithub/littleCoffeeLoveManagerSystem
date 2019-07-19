@@ -49,7 +49,7 @@ class BackUserManage extends Component {
             this.setState({
                 highlight: "1"
             });
-            this.props.history.push(this.menu[0].url);
+            // this.props.history.push(this.menu[0].url);
         }
     };
 

@@ -1830,7 +1830,14 @@ class BackUsers extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
+            opObj: {
+                select: true,
+                add: true,
+                modify: true,
+                delete: true,
+                resetPassword: true,
+                ban: true,
+            },
             // 获取信息列表所需关键词
             keyword: {
                 // 账号类型

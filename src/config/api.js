@@ -5,10 +5,12 @@ let base = ''
 
 export  default {
     /*-------------------------------公共接口-------------------------------*/
-    // 获取验证码
+    // 获取短信验证码
     getVerificationCode: `${base}/mobileCode/sendVerificationCode`,
+    // 获取图片验证码
+    getImgCode: `${base}/code`,
     // 获取文件上传token
-    getToken: `${base}/sys/upload/getToken`,
+    getToken: `${base}/cs/upload/getToken`,
     /*---------------------------------登录---------------------------------*/
     // 登录
     login: `${base}/user/login`,
@@ -18,17 +20,17 @@ export  default {
     resetPassword: `${base}/user/resetPassword`,
     /*-------------------------------分类管理-------------------------------*/
     // 列表
-    getOrgTypePage: `${base}/sys/orgType/page`,    
+    getOrgTypePage: `${base}/cs/annunciateType/list`,    
     // 添加
-    saveOrgType: `${base}/sys/orgType/save`,
+    saveOrgType: `${base}/cs/annunciateType/save`,
     // 删除
-    deleteOrgType: `${base}/sys/orgType/updateStatus`,
+    deleteOrgType: `${base}/cs/annunciateType/delete`,
     // 编辑
-    updateOrgType: `${base}/sys/orgType/update`,
+    updateOrgType: `${base}/cs/annunciateType/update`,
     // 详情
-    getOrgTypeDetail: `${base}/sys/orgType/getById`,    
+    getOrgTypeDetail: `${base}/cs/annunciateType/getById`,    
     // 排序
-    sortOrgType: `${base}/sys/orgType/updateSort`,
+    sortOrgType: `${base}/cs/annunciateType/updateSort`,
     /*-------------------------------广告管理-------------------------------*/
     // 列表
     advList: `${base}/sys/banner/list`,
@@ -67,7 +69,7 @@ export  default {
     getStarList: `${base}/sys/excellentCourse/getTeacher`,
     /*-------------------------------通告管理-------------------------------*/
     // 列表
-    noticeList: `${base}/sys/excellentCourse/checkList`,
+    noticeList: `${base}/sys/excellentCourse/list`,
     // 添加
     addNotice: `${base}/sys/excellentCourse/save`,
     // 编辑
