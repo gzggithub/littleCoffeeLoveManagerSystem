@@ -2,7 +2,11 @@
 @import './static/css/common.css';
 @import './static/css/AppHome/StarManage.css';
 @import './static/css/AppHome/SignList.css';
+@import './static/css/AppHome/NoticeManage.css';
+@import './static/css/AppHome/CoffeeCircle.css';
+@import './static/css/BackUserManage/BackUser.css';
 @import './static/css/BackUserManage/Department.css';
+@import './static/css/BackUserManage/Roles.css';
 @import './static/css/CheckManage/QualityCourseCheck.css';
 
 

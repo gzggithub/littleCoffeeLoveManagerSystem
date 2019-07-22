@@ -158,7 +158,8 @@ export const starList = params => {
 // 添加
 export const saveStar = data => {
     setAuthorization();
-    return axios.post(api.saveStar, createPostParams(data));
+    axios.defaults.headers['Content-Type'] = 'application/json';
+    return axios.post(api.saveStar, data);
 }
 
 // 编辑
@@ -171,6 +172,11 @@ export const updateStar = data => {
 export const getStarDetail = params => {
     setAuthorization();
     return axios.get(api.getStarDetail, {params: params});
+}
+// 复制
+export const NewestStar = params => {
+    setAuthorization();
+    return axios.get(api.NewestStar, {params: params});
 }
 
 // 排序
@@ -222,6 +228,12 @@ export const noticeDetail = params => {
     return axios.get(api.noticeDetail, {params: params});
 }
 
+// 复制
+export const NewestNotice = params => {
+    setAuthorization();
+    return axios.get(api.NewestNotice, {params: params});
+}
+
 // 结束
 export const noticeOver = data => {
     setAuthorization();
@@ -257,7 +269,7 @@ export const downloadSignList = data => {
 // 列表
 export const checkList = params => {
     setAuthorization();
-    return axios.get(api.starList, {params: params});
+    return axios.get(api.checkList, {params: params});
 }
 
 // 详情
@@ -294,7 +306,7 @@ export const deleteCoffee = params => {
 // 编辑
 export const updateCoffee = data => {
     setAuthorization();
-    return axios.post(api.updateCoffee, createPostParams(data));
+    return axios.post(api.updateCoffee, data);
 }
 
 // 详情
@@ -357,11 +369,22 @@ export const accountDetail = params => {
     setAuthorization();
     return axios.get(api.accountDetail, {params: params});
 }
+// 禁用、启用
+export const ban = data => {
+    setAuthorization();
+    return axios.post(api.ban, createPostParams(data));
+}
 
 // 重置密码
 export const resetPwd = data => {
     setAuthorization();
     return axios.post(api.resetPwd, createPostParams(data));
+}
+
+// 机构列表
+export const orgList = params => {
+    setAuthorization();
+    return axios.get(api.orgList, {params: params});
 }
 
 /*-------------------------------部门管理-------------------------------*/
@@ -393,6 +416,11 @@ export const updateDepartment = data => {
 export const departmentDetail = params => {
     setAuthorization();
     return axios.get(api.departmentDetail, {params: params});
+}
+
+export const departmentUserList = params => {
+    setAuthorization();
+    return axios.get(api.departmentUserList, {params: params});
 }
 
 /*-------------------------------角色管理-------------------------------*/

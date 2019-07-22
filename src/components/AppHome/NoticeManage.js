@@ -22,7 +22,7 @@ import {
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import '../../config/config';
-import { noticeList, } from '../../config';
+import { noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReview } from '../../config';
 import reqwest from 'reqwest';
 
 const Search = Input.Search;
@@ -84,7 +84,7 @@ const ItemAddForm = Form.create()(
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
                 destroyOnClose={true}>
-                <div className="course-add course-form item-form quality-course-form">
+                <div className="course-add course-form item-form quality-course-form notice-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
                         <Row gutter={24}>
@@ -169,7 +169,7 @@ const ItemAddForm = Form.create()(
                                         initialValue: data.location,                                      
                                         rules: [{
                                             required: true,
-                                            message: '通告名称不能为空',                                            
+                                            message: '通告地点不能为空',                                            
                                         }],
                                     })(
                                         <Input placeholder="请填写地点"/>
@@ -211,8 +211,7 @@ class ItemAdd extends Component {
         this.state = {
             visible: false,
             // 通告基本信息
-            data: {},
-            allTypeList: [],           
+            data: {},                     
             // 提交按钮状态变量
             loading: false,
             startValue: null,
@@ -260,75 +259,26 @@ class ItemAdd extends Component {
 
     // 获取通告基本信息
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/copy',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    // 已有所属分类写入                    
-                    json.data.typeId = json.data.excellentCourseType.typeId;                                      
-                    // 富文本数据写入入
-                    this.editor.setData(json.data.characteristic);
-                    // 信息写入
-                    this.setState({
-                        data: json.data,
-                        viewPic: json.data.pic,
-                        videoList: json.data.lesson
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 1005) {                        
-                        this.countDown();// 判断没有添加数据是，提示信息
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+        NewestNotice().then((json) => {
+            if (json.data.result === 0) {
+                // 已有所属分类写入                    
+                // json.data.data.typeId = json.data.data.excellentCourseType.typeId;                                      
+                // 富文本数据写入入
+                // this.editor.setData(json.data.data.characteristic);
+                // 信息写入
+                this.setState({
+                    data: json.data.data,
+                    viewPic: json.data.data.pic,
+                    videoList: json.data.data.lesson
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
-    // 获取科目列表
-    getTypeList = () => {
-        reqwest({
-            url: '/sys/orgType/list',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {                    
-                    this.setState({
-                        allTypeList: json.data
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
-    };
 
     showModal = (props, event) => {
-        this.getTypeList();
         if (props === 1) {// 复制通告            
             this.getData();
         } else if (props === 2) {                       
@@ -364,8 +314,7 @@ class ItemAdd extends Component {
             visible: false
         }, () => {
             this.setState({
-                data: {},
-                allTypeList: [],              
+                data: {},                            
                 loading: false,
             });
             form.resetFields();
@@ -391,41 +340,53 @@ class ItemAdd extends Component {
     handleCreate = (type) => {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
-            if (err) {return;}
-            // let { viewPic, allAuthorList, videoList} = this.state;
+            if (err) {return;}           
             
-            const result = {
+            const data = {
                 name: values.name,
+                provinceId: values.cityId[0],
+                provinceName: values.provinceName,
+                cityId: values.cityId[1] || values.cityId[0],
+                cityName: values.cityName,
+                beginDate: this.state.startTime,
+                endDate: this.state.endTime,
+                type: values.type,
+                address: values.address,
+                lat: values.lat,
+                lng: values.lng,
+                description: values.description,
             };
-
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/excellentCourse/save',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: result,
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({confirmLoading: false});
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("添加通告成功");
-                        this.handleCancel();
-                        this.props.recapture();                            
-                    } else {
-                        message.error(json.message);
-                        sessionStorage.removeItem("courseData");
-                        this.setState({confirmLoading: false});
-                    }
+            this.setState({loading: true});            
+            addNotice(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("添加通告成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            })
+            }).catch((err) => {this.errorHandle(err);});
         });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -488,9 +449,7 @@ class ItemEdit extends Component {
         this.state = {
             visible: false,
             // 通告基本信息
-            data: {},
-            // 作者
-            allTypeList: [],           
+            data: {},                       
             // 提交按钮状态变量
             loading: false,                  
         };        
@@ -498,82 +457,18 @@ class ItemEdit extends Component {
 
     // 获取通告基本信息
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/detail',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    // 已有所属分类写入                    
-                    json.data.typeId = json.data.excellentCourseType.typeId;
-                    
-                    // 富文本数据写入入
-                    this.editor.setData(json.data.characteristic);
-                    // 信息写入
-                    this.setState({
-                        data: json.data,                       
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 1005) {                        
-                        this.countDown();// 判断没有添加数据是，提示信息
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+        noticeDetail({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {
+                this.setState({data: json.data.data});
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
-    };
-
-    // 获取科目列表
-    getTypeList = () => {
-        reqwest({
-            url: '/sys/orgType/list',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {                    
-                    this.setState({
-                        allTypeList: json.data
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                    }
-                }
-            }
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     showModal = () => {
-        this.geTypeList();
         this.getData();       
-        this.setState({visible: true});      
-        setTimeout(()=> {
-           this.editor = window.CKEDITOR.replace(document.getElementById('characteristic'));                      
-        });
+        this.setState({visible: true});
     };   
 
     // 取消处理
@@ -583,11 +478,9 @@ class ItemEdit extends Component {
             visible: false
         }, () => {
             this.setState({
-                data: {},    
-                allTypeList: [],                    
+                data: {},
                 loading: false,
             });
-            this.editor = ""
             form.resetFields();
         });
     };
@@ -597,82 +490,55 @@ class ItemEdit extends Component {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             if (err) {return;}
-            
-            // 通告图片校验与写入
-            if (this.state.viewPic) {
-                values.photo = this.state.viewPic.slice(global.config.photoUrl.length);
-            } else {
-                message.error("图片未选择");
-                return false;
-            }
-
-            // 过滤作者
-            let tempAuther = this.state.allAuthorList.filter((para) => {return para.id = values.teacherId});            
-            
-            // 通告视频写入与校验
-            let lesson = this.state.videoList;
-            let tempVideoList = [];
-            if (lesson.length) {
-                lesson.forEach((item, index) => {                    
-                    tempVideoList.push({
-                        name: item.name,
-                        sort: item.sort,
-                        duration: item.duration,
-                        video: item.video.slice(global.config.photoUrl.length)
-                    })
-                })
-            }
-            console.log(tempVideoList);
-            // 富文本内容处理
-            values.riches = this.editor.getData();
-            console.log(values.riches)
             const result = {
                 id: this.props.id,
-                name: values.courseName,
-                typeId: values.typeIds[1],
-                pic: values.photo,
-                teacherId: tempAuther[0].id,
-                teacherName: tempAuther[0].name,                   
-                originalPrice: values.originalPrice,
-                price: values.price,
-                fee: values.fee,
-                isFree: values.isFree,
-                chargeJointCount: values.chargeJointCount,
-                characteristic: values.riches,
-                tips: values.tips,
-                warmPrompt: values.warmPrompt,
-                official: values.official,
-                lesson: JSON.stringify(tempVideoList),
+                name: values.name,
+                provinceId: values.cityId[0],
+                provinceName: values.provinceName,
+                cityId: values.cityId[1] || values.cityId[0],
+                cityName: values.cityName,
+                beginDate: this.state.startTime,
+                endDate: this.state.endTime,
+                type: values.type,
+                address: values.address,
+                lat: values.lat,
+                lng: values.lng,
+                description: values.description,
             };
 
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/excellentCourse/update',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: result,
-                error: (XMLHttpRequest) => {
-                    message.error("获取失败");
-                    this.setState({confirmLoading: false});
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("编辑通告成功");
-                        this.handleCancel();
-                        this.props.recapture();                            
-                    } else {
-                        message.error(json.message);                        
-                        this.setState({confirmLoading: false});
-                    }
+            this.setState({loading: true});
+            updateNotice(result).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("编辑通告成功");
+                    this.handleCancel();
+                    this.props.recapture();                            
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            })
+            }).catch((err) => {this.errorHandle(err);});
         });
     };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
+    };
+
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1783,54 +1649,22 @@ class ItemDetails extends Component {
 
     // 获取通告基本信息
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/detail',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    // 已有所属分类写入
-                    json.data.typeIds = json.data.excellentCourseType.parentTypeName + '/' + json.data.excellentCourseType.typeName;
-                    this.setState({
-                        loading: false,
-                        data: json.data,
-                        videoList: json.data.lesson,
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
+        noticeDetail({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {                   
+                this.setState({
+                    loading: false,
+                    data: json.data.data,
+                    videoList: json.data.data.lesson
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     showModal = () => {        
         this.getData();
-        this.setState({
-            visible: true,
-        })
+        this.setState({visible: true})
     };
 
     handleCancel = () => {
@@ -1842,6 +1676,26 @@ class ItemDetails extends Component {
             // 通告基本信息
             data: "",
         });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     render() {
@@ -1997,9 +1851,10 @@ class DataTable extends Component {
     // 获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
-        const params = {                              
-            name: keyword ? keyword.noticeName : this.props.keyword.noticeName,
+        const params = {
+            cityId: keyword ? keyword.cityCode : this.props.keyword.cityCode,
             status: keyword ? keyword.status : this.props.keyword.status,
+            name: keyword ? keyword.noticeName : this.props.keyword.noticeName,
             startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
             endTime: keyword ? keyword.endTime : this.props.keyword.endTime,                
             pageNum: this.state.pagination.current,
@@ -2062,99 +1917,40 @@ class DataTable extends Component {
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
-    };
-
-    // 设置排序
-    handleSort = (row) => {
-        this.setState({loading: true});
-        reqwest({
-            url: '/sys/excellentCourse/updateSort',
-            type: 'json',
-            method: 'post',
-            data: {                
-                id: row.id,// 通告Id                
-                sort: Number(row.sort),// 排序
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({loading: false});
-                    this.getData();
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false});
-                    }
-                }
-            }
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     // 通告结束
     itemOver = (id) => {
-        this.setState({loading: true});
-        reqwest({
-            url: '/sys/excellentCourse/putAway',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                id: id,
-                status: 2
-            },
-            error: (XMLHttpRequest) => {
-                message.error("失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("通告结束成功");
-                    this.getData();
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false});
-                    }
-                }
+        this.setState({loading: true});        
+        noticeOver({id: id}).then((json) => {
+            if (json.data.result === 0) {
+                message.success("通告结束成功");
+                this.getData();
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
+    // 异常处理
     exceptHandle = (json) => {
         if (json.code === 901) {
-            message.error("请先登录");                        
+            message.error("请先登录");            
             this.props.toLoginPage();// 返回登陆页
         } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
+            message.error("登录信息已过期，请重新登录");            
             this.props.toLoginPage();// 返回登陆页
         } else {
             message.error(json.message);
-            this.setState({loading: false})
+            this.setState({loading: false});
         }
+    };
+
+    // 错误处理
+    errorHandle = () => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     // 表格参数变化处理

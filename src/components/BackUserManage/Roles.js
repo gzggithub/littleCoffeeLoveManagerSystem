@@ -14,7 +14,7 @@ import {
     Tree,
     Icon,
 } from 'antd';
-import reqwest from 'reqwest';
+import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
 
 const Search = Input.Search;
 const {TextArea} = Input;
@@ -46,8 +46,7 @@ const ItemAddForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="role-add role-form">
                     <Form layout="vertical">
                         <FormItem className="roleName" {...formItemLayout_16} label="角色名称：">
@@ -81,7 +80,7 @@ const ItemAddForm = Form.create()(
 class ItemAdd extends Component {
     state = {
         visible: false,
-        confirmLoading: false
+        loading: false
     };
 
     showModal = () => {
@@ -93,9 +92,7 @@ class ItemAdd extends Component {
         this.setState({
             visible: false
         }, () => {
-            this.setState({
-                confirmLoading: false
-            });
+            this.setState({loading: false});
             form.resetFields();
         });
     };
@@ -103,61 +100,41 @@ class ItemAdd extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/admin/role/save',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    roleName: values.roleName,
-                    remark: values.remark,
-                    orgId: 0,
-                    orgCode: null,
-                    isSys: 0,
-                    isDelete: 0,
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("角色添加成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.setFlag()
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            if (err) {return;}
+            this.setState({loading: true});
+            const data = {
+                name: values.roleName,
+                desc: values.remark,                
+            };
+            addRole(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("角色添加成功");
+                    this.handleCancel();
+                    this.props.setFlag();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            })
+            }).catch((err) => {this.errorHandle(err);});
         })
+    };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");
+            this.props.toLoginPage();
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");
+            this.props.toLoginPage();
+        } else {
+            message.error(json.message);
+            this.setState({loading: false})
+        }
+    };
+
+    errorHandle = (err) => {
+        console.log(err);
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -173,7 +150,7 @@ class ItemAdd extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    confirmLoading={this.state.confirmLoading}
+                    confirmLoading={this.state.loading}
                 />
             </div>
         );
@@ -183,7 +160,7 @@ class ItemAdd extends Component {
 //添加人员表单
 const ItemAddMemberForm  = Form.create()(
     (props) => {
-        const {visible, checkedKeys, onCancel, onCreate, confirmLoading, gData, searchValue, expandedKeys, autoExpandParent, onChange, onExpand, memberList, menberListLen, clearAllMember, clearSingle, onSelect, onCheck} = props;
+        const {visible, checkedKeys, onCancel, onCreate, gData, searchValue, expandedKeys, autoExpandParent, onChange, onExpand, memberList, menberListLen, clearAllMember, clearSingle, onSelect, onCheck} = props;
         // 用于和表单进行双向绑定，详见下方描述
         // const {getFieldDecorator} = form;
         // 另外一种方式
@@ -241,70 +218,36 @@ const ItemAddMemberForm  = Form.create()(
                 width={600}
                 onCancel={onCancel}
                 onOk={onCreate}
-                destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
-                {
-                    <div className="role-edit role-form role-add-member">
-                        <div className="left">
-                            <div className="top">添加人员</div>
-                            <div className="bottom">
-                                <Search style={{ marginBottom: 8}} 
-                                    placeholder="输入员工姓名" 
-                                    onChange={onChange}
-                                    />
-                                <div style={{maxHeight: "300px", overflow: "auto"}}>
-                                    <Tree
-                                        checkedKeys={checkedKeys}
-                                        onExpand={onExpand}
-                                        expandedKeys={expandedKeys}
-                                        autoExpandParent={autoExpandParent}
-                                        onSelect={onSelect}
-                                        onCheck={onCheck}
-                                        checkable={true}
-                                        >
-                                        {loop(gData)}
-                                    </Tree>
-                                    {/*<Tree
-                                        loadData={onLoadData}
-                                        onExpand={onExpand}
-                                        expandedKeys={expandedKeys}
-                                        autoExpandParent={autoExpandParent}
-                                        onSelect={onSelect}
-                                        onCheck={onCheck}
-                                        checkable={true}
-                                        >
-                                        {loop(gData)}
-                                        {renderTreeNodes(treeData)}
-                                    </Tree>*/}
-                                </div>
+                destroyOnClose={true}>
+                <div className="role-edit role-form role-add-member">
+                    <div className="left">
+                        <div className="top">添加人员</div>
+                        <div className="bottom">
+                            <Search style={{ marginBottom: 8}} onChange={onChange} placeholder="输入员工姓名"/>
+                            <div style={{maxHeight: "300px", overflow: "auto"}}>
+                                <Tree
+                                    checkedKeys={checkedKeys}
+                                    onExpand={onExpand}
+                                    expandedKeys={expandedKeys}
+                                    autoExpandParent={autoExpandParent}
+                                    onSelect={onSelect}
+                                    onCheck={onCheck}
+                                    checkable={true}>
+                                    {loop(gData)}
+                                </Tree>                                    
                             </div>
                         </div>
-                        <div className="right">
-                            <div className="top">
-                                <div>已选（<span>{menberListLen}</span>）</div>
-                                <div onClick={clearAllMember}>清空</div>
-                            </div>
-                            <ul className="bottom">
-                                {memberListOption}
-                            </ul>
-                        </div>
-                        {/* 穿梭框*/}
-                        {/*<Transfer
-                            dataSource={mockData}
-                            showSearch
-                            listStyle={{
-                                width: 230,
-                                height: 300,                                    
-                            }}
-                            filterOption={filterOption}
-                            targetKeys={targetKeys}
-                            onChange={handleChange}
-                            onSearch={handleSearch}
-                            render={item => item.title}
-                          />*/}
                     </div>
-                }
+                    <div className="right">
+                        <div className="top">
+                            <div>已选（<span>{menberListLen}</span>）</div>
+                            <div onClick={clearAllMember}>清空</div>
+                        </div>
+                        <ul className="bottom">
+                            {memberListOption}
+                        </ul>
+                    </div>                        
+                </div>
             </Modal>
         );
     }
@@ -313,13 +256,12 @@ const ItemAddMemberForm  = Form.create()(
 //添加人员组件
 class ItemAddMember extends Component {
     constructor(props) {
-        super(props);
-    
+        super(props);    
         this.state = {
             visible: false,
             // 初始详情信息
             data: {},
-            confirmLoading: false,
+            loading: false,
             mockData: [],
             targetKeys: [],
             // 添加人员菜单项初始化
@@ -346,9 +288,7 @@ class ItemAddMember extends Component {
         this.getDepartmentList();
         this.generateList(this.state.gData);
         // 获取初始详情信息
-        this.setState({
-            visible: true,
-        });
+        this.setState({visible: true});
     };
     
     // 部门列表数据树型结构处理
@@ -393,131 +333,102 @@ class ItemAddMember extends Component {
     
     // 获取部门列表
     getDepartmentList = (departmentName) => {
-        reqwest({
-            url: '/sys/department/getDepartmentUser',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },           
-            data: {
-                name: departmentName,
-                orgId: this.props.orgId,
-                pageNum: 1,
-                pageSize: 20,
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({
-                    confirmLoading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    const data = [];
-                    json.data.forEach((item) => {
-                        let subData = [];
-                        console.log(item.userList)
-
-                        if (item.children) {
-                            item.children.forEach((subItem) => {
-                                let thirdData = [];
-                                // console.log(4444444)
-                                if (subItem.children) {
-                                    // console.log(555555)
-                                    subItem.children.forEach((thirdItem) => {
-                                        let fourthData = [];
-                                        if (thirdItem.children) {
-                                            // console.log(66666)
-                                            thirdItem.children.forEach((fourthItem) => {
+        const params = {
+            name: departmentName,
+            orgId: this.props.orgId,
+            pageNum: 1,
+            pageSize: 20,
+        };
+        departmentList(params).then((json) => {
+            if (json.data.result === 0) {
+                const data = [];
+                json.data.forEach((item) => {
+                    let subData = [];
+                    console.log(item.userList)
+                    if (item.children) {
+                        item.children.forEach((subItem) => {
+                            let thirdData = [];                            
+                            if (subItem.children) {                                
+                                subItem.children.forEach((thirdItem) => {
+                                    let fourthData = [];
+                                    if (thirdItem.children) {                                       
+                                        thirdItem.children.forEach((fourthItem) => {
+                                            fourthData.push({
+                                                title: fourthItem.sysDepartment.name,
+                                                key: fourthItem.sysDepartment.id,
+                                                // key: fourthItem.sysDepartment.name + ',' + fourthItem.sysDepartment.id,
+                                            })
+                                        })
+                                    } else {
+                                        // console.log(232323)
+                                        if (thirdItem.userList) {
+                                            // console.log(56676767)
+                                            thirdItem.userList.forEach((fifthItem) =>{
                                                 fourthData.push({
-                                                    title: fourthItem.sysDepartment.name,
-                                                    key: fourthItem.sysDepartment.id,
-                                                    // key: fourthItem.sysDepartment.name + ',' + fourthItem.sysDepartment.id,
+                                                    title: fifthItem.userName,
+                                                    // key: fifthItem.id,
+                                                    key: fifthItem.userName + ',' + fifthItem.id
                                                 })
                                             })
-                                        } else {
-                                            // console.log(232323)
-                                            if (thirdItem.userList) {
-                                                // console.log(56676767)
-                                                thirdItem.userList.forEach((fifthItem) =>{
-                                                    fourthData.push({
-                                                        title: fifthItem.userName,
-                                                        // key: fifthItem.id,
-                                                        key: fifthItem.userName + ',' + fifthItem.id
-                                                    })
-                                                })
-                                            }                                          
-                                        }
-                                        
-                                        thirdData.push({
-                                            title: thirdItem.sysDepartment.name,
-                                            key: thirdItem.sysDepartment.id,
-                                            // key: thirdItem.sysDepartment.name + ',' + thirdItem.sysDepartment.id,
-                                            children: fourthData,
-                                        })
-                                    })
-                                } else {
-                                    if (subItem.userList) {
-                                        subItem.userList.forEach((thirdCopyItem) => {
-                                            thirdData.push({
-                                                title: thirdCopyItem.userName,
-                                                // key: thirdCopyItem.id,
-                                                key: thirdCopyItem.userName + ',' + thirdCopyItem.id,
-                                            })                                            
-                                        })
+                                        }                                          
                                     }
+                                    
+                                    thirdData.push({
+                                        title: thirdItem.sysDepartment.name,
+                                        key: thirdItem.sysDepartment.id,
+                                        // key: thirdItem.sysDepartment.name + ',' + thirdItem.sysDepartment.id,
+                                        children: fourthData,
+                                    })
+                                })
+                            } else {
+                                if (subItem.userList) {
+                                    subItem.userList.forEach((thirdCopyItem) => {
+                                        thirdData.push({
+                                            title: thirdCopyItem.userName,
+                                            // key: thirdCopyItem.id,
+                                            key: thirdCopyItem.userName + ',' + thirdCopyItem.id,
+                                        })                                            
+                                    })
                                 }
-                                console.log(subItem.userList)
+                            }
+                            console.log(subItem.userList)
+                            subData.push({
+                                title: subItem.sysDepartment.name,
+                                key: subItem.sysDepartment.id,
+                                // key: subItem.sysDepartment.name + ',' + subItem.sysDepartment.id,
+                                // value: subItem.name+ '/' + subItem.parentId + ',' + subItem.id,
+                                children: thirdData
+                            })
+                        })
+                    } else {
+                        if (item.userList) {
+                            item.userList.forEach((subCopyItem) => {
                                 subData.push({
-                                    title: subItem.sysDepartment.name,
-                                    key: subItem.sysDepartment.id,
-                                    // key: subItem.sysDepartment.name + ',' + subItem.sysDepartment.id,
-                                    // value: subItem.name+ '/' + subItem.parentId + ',' + subItem.id,
-                                    children: thirdData
+                                    title: subCopyItem.userName,
+                                    // key: subCopyItem.id
+                                    key: subCopyItem.userName + ',' + subCopyItem.id
                                 })
                             })
-                        } else {
-                            if (item.userList) {
-                                item.userList.forEach((subCopyItem) => {
-                                    subData.push({
-                                        title: subCopyItem.userName,
-                                        // key: subCopyItem.id
-                                        key: subCopyItem.userName + ',' + subCopyItem.id
-                                    })
-                                })
-                            }
-                        }                      
-                        data.push({
-                            title: item.sysDepartment.name,
-                            key: item.sysDepartment.id,
-                            // key: item.sysDepartment.name + ',' + item.sysDepartment.id,
-                            children: subData
-                        })
-                    });
-                    console.log(data);
-                    this.setState({
-                        // treeData: this.handleTree(json.data),
-                        // gData: this.handleTree(json.data),
-                        gData: data,
-                    });
-                    console.log(this.state.treeData)
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            confirmLoading: false
-                        })
-                    }
-                }
+                        }
+                    }                      
+                    data.push({
+                        title: item.sysDepartment.name,
+                        key: item.sysDepartment.id,
+                        // key: item.sysDepartment.name + ',' + item.sysDepartment.id,
+                        children: subData
+                    })
+                });
+                console.log(data);
+                this.setState({
+                    // treeData: this.handleTree(json.data),
+                    // gData: this.handleTree(json.data),
+                    gData: data,
+                });
+                console.log(this.state.treeData)
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
     };
     
     generateList = (data) => {
@@ -642,7 +553,7 @@ class ItemAddMember extends Component {
     };
     
     // 清掉单个 但是复选项框没有清除选项状态（使用checkedKeys)
-    clearSingle = (index, name, id, userName) => {        
+    clearSingle = (index, name, id, userName) => {
         let memberListTemp01 = []
         this.state.memberList.forEach((item) => {
             if (item.name !== name) {
@@ -737,22 +648,16 @@ class ItemAddMember extends Component {
         }, () => {
             this.setState({
                 data: {},
-                confirmLoading: false,
+                loading: false,             
                 mockData: [],
-                targetKeys: [],
-                // 添加人员菜单项初始化
+                targetKeys: [],               
                 expandedKeys: [],
                 searchValue: '',
-                autoExpandParent: true,
-                // 添加人员选择人员数组初始化
-                memberList: [],
-                // 已选人员数
-                menberListLen: 0,
-                // 添加人员所有id
-                memberListId: [],
-                // 选中的key
-                checkedKeys: [],
-                // 部门列表数据
+                autoExpandParent: true,                
+                memberList: [],                
+                menberListLen: 0,               
+                memberListId: [],                
+                checkedKeys: [],                
                 gData: [],
                 dataList: [],
                 treeData: [],
@@ -768,61 +673,42 @@ class ItemAddMember extends Component {
             if (err) {
                 return;
             }
-            this.setState({
-                confirmLoading: true
-            });
+            this.setState({loading: true});
             console.log(this.state.memberListId);
-            reqwest({
-                url: '/admin/role/bindUserRole',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    // 添加人员所有id
-                    userId: this.state.memberListId,
-                    roleId: this.props.id,
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("添加人员成功");
-                        this.setState({
-                            visible: false,
-                        }, () => {
-                            this.setState({
-                                data: {},
-                                memberList: [],
-                                memberListId: [],
-                                menberListLen: 0,
-                                confirmLoading: false
-                            });
-                        });
-                        // 编辑成功，重新获取列表
-                        this.props.recapture();
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            const data = {
+                roleId: this.props.id,             
+                userId: this.state.memberListId// 添加人员所有id                
+            };
+            addMember(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("添加人员成功");
+                    this.handleCancel();                        
+                    this.props.recapture();// 编辑成功，重新获取列表
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            })
-        })
+            }).catch((err) => {this.errorHandle(err);});
+        });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -843,7 +729,7 @@ class ItemAddMember extends Component {
                     checkedKeys={this.state.checkedKeys}
                     defaultCheckedKeys={this.state.defaultCheckedKeys}
                     data={this.state.data}
-                    confirmLoading={this.state.confirmLoading}
+                    confirmLoading={this.state.lLoading}
                     onExpand={this.onExpand}
                     onChange={this.onChange}
                     onSelect={this.onSelect}
@@ -1020,7 +906,7 @@ class RoleAuthority extends Component {
         menuListExist: [],
         // 该角色初始权限菜单列表
         menuListExistInit: [],
-        confirmLoading: false
+        loading: false
     };
 
     // 权限菜单列表处理函数
@@ -1127,79 +1013,39 @@ class RoleAuthority extends Component {
 
     // 获取可用权限菜单列表
     getMenuList = () => {
-        reqwest({
-            url: '/admin/user/getMenuListByUserId',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {
-                    console.log(json.data)
-                    // console.log(JSON.parse(sessionStorage.menuListData));
-                    this.setState({
-                        // 对原始权限菜单列表进行处理后写入                        
-                        menuList: this.dataHandle(json.data)                        
-                    });                    
-                } else {
-                    message.error(json.message);
-                }
+        getPermissionList().then((json) => {
+            if (json.data.result === 0) {
+                console.log(json.data.data);
+                this.setState({
+                    menuList: this.dataHandle(json.data.data)// 对原始权限菜单列表进行处理后写入
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     // 获取该角色当前权限菜单列表
     getMenuListExist = () => {
-        reqwest({
-            url: '/admin/role/getInfoByRoleId',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                id: this.props.id
-            },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data:[
-                //         {id: 1},
-                //     ]
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    let data=[];
-                    if (json.data) {
-                        json.data.forEach((item) => {
-                            data.push(item.id);
-                        });
-                        // 排序
-                        data.sort((a, b) => {
-                            return a - b
-                        });
-                        // 该处需进行对象深拷贝，防止menuListExistInit数据篡改
-                        this.setState({
-                            menuListExist: JSON.parse(JSON.stringify(data)),
-                            menuListExistInit: JSON.parse(JSON.stringify(data))
-                        });
-                    }                   
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+        getPermission({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {
+                let data=[];
+                if (json.data.data.length) {
+                    json.data.data.forEach((item) => {
+                        data.push(item.id);
+                    });
+                    // 排序
+                    data.sort((a, b) => {return a - b});
+                    // 该处需进行对象深拷贝，防止menuListExistInit数据篡改
+                    this.setState({
+                        menuListExist: JSON.parse(JSON.stringify(data)),
+                        menuListExistInit: JSON.parse(JSON.stringify(data))
+                    });
+                }                   
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     // 权限菜单变更处理函数（无三级菜单项处理，已废弃）
@@ -1593,9 +1439,7 @@ class RoleAuthority extends Component {
         this.getMenuList();
         // 获取该角色当前权限菜单列表
         this.getMenuListExist();
-        this.setState({
-            visible: true
-        })
+        this.setState({visible: true});
     };
 
     handleCancel = () => {
@@ -1606,36 +1450,9 @@ class RoleAuthority extends Component {
                 menuList: [],
                 menuListExist: [],
                 menuListExistInit: [],
-                confirmLoading: false
+                loading: false
             });
-        })
-        // const cancel = () => {
-            
-        // };
-        // if (this.state.menuList.length === 0) {
-        //     cancel();
-        //     return;
-        // }
-        // // 排序
-        // let data = this.state.menuListExist;
-        // data.sort((a, b) => {
-        //     return a - b
-        // });
-        // // 信息比对
-        // if (this.state.menuListExistInit.toString() === data.toString()) {
-        //     cancel()
-        // } else {
-        //     confirm({
-        //         title: '确认放弃修改？',
-        //         content: "",
-        //         okText: '确认',
-        //         okType: 'danger',
-        //         cancelText: '取消',
-        //         onOk() {
-        //             cancel();
-        //         }
-        //     });
-        // }
+        });
     };
 
     handleCreate = () => {
@@ -1649,66 +1466,46 @@ class RoleAuthority extends Component {
         });
         console.log(data);
         // 信息比对
-        if (this.state.menuListExistInit.toString() === data.toString()) {
-            message.error("暂无信息更改，无法提交");
-            return;
-        }
+        // if (this.state.menuListExistInit.toString() === data.toString()) {
+        //     message.error("暂无信息更改，无法提交");
+        //     return;
+        // }
         console.log(this.state.menuListExist);
-        this.setState({
-            confirmLoading: true
-        });
+        this.setState({loading: true});
         console.log(this.state.menuListExist);
-        reqwest({
-            // url: '/role/saveJurisdiction',
-            url: '/admin/role/updateJurisdiction',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                roleId: this.props.id,
-                menuIds: this.state.menuListExist,
-                // menuId: this.state.menuListExist.join(","),
-                // menuIds: 2,
-                // menuIds: 3,
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({
-                    confirmLoading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("角色权限设置成功");
-                    this.setState({
-                        visible: false
-                    }, () => {
-                        this.setState({
-                            menuList: [],
-                            menuListExist: [],
-                            menuListExistInit: [],
-                            confirmLoading: false
-                        });
-                    });
-                    this.props.recapture()
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            confirmLoading: false
-                        })
-                    }
-                }
+
+        setPermission({
+            roleId: this.props.id,
+            menuIds: this.state.menuListExist
+        }).then((json) => {
+            if (json.data.result === 0) {
+                message.success("角色权限设置成功");
+                this.handleCancel();
+                this.props.recapture();
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     render() {
@@ -1722,8 +1519,7 @@ class RoleAuthority extends Component {
                     menuList={this.state.menuList}
                     menuListExist={this.state.menuListExist}
                     setMenuListExist={this.setMenuListExist}
-                    confirmLoading={this.state.confirmLoading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         )
     }
@@ -1743,8 +1539,7 @@ const ItemEditForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 {
                     JSON.stringify(data) === "{}" ?
                         <div className="spin-box">
@@ -1789,80 +1584,22 @@ class ItemEdit extends Component {
         visible: false,
         // 初始详情信息
         data: {},
-        confirmLoading: false
+        loading: false
     };
 
-    getData = () => {
-        reqwest({
-            url: '/admin/role/getById',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: {
-                id: this.props.id,
-            },
-            error: (XMLHttpRequest) => {
-                message.error("详情获取失败");
-                // const json = {
-                //     result: 0,
-                //     data: {
-                //         role: {
-                //             id: 1,
-                //             roleName: ""
-                //         }
-                //     }
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        data: json.data
-                    })
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+    getData = () => {       
+        roleDetail({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {
+                this.setState({data: json.data.data});
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
     };
 
-    showModal = () => {
-        // 获取初始详情信息
-        this.getData();
-        this.setState({
-            visible: true,
-        })
-    };
-
-    // 信息比对函数
-    dataContrast = (values) => {
-        const initValues = this.state.data;
-        const itemList = ["roleName", "remark"];
-        const result = {};
-        itemList.forEach((item) => {
-            if (values[item] !== initValues[item]) {
-                result[item] = values[item];
-            }
-        });
-        if (JSON.stringify(result) === "{}") {
-            return false;
-        } else {
-            result.id = this.props.id;
-            result.orgId = this.state.data.orgId;
-            result.orgCode = this.state.data.orgCode;
-            result.isSys = this.state.data.isSys;
-            result.isDelete = this.state.data.delete;
-            return result;
-        }
+    showModal = () => {        
+        this.getData();// 获取初始详情信息
+        this.setState({visible: true,})
     };
 
     handleCancel = () => {
@@ -1872,7 +1609,7 @@ class ItemEdit extends Component {
         }, () => {
             this.setState({
                 data: {},
-                confirmLoading: false
+                loading: false
             });
             form.resetFields();
         });
@@ -1881,62 +1618,42 @@ class ItemEdit extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            const result = this.dataContrast(values);
-            if (!result) {
-                message.error("暂无信息更改，无法提交");
-                return;
-            }
-            console.log(result);
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/admin/role/update',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: result,
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("角色信息编辑成功");
-                        this.setState({
-                            visible: false,
-                        }, () => {
-                            this.setState({
-                                data: {},
-                                confirmLoading: false
-                            });
-                        });
-                        // 编辑成功，重新获取列表
-                        this.props.recapture();
-                    } else {
-                        if (json.code === 901) {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            if (err) {return;}
+            const data = {
+                id: this.props.id,
+                name: values.roleName,
+                desc: values.remark
+            };
+            updateRole(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("角色信息编辑成功");
+                    this.handleCancel();                    
+                    this.props.recapture();// 编辑成功，重新获取列表
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            })
-        })
+            }).catch((err) => {this.errorHandle(err);});
+        });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -1953,7 +1670,7 @@ class ItemEdit extends Component {
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
                     data={this.state.data}
-                    confirmLoading={this.state.confirmLoading}
+                    confirmLoading={this.state.loading}
                 />
             </a>
         )
@@ -1990,7 +1707,6 @@ const NumDetailForm = Form.create()(
 class NumDetail extends Component {
     state = {
         visible: false,
-        confirmLoading: false,
         loading: false,
         data: [],
         pagination: {
@@ -2035,65 +1751,54 @@ class NumDetail extends Component {
     };
 
     getDataMemberList = () => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/admin/user/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                roleId: this.props.id,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
+        this.setState({loading: true});        
+        memberList({roleId: this.props.id}).then((json) => {
+            if (json.data.result === 0) {                    
                 this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {                    
-                    this.setState({
-                        data: json.data.list,
-                        loading: false,
-                        pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    })
-
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
+                    data: json.data.data.list,
+                    loading: false,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
                     }
-                }
+                })
+
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     handleCancel = () => {
         this.setState({
             visible: false
         }, () => {
-            this.setState({
-                confirmLoading: false,
+            this.setState({                
                 loading: false,
                 data: [],
             });
         })       
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -2107,8 +1812,7 @@ class NumDetail extends Component {
                 <NumDetailForm
                     ref={this.saveFormRef}
                     visible={this.state.visible}
-                    onCancel={this.handleCancel}                    
-                    confirmLoading={this.state.confirmLoading}
+                    onCancel={this.handleCancel}
                     loading={this.state.loading}
                     data={this.state.data}
                     columns={this.columns}
@@ -2151,12 +1855,15 @@ class DataTable extends Component {
                 title: '成员',
                 dataIndex: 'roleNums',
                 width: '10%',
-                // render: (text, record) => this.renderColumns(text, record, 'roleNums'),
                 render: (text, record) => {
                     return (
                         <div className="editable-row-operations">
-                            <NumDetail id={record.id} parentId={record.parentId} num={record.roleNums} recapture={this.getData}
-                                        toLoginPage={this.props.toLoginPage}/>
+                            <NumDetail 
+                                id={record.id} 
+                                parentId={record.parentId} 
+                                num={record.roleNums} 
+                                recapture={this.getData}
+                                toLoginPage={this.props.toLoginPage}/>
                         </div>
                     )
                 }
@@ -2227,124 +1934,83 @@ class DataTable extends Component {
 
     //获取本页信息
     getData = (keyword) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/admin/role/getRolePage',
-            type: 'json',
-            method: 'get',
-            data: {
-                roleName: keyword ? keyword.roleName : this.props.keyword.roleName,
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({
-                    loading: false
-                });
-            },
-            success: (json) => {
-                const data = [];
-                if (json.result === 0) {
-                    if (json.data) {
-                        if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                            this.setState({
-                                pagination: {
-                                    current: 1,
-                                    pageSize: this.state.pagination.pageSize
-                                }
-                            }, () => {
-                                this.getData();
-                            });
-                            return
-                        }
-                        json.data.list.forEach((item, index) => {
-                            data.push({
-                                key: index.toString(),
-                                id: item.role.id,
-                                index: index + 1,
-                                name: item.role.roleName,
-                                roleNums: item.userNum,
-                                orgId: item.role.orgId,
-                                remark: item.role.remark,
-                                updateTime: item.role.createTime,
-                            })
-                        })
-                    }
+        this.setState({loading: true});
+        const params = {
+            roleName: keyword ? keyword.roleName : this.props.keyword.roleName,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize
+        }
+        roleList(params).then((json) => {
+            const data = [];
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        data: data,
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
-                    })
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    }, () => {
+                        this.getData();
+                    });
+                    return
                 }
+                json.data.data.list.forEach((item, index) => {
+                    data.push({
+                        key: index.toString(),
+                        id: item.role.id,
+                        index: index + 1,
+                        // name: item.role.roleName,
+                        // roleNums: item.userNum,
+                        // remark: item.role.remark,
+                        // updateTime: item.role.createTime,
+                    })
+                })
+                this.setState({
+                    loading: false,
+                    data: data,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
+                    }
+                })
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     //角色删除
     itemDelete = (para) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/admin/role/delete?id=' + para,
-            type: 'json',
-            method: 'delete',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
+        this.setState({loading: true});
+        deleteRole({id: para}).then((json) => {
+            if (json.data.result === 0) {
                     message.success("角色删除成功");
                     this.getData();
                 } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    this.exceptHandle(json.data);
                 }
-            }
-        })
+        }).catch((err) => {this.errorHandle(err);});
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     //页码变化处理
@@ -2374,12 +2040,13 @@ class DataTable extends Component {
     };
 
     render() {
-        return <Table bordered
-                      loading={this.state.loading}
-                      dataSource={this.state.data}
-                      pagination={this.state.pagination}
-                      columns={this.columns}
-                      onChange={this.handleTableChange}/>;
+        return <Table 
+                    bordered
+                    loading={this.state.loading}
+                    dataSource={this.state.data}
+                    pagination={this.state.pagination}
+                    columns={this.columns}
+                    onChange={this.handleTableChange}/>;
     }
 }
 
@@ -2427,14 +2094,12 @@ class Roles extends Component {
 
     // 关键词写入
     setKeyword = (type, value) => {
-        if (type === 1) {
-            if (value !== this.state.keyword.roleName) {
-                this.setState({
-                    keyword: {
-                        roleName: value,
-                    }
-                })
-            }
+        if (value !== this.state.keyword.roleName) {
+            this.setState({
+                keyword: {
+                    roleName: value,
+                }
+            })
         }
     };
 
@@ -2471,14 +2136,11 @@ class Roles extends Component {
                     this.state.opObj.select ?
                         <div>
                             <header className="clearfix">
-                                <Search placeholder="请输入角色名称信息"
-                                        onSearch={(value) => this.setKeyword(1, value)}
-                                        enterButton
-                                        style={{
-                                            width: "320px",
-                                            float: "left"
-                                        }}
-                                />
+                                <Search 
+                                    onSearch={(value) => this.setKeyword(value)}
+                                    enterButton
+                                    style={{width: "320px", float: "left"}}
+                                    placeholder="请输入角色名称信息"/>
                                 {/*角色添加*/}
                                 <div className="add-button" style={{float: "right"}}>
                                     <ItemAdd 

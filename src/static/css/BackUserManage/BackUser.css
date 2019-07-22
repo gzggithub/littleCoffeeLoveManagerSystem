@@ -1,0 +1,17 @@
+/*所有账号*/
+.backUser-manage .backUsers header {
+    margin-bottom: 10px;
+}
+
+.backUser-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.backUser-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.backUser-form .ant-form-item.password .ant-form-explain {
+    width: 100%;
+    left: 161%;
+}

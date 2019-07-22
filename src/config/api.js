@@ -127,8 +127,12 @@ export  default {
     updateAccount: `${base}/cs/user/update`,
     // 详情
     accountDetail: `${base}/cs/user/getById`,
+    // 禁用和启用
+    ban: `${base}/cs/user/ban`,
     // 重置密码
     resetPwd: `${base}/cs/user/resetPassword`,
+    // 机构列表
+    orgList: `${base}/cs/org/list`,
     /*-------------------------------部门管理-------------------------------*/
     // 列表
     departmentList: `${base}/cs/department/list`,
@@ -146,7 +150,7 @@ export  default {
     subordinateMember: `${base}/cs/department/getDepartmentUser`,
     /*-------------------------------角色管理-------------------------------*/
     // 列表
-    roleList: `${base}/cs/role/list`,
+    roleList: `${base}/cs/role/getRolePage`,
     // 添加
     addRole: `${base}/cs/role/save`,
     // 删除

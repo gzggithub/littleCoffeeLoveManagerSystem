@@ -48,7 +48,7 @@ class EditableCell extends Component {
         });
     }
 
-    sort = (props1, e) => {
+    sort = (props1, e, dataIndex) => {
         const { record, handleSort } = this.props;
         this.form.validateFields((error, values) => {
             if (error && error[e.currentTarget.id]) {
@@ -56,9 +56,16 @@ class EditableCell extends Component {
             }
             this.toggleEdit();
             // 判断排序值是否改变，不变就不用排序，只有改变才请求sort接口
-            if (props1 !== Number(values.sort)) {
-                handleSort({ ...record, ...values });
-            } 
+            
+            if (dataIndex === 'sort') {
+                if (props1 !== Number(values.sort)) {
+                    handleSort({ ...record, ...values });
+                }
+            } else {
+                if (props1 !== Number(values.operateNum)) {
+                    handleSort({ ...record, ...values });
+                }
+            }
         });
     }
 
@@ -84,10 +91,11 @@ class EditableCell extends Component {
                                 <Input style={{textAlign: "center"}}
                                     // allowClear
                                     ref={node => (this.input = node)}
-                                    onPressEnter={this.sort.bind(this, record[dataIndex])}
-                                    onBlur={this.sort.bind(this, record[dataIndex])}
-                                    placeholder="双击设置排序"
-                                />
+                                    // onPressEnter={this.sort.bind(this, record[dataIndex], dataIndex)}
+                                    onPressEnter={() => this.sort(this, record[dataIndex], dataIndex)}
+                                    onBlur={() => this.sort(this, record[dataIndex], dataIndex)}
+                                    // onBlur={this.sort.bind(this, record[dataIndex])}
+                                    placeholder={dataIndex === 'sort' ? "双击设置排序" : "双击设置浏览数"}/>
                             )}
                         </FormItem>
                         ) : (
@@ -111,7 +119,7 @@ class EditableCell extends Component {
     }
 }
 
-// 明星信息编辑表单
+// 编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
         const {visible, onCancel, onCreate, form, data, confirmLoading} = props;
@@ -120,7 +128,7 @@ const ItemEditForm = Form.create()(
         return (
             <Modal
                 visible={visible}
-                title="编辑明星"
+                title="编辑"
                 width={1000}
                 onCancel={onCancel}
                 footer={[
@@ -128,10 +136,10 @@ const ItemEditForm = Form.create()(
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
                 destroyOnClose={true}>
-                <div className="course-add course-form item-form quality-course-form">
+                <div className="course-add item-form quality-course-form coffee-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
-                        <Row gutter={24}>
+                        {/*<Row gutter={24}>
                             <Col span={8}>
                                 <FormItem className="name"  label="发帖人：">
                                     {getFieldDecorator('name', {
@@ -146,9 +154,9 @@ const ItemEditForm = Form.create()(
                                 </FormItem>                                
                             </Col>                            
                         </Row>
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">明星详情</h4>
-                        <FormItem className="content" label="明星简介：">
+                        <div className="ant-line"></div>*/}
+                        {/*<h4 className="add-form-title-h4">明星详情</h4>*/}
+                        <FormItem className="content" label="内容：">
                             {getFieldDecorator('content', {
                                 initialValue: data.content,
                                 rules: [{
@@ -157,9 +165,9 @@ const ItemEditForm = Form.create()(
                                 }],
                             })(
                                 <TextArea 
-                                    className="ckeditor"
+                                    // className="ckeditor"
                                     style={{resize: "none"}}                                    
-                                    placeholder="请填写明星简介"
+                                    placeholder="请填写内容"
                                     autosize={{minRows: 5, maxRows: 10}}/>                                
                             )}
                         </FormItem>                        
@@ -171,7 +179,7 @@ const ItemEditForm = Form.create()(
     }
 );
 
-// 明星信息编辑明星组件
+// 编辑组件
 class ItemEdit extends Component {
     constructor(props) {
         super(props);
@@ -182,7 +190,7 @@ class ItemEdit extends Component {
             // 提交按钮状态变量
             loading: false,                  
         };
-        this.editor = ""
+        // this.editor = ""
     }
 
     // 获取明星基本信息
@@ -190,9 +198,9 @@ class ItemEdit extends Component {
         coffeeDetail({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
                 // 已有所属分类写入                    
-                json.data.data.typeId = json.data.data.excellentCourseType.typeId;                
+                // json.data.data.typeId = json.data.data.excellentCourseType.typeId;                
                 // 富文本数据写入
-                this.editor.setData(json.data.data.characteristic);
+                // this.editor.setData(json.data.data.characteristic);
                 // 信息写入
                 this.setState({
                     data: json.data.data,
@@ -203,18 +211,15 @@ class ItemEdit extends Component {
                 this.props.exceptHandle(json.data);
                 this.setState({loading: false});              
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     showModal = () => {
         this.getData();       
         this.setState({visible: true});      
-        setTimeout(()=> {
-           this.editor = window.CKEDITOR.replace(document.getElementById('content'));                      
-        });
+        // setTimeout(()=> {
+        //    this.editor = window.CKEDITOR.replace(document.getElementById('content'));                      
+        // });
     };
 
     // 取消处理
@@ -239,11 +244,11 @@ class ItemEdit extends Component {
             if (err) {return;}
             
             // 富文本内容处理
-            values.content = this.editor.getData();
-            console.log(values.riches)
+            // values.content = this.editor.getData();
+            // console.log(values.riches)
             const result = {
                 id: this.props.id,
-                name: values.name,                
+                // name: values.name,                
                 content: values.content,               
             };
             this.setState({loading: true});
@@ -253,27 +258,30 @@ class ItemEdit extends Component {
                     this.handleCancel();
                     this.props.recapture();                            
                 } else {
-                    message.error(json.message);                        
-                    this.setState({loading: false});
+                    this.exceptHandle(json.data);
                 }
-            }).catch((err) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            });
+            }).catch((err) => {this.errorHandle(err);});
         });
     };
 
+    // 异常处理
     exceptHandle = (json) => {
         if (json.code === 901) {
-            message.error("请先登录");                        
+            message.error("请先登录");            
             this.props.toLoginPage();// 返回登陆页
         } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
+            message.error("登录信息已过期，请重新登录");            
             this.props.toLoginPage();// 返回登陆页
         } else {
             message.error(json.message);
-            this.setState({loading: false})
+            this.setState({loading: false});
         }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -297,7 +305,7 @@ class ItemEdit extends Component {
     }
 }
 
-// 明星详情表单
+// 详情表单
 const ItemDetailsForm = Form.create()(
     (props) => {
         const {visible, onCancel, form, data, confirmLoading} = props;
@@ -315,11 +323,11 @@ const ItemDetailsForm = Form.create()(
                 <div className="institutionCheck-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基本信息</h4>
-                        <Row gutter={24}>
+                        {/*<Row gutter={24}>
                             <Col span={8}>
                                 <FormItem className="courseName"  label="发帖人：">
                                     {getFieldDecorator('courseName', {
-                                        initialValue: data.name,
+                                        initialValue: data.appUserId,
                                         rules: [{
                                             required: true,
                                             message: '发帖人不能为空',
@@ -331,18 +339,18 @@ const ItemDetailsForm = Form.create()(
                             </Col>                            
                             <div className="ant-line"></div>
                         </Row>
-                        <div className="ant-line"></div>
+                        <div className="ant-line"></div>*/}
                         <Row gutter={24}>
                             <Col span={24}>
                                 <FormItem className="characteristic" label="内容：">
                                     {getFieldDecorator('characteristic', {
-                                        initialValue: data.characteristic,
+                                        initialValue: data.content,
                                         rules: [{
                                             required: true,
                                             message: '内容不能为空',
                                         }],
                                     })(                                        
-                                        <div className="courseDescription" style={{border: "1px solid #e5e3e0",padding: "10px"}} dangerouslySetInnerHTML={{__html: data.characteristic}}></div>
+                                        <div className="courseDescription" style={{border: "1px solid #e5e3e0",padding: "10px"}} dangerouslySetInnerHTML={{__html: data.content}}></div>
                                     )}
                                 </FormItem>
                             </Col>
@@ -355,32 +363,26 @@ const ItemDetailsForm = Form.create()(
     }
 );
 
-// 明星详情组件
+// 详情组件
 class ItemDetails extends Component {
     state = {
         visible: false,
         loading: true,
-        // 明星基本信息
         data: "",
     };
 
-    // 获取明星基本信息
+    // 获取基本信息
     getData = () => {
         coffeeDetail({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
                 this.setState({
                     loading: false,
-                    data: json.data,
-                    videoList: json.data.lesson,
+                    data: json.data.data,
                 });
             } else {
-                this.props.exceptHandle(json.data);
-                this.setState({loading: false});            
+                this.exceptHandle(json.data);                         
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     showModal = () => {        
@@ -395,6 +397,26 @@ class ItemDetails extends Component {
             videoList: [],            
             data: "",
         });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     render() {
@@ -527,6 +549,7 @@ class DataTable extends Component {
         coffeeList(params).then((json) => {
             const data = [];
             if (json.data.result === 0) {
+                console.log(555);
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
                         pagination: {
@@ -538,20 +561,25 @@ class DataTable extends Component {
                     });
                     return
                 }
+                console.log(json.data.data.list)
                 json.data.data.list.forEach((item, index) => {
+                    console.log(55554)
+                    console.log(item)
                     data.push({
                         key: index.toString(),
                         id: item.id,
                         index: index + 1,
                         sort: item.sort ? item.sort : '',
-                        nickname: item.nickname,
-                        content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
-                        content_detail: item.content,
-                        viewNum: item.viewNum,
-                        operateNum: item.num ? item.num : '',
-                        createTime: item.createTime,                        
+                        nickname: item.appUserId,
+                        content: item.context.length > 18 ? item.context.slice(0, 18) + '...' : item.context,
+                        viewNum: item.visitorNum,
+                        operateNum: item.fakeVisitorNum ? item.fakeVisitorNum : '',
+                        createTime: item.createTime                        
                     });
+                    console.log(data);
                 });
+                console.log(444)
+                console.log(data)
                 this.setState({
                     loading: false,
                     data: data,
@@ -564,10 +592,7 @@ class DataTable extends Component {
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     // 设置排序
@@ -583,10 +608,7 @@ class DataTable extends Component {
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     // 设置浏览数
@@ -602,10 +624,7 @@ class DataTable extends Component {
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     //评价删除
@@ -618,10 +637,7 @@ class DataTable extends Component {
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("删除失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => {this.errorHandle(err);});
     };
 
     exceptHandle = (json) => {
@@ -636,6 +652,11 @@ class DataTable extends Component {
             this.setState({loading: false});
         }
     };
+
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
+    }
 
     //表格参数变化处理
     handleTableChange = (pagination, filters) => {
@@ -682,6 +703,7 @@ class DataTable extends Component {
                 dataIndex: col.dataIndex,
                 title: col.title,
                 handleSort: this.handleSort,
+                setViewNum: this.setViewNum
               }),
             };
         });

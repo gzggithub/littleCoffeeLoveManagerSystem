@@ -23,7 +23,14 @@
     margin-bottom: 10px;
 }
 
+.course-form.star-manage-form .ant-form-item.phone .ant-form-explain {
+    width: 190px;
+}
 .course-form.star-manage-form .ant-form-item.personalProfile .ant-form-explain {
+    top: 108%;
+}
+
+.course-form.star-manage-form .ant-form-item.avatar .ant-form-explain {
     top: 108%;
 }
 

@@ -9,7 +9,7 @@ import {
     Popconfirm,
     Spin,
 } from 'antd';
-import reqwest from 'reqwest';
+import { departmentList, addDepartment, deleteDepartment, updateDepartment, departmentDetail, departmentUserList } from '../../config';
 
 const FormItem = Form.Item;
 const {TextArea} = Input;
@@ -43,8 +43,7 @@ const AddItemForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="menu-add menu-form">
                     <Form layout="vertical">
                         <FormItem className="name" {...formItemLayout_14} label="部门名称：">
@@ -83,7 +82,7 @@ const AddItemForm = Form.create()(
 class AddItem extends Component {
     state = {
         visible: false,
-        confirmLoading: false
+        loading: false
     };
 
     showModal = () => {
@@ -93,13 +92,10 @@ class AddItem extends Component {
     handleCancel = () => {
         const form = this.form;
         this.setState({
-            visible: false
-        }, () => {
-            this.setState({
-                confirmLoading: false
-            });
-            form.resetFields();
+            visible: false,
+            loading: false
         });
+        form.resetFields();
     };
 
     handleCreate = () => {
@@ -108,56 +104,42 @@ class AddItem extends Component {
             if (err) {
                 return;
             }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/department/save',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    name: values.name,
-                    parentId: 0,
-                    description: values.description,
-                    type: 0
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("部门添加成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.setFlag()
-                    } else {
-                        if (json.code === "901") {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                loading: false
-                            })
-                        }
-                    }
+            this.setState({loading: true});
+            const data = {
+                parentId: 0,
+                name: values.name,                
+                desc: values.description
+            };
+            addDepartment(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("部门添加成功");
+                    this.handleCancel();
+                    this.props.setFlag();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            });
+            }).catch((err) => {this.errorHandle();});
         });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -173,8 +155,7 @@ class AddItem extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    confirmLoading={this.state.confirmLoading}
-                />
+                    confirmLoading={this.state.loading}/>
             </div>
         );
     }
@@ -194,8 +175,7 @@ const AddSubItemForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="menu-add menu-form">
                     <Form layout="vertical">
                         <FormItem className="name" {...formItemLayout_16} label="子部门名称：">
@@ -234,7 +214,7 @@ const AddSubItemForm = Form.create()(
 class AddSubItem extends Component {
     state = {
         visible: false,
-        confirmLoading: false
+        loading: false
     };
 
     showModal = () => {
@@ -244,70 +224,52 @@ class AddSubItem extends Component {
     handleCancel = () => {
         const form = this.form;
         this.setState({
-            visible: false
-        }, () => {
-            this.setState({
-                confirmLoading: false
-            });
-            form.resetFields();
+            visible: false,
+            loading: false
         });
+        form.resetFields();
     };
 
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/department/save',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    name: values.name,
-                    parentId: this.props.id,
-                    description: values.description,
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("子部门添加成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.recapture();
-                    } else {
-                        if (json.code === "901") {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            if (err) {return;}
+            this.setState({loading: true});
+            const data = {
+                parentId: this.props.id,
+                name: values.name,                
+                desc: values.description,
+            };
+            addDepartment(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("子部门添加成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            });
+            }).catch((err) => {this.errorHandle();})
         });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = () => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -324,8 +286,7 @@ class AddSubItem extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    confirmLoading={this.state.confirmLoading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
@@ -364,12 +325,11 @@ const NumDetailForm = Form.create()(
 class NumDetail extends Component {
     state = {
         visible: false,
-        confirmLoading: false,
         loading: false,
         data: [],
         pagination: {
             current: 1,
-            pageSize: Number(localStorage.institutionPageSize) || 10,
+            pageSize: 10,
             pageSizeOptions: ["5", "10", "15", "20"],
             showQuickJumper: true,
             showSizeChanger: true
@@ -410,136 +370,55 @@ class NumDetail extends Component {
     };
 
     getDataMemberList = () => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/admin/user/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                departmentId: this.props.id,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
+        this.setState({loading: true});
+        const params = {
+            departmentId: this.props.id,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize
+        }
+        departmentUserList(params).then((json) => {
+            if (json.data.result === 0) {
                 this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        data: json.data.list,
-                        loading: false,
-                        pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    })
-                    // const memberList = [];
-                    // json.data.userList.forEach((item, index) => {
-                    //     memberList.push({
-                    //         id: item.id,
-                    //         userId: item.userId,
-                    //         departmentId: item.departmentId,
-                    //         userName: item.userName,
-                    //         // phone: item.phone || "暂无",
-                    //         departmentName: item.departmentName
-                    //     })
-                    // })
-                    // this.setState({
-                    //     data: json.data.userList,
-                    //     loading: false,
-                    // })
-                } else {
-                    if (json.code === "901") {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
+                    data: json.data.data.list,
+                    loading: false,
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
                     }
-                }
+                })                    
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => {this.errorHandle();});
     };
 
     handleCancel = () => {
         this.setState({
-            visible: false
-        }, () => {
-            this.setState({
-                confirmLoading: false,
-                loading: false,
-            });
-        })       
+            visible: false,
+            loading: false,
+            data: []
+        });
     };
 
-    handleCreate = () => {
-        const form = this.form;
-        form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/menu/saveSysMenu',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: {
-                    name: values.name,
-                    parentId: this.props.id,
-                    url: values.url,
-                    type: 1
-                },
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("子部门添加成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.recapture();
-                    } else {
-                        if (json.code === "901") {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
-                }
-            });
-        });
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = () => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -554,13 +433,10 @@ class NumDetail extends Component {
                     ref={this.saveFormRef}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
-                    // onCreate={this.handleCreate}
-                    confirmLoading={this.state.confirmLoading}
                     loading={this.state.loading}
                     data={this.state.data}
                     columns={this.columns}
-                    pagination={this.pagination}
-                />
+                    pagination={this.pagination}/>
             </a>
         );
     }
@@ -631,77 +507,24 @@ class ItemEdit extends Component {
     state = {
         visible: false,
         data: {},
-        confirmLoading: false
+        loading: false
     };
 
     getData = () => {
-        reqwest({
-            url: '/sys/department/getById',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: {
-                //         sysMenu: {
-                //             id: 1,
-                //             name: "",
-                //             parentId: null,
-                //             url: ""
-                //         }
-                //     },
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({
-                        // data: json.data.sysMenu,
-                        data: json.data.sysDepartment,
-                    })
-                } else {
-                    if (json.code === "901") {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+        departmentDetail({id: this.props.id}).then((json) => {
+            if (json.data.result === 0) {
+                this.setState({                    
+                    data: json.data.data
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => {this.errorHandle();});
     };
 
     showModal = () => {
         this.getData();
-        this.setState({
-            visible: true,
-        })
-    };
-
-    // 信息比对函数
-    dataContrast = (values) => {
-        const initValues = this.state.data;
-        const itemList = ["name", "parentId", "personInCharge", "description", "id"];
-        const result = {};
-        itemList.forEach((item) => {
-            if (values[item] !== initValues[item]) {
-                result[item] = values[item];
-            }
-        });
-        if (JSON.stringify(result) === "{}") {
-            return false;
-        } else {
-            result.id = this.props.id;
-            return result;
-        }
+        this.setState({visible: true});
     };
 
     handleCancel = () => {
@@ -711,7 +534,7 @@ class ItemEdit extends Component {
         }, () => {
             this.setState({
                 data: {},
-                confirmLoading: false
+                loading: false
             });
             form.resetFields();
         });
@@ -723,57 +546,43 @@ class ItemEdit extends Component {
             if (err) {
                 return;
             }
-            const result = this.dataContrast(values);
-            if (!result) {
-                message.error("暂无信息更改，无法提交");
-                return;
-            }
-            this.setState({
-                confirmLoading: true
-            });
-            reqwest({
-                url: '/sys/department/update',
-                type: 'json',
-                method: 'post',
-                headers: {
-                    Authorization: sessionStorage.token
-                },
-                data: result,
-                error: (XMLHttpRequest) => {
-                    message.error("保存失败");
-                    this.setState({
-                        confirmLoading: false
-                    })
-                },
-                success: (json) => {
-                    if (json.result === 0) {
-                        message.success("部门信息编辑成功");
-                        this.setState({
-                            visible: false
-                        }, () => {
-                            this.setState({
-                                data: {},
-                                confirmLoading: false
-                            });
-                        });
-                        this.props.recapture();
-                    } else {
-                        if (json.code === "901") {
-                            message.error("请先登录");
-                            this.props.toLoginPage();
-                        } else if (json.code === 902) {
-                            message.error("登录信息已过期，请重新登录");
-                            this.props.toLoginPage();
-                        } else {
-                            message.error(json.message);
-                            this.setState({
-                                confirmLoading: false
-                            })
-                        }
-                    }
+            const data = {
+                id: this.props.id,
+                name: values.name,
+                parentId: this.props.id,
+                desc: values.description
+            };
+            this.setState({loading: true});
+            updateDepartment(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("部门信息编辑成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.exceptHandle(json.data);
                 }
-            });
+            }).catch((err) => {this.errorHandle();});
         });
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = () => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -791,8 +600,7 @@ class ItemEdit extends Component {
                     onCreate={this.handleCreate}
                     id={this.props.id}
                     data={this.state.data}
-                    confirmLoading={this.state.confirmLoading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
@@ -803,8 +611,7 @@ class DataTable extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            loading: true,
-            // 处理后的菜单列表
+            loading: true,            
             data: [],
             pagination: {
                 current: 1,
@@ -829,8 +636,7 @@ class DataTable extends Component {
             {
                 title: '部门成员',
                 dataIndex: 'num',
-                width: '15%',
-                // render: (text, record) => this.renderColumns(text, record, 'num'),
+                width: '15%',               
                 render: (text, record) => {
                     return (
                         <div className="editable-row-operations">
@@ -882,6 +688,7 @@ class DataTable extends Component {
                                 parentId={record.parentId} 
                                 recapture={this.getData}
                                 opStatus={this.props.opObj.add && record.parentId === 0}
+                                // opStatus={this.props.opObj.add}
                                 toLoginPage={this.props.toLoginPage}/>
                         </div>
                     );
@@ -897,170 +704,112 @@ class DataTable extends Component {
         );
     }
 
-    // 日期处理函数
-    dateHandle = (para) => {
-        const tempDate = new Date(para.replace("CST", "GMT+0800")),
-            oMonthT = (tempDate.getMonth() + 1).toString(),
-            oMonth = oMonthT.length <= 1 ? "0" + oMonthT : oMonthT,
-            oDayT = tempDate.getDate().toString(),
-            oDay = oDayT.length <= 1 ? "0" + oDayT : oDayT,
-            oYear = tempDate.getFullYear().toString(),
-            oTime = oYear + '-' + oMonth + '-' + oDay;
-        return oTime;
-    };
-
-    dateHandle02 = (para) => {
-        const add0 = (m) => {
-            return m < 10 ? '0' + m : m;
-        }
-        //shijianchuo是整数，否则要parseInt转换
-        const time = new Date(para),
-            y = time.getFullYear(),
-            m = time.getMonth()+1,
-            d = time.getDate();
-        return y + '-' + add0(m) + '-' + add0(d);
-    };
-
     // 部门列表处理函数
     dataHandle = (data) => {
+        console.log(data)
         // 获取一级菜单列表（parentId为0的项）；
         const result = [];
-        const fnFilter = (para) => {
-            return para.sysDepartment.parentId === 0
-        };
-        data.filter(fnFilter).forEach((item, index) => {
+        // const fnFilter = (para) => {
+        //     return para.parentId === 0
+        // };
+        // data.filter(fnFilter).forEach((item, index) => {
+        data.forEach((item, index) => {
             const temp = {
-                key: item.sysDepartment.id,
-                id: item.sysDepartment.id,
-                parentId: item.sysDepartment.parentId,
+                key: item.id,
+                id: item.id,
+                parentId: item.parentId,
                 index: index + 1,
-                name: item.sysDepartment.name,
-                num: item.sysDepartment.num,
-                description: item.sysDepartment.description,
-                updateTime: item.sysDepartment.updateTime,
+                name: item.name,
+                num: item.num,
+                description: item.desc,
+                updateTime: item.updateDate,
                 children: item.children,
-                userList: item.userList,
-                // URL: item.url,
+                userList: item.userList,               
             };
             result.push(temp)
         });
         result.forEach((item) => {
             if (item.children) {
                 item.children.forEach((subItem, subIndex) => {
-                    subItem.updateTime = this.dateHandle(subItem.updateTime);
+                    subItem.updateTime = subItem.updateDate;
                     subItem.key = subItem.id;
                     subItem.index = subIndex + 1;
                 });
             }
             
         });
-        // 遍历一级菜单，生成所需要的权限菜单列表
-        // result.forEach((item) => {
-            // 获取当前一级菜单下属二级菜单列表，写入children属性
-        //     const fnFilter__ = (para) => {
-        //         return para.parentId === item.id
-        //     };
-        //     if (data.filter(fnFilter__).length) {
-        //         item.children = [];
-        //         data.filter(fnFilter__).forEach((subItem, subIndex) => {
-        //             const temp = {
-        //                 key: subItem.id,
-        //                 id: subItem.id,
-        //                 parentId: subItem.parentId,
-        //                 index: subIndex + 1,
-        //                 name: subItem.name,
-        //                 num: subItem.num || 10,
-        //                 description: subItem.description || "暂无相关描述",
-        //                 // URL: subItem.url,
-        //             };
-        //             item.children.push(temp)
-        //         })
-        //     }
-        // });
+        console.log(result)
         return result;
     };
 
     //获取本页信息
     getData = () => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/department/list',
-            type: 'json',
-            method: 'get',
-            data: {
-                name: '',
-                orgId: sessionStorage.orgId,
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize,
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({
-                    loading: false
-                })
-                // const json = {
-                //     result: 0,
-                //     data: [
-                //         {id: 11, name: "", parentId: 0, url: ""},
-                //         {id: 12, name: "", parentId: 0, url: ""},
-                //         {id: 13, name: "", parentId: 0, url: ""},
-                //         {id: 14, name: "", parentId: 0, url: ""},
-                //         {id: 15, name: "", parentId: 0, url: ""},
-                //         {id: 16, name: "", parentId: 0, url: ""},
-                //         {id: 17, name: "", parentId: 0, url: ""},
-                //         {id: 18, name: "", parentId: 0, url: ""},
-                //         {id: 19, name: "", parentId: 0, url: ""},
-                //         {id: 20, name: "", parentId: 0, url: ""},
-                //         {id: 21, name: "", parentId: 0, url: ""},
-                //     ]
-                // };
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
+        this.setState({loading: true});       
+        const params = {
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize,
+        };
+        departmentList(params).then((json) => {
+            console.log(json)
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        // 对原始菜单列表进行处理后写入
-                        data: this.dataHandle(json.data.list),
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
-                    })
-                } else {
-                    if (json.code === "901") {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
+                    }, () => {
+                        this.getData();
+                    });
+                    return
                 }
+                this.setState({
+                    loading: false,                    
+                    data: json.data.data.list,// 对原始菜单列表进行处理后写入
+                    // data: this.dataHandle(json.data.data.list),// 对原始菜单列表进行处理后写入
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
+                    }
+                })
+            } else {
+                this.exceptHandle(json.data);
             }
-        })
+        }).catch((err) => {this.errorHandle(err);});
+    };
+
+    //部门删除
+    deleteItem = (para) => {
+        this.setState({loading: true});        
+        deleteDepartment({id: para}).then((json) => {
+            if (json.data.result === 0) {
+                message.success("部门删除成功");
+                this.getData();
+            } else {
+                this.exceptHandle(json.data);
+            }
+        }).catch((err) => {this.errorHandle(err);});
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     //表格参数变化处理
@@ -1078,125 +827,6 @@ class DataTable extends Component {
         });
     };
 
-    //部门删除
-    deleteItem = (para) => {
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/sys/department/delete',
-            type: 'json',
-            method: 'post',
-            data: {
-                id: para
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("部门删除成功");
-                    this.getData();
-                } else {
-                    if (json.code === "901") {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
-            }
-        });
-    };
-
-    //部门排序
-    reOrder = (para_id, para_type, para_index, parentId) => {
-        let dataArr = [], targetId = "";
-        // 获取操作项所在列表对象
-        const fnFilter = (item) => {
-            return item.id === parentId
-        };
-        if (parentId === 0) {
-            // 操作项为一级菜单，dataArr即为data对象本身
-            dataArr = this.state.data
-        } else {
-            // 操作项非一级菜单，dataArr即为当前操作项父菜单下属子菜单列表
-            dataArr = this.state.data.filter(fnFilter)[0].children
-        }
-        // type为1，进入上移分支
-        if (para_type === 1) {
-            // 首项无法上移，直接return
-            if (para_index <= 0) {
-                message.error("该项无法上移");
-                return;
-            }
-            // 上一项Id设为目标Id
-            targetId = dataArr[para_index - 1].id
-        }
-        // type为0，进入下移分支
-        if (para_type === 0) {
-            // 末项无法下移，直接return
-            if (para_index >= dataArr.length - 1) {
-                message.error("该项无法下移");
-                return;
-            }
-            // 下一项Id设为目标Id
-            targetId = dataArr[para_index + 1].id;
-        }
-        this.setState({
-            loading: true
-        });
-        reqwest({
-            url: '/menu/sortSysMenu',
-            type: 'json',
-            method: 'post',
-            data: {
-                id: para_id,
-                targetId: targetId
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: () => {
-                message.error("保存失败");
-                this.setState({
-                    loading: false
-                })
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    message.success("排序成功");
-                    this.getData();
-                } else {
-                    if (json.code === "901") {
-                        message.error("请先登录");
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
-            }
-        });
-    };
-
     componentWillMount() {
         this.getData();
     }
@@ -1209,12 +839,13 @@ class DataTable extends Component {
     }
 
     render() {
-        return <Table bordered
-                      loading={this.state.loading}
-                      dataSource={this.state.data}
-                      pagination={this.state.pagination}
-                      columns={this.columns}
-                      onChange={this.handleTableChange}/>;
+        return <Table 
+                    bordered
+                    loading={this.state.loading}
+                    dataSource={this.state.data}
+                    pagination={this.state.pagination}
+                    columns={this.columns}
+                    onChange={this.handleTableChange}/>;
     }
 }
 

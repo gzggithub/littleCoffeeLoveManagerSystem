@@ -337,13 +337,29 @@ class ItemCheck extends Component {
                     this.props.recapture();
                 } else {
                     this.props.exceptHandle(json.data);
-                    this.setState({loading: false});
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            });
+            }).catch((err) => {this.errorHandle(err);});
         });
+    };
+
+     // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = () => {
+        message.error("保存失败");
+        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {

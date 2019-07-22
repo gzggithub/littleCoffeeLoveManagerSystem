@@ -7,10 +7,10 @@
     分类管理：Category
     广告管理：AdvManage
     明星管理：StarManage
-    通告管理：NotificationManage
+    通告管理：NoticeManage
     明星审核：StarCheck
 
 2.账号管理：BackUserManage
-    部门管理：Departments
+    部门管理：Department
     角色管理：Roles
     所有账号：BackUsers

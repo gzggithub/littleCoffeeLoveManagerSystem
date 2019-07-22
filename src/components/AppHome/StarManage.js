@@ -20,7 +20,8 @@ import {
 } from 'antd';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
-import { configUrl, getToken, starList, saveStar, getStarDetail, updateStar, sortStar, putAwayStar, starTypeList, getStarList } from '../../config';
+import { checkTel, pCAName } from '../../config/common';
+import { configUrl, getToken, starList, saveStar, getStarDetail, updateStar, NewestStar, sortStar, putAwayStar, starTypeList, getStarList } from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -125,28 +126,29 @@ const ItemAddForm = Form.create()(
         const {getFieldDecorator} = form;
 
         // 城市选项生成
-        const optionsOfCity = [{value: "0", label: "全国"}];
-        let currentArea = [];
-        if (provinceList.length) {
-            provinceList.forEach((item) => {
-                let children = [];
-                if (item.districtList) {
-                    item.districtList.forEach((subItem) => {
-                        let subChildren = [];
-                        if (subItem.districtList) {
-                            subItem.districtList.forEach((thirdItem) => {
-                                subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
-                                if (Number(thirdItem.adcode) === data.areaId) {                          
-                                    currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];// 当前城市设为选中项
-                                }
-                            });
-                        }
-                        children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
-                    });
-                }
-                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-            });
-        }
+        // const optionsOfCity = [{value: "0", label: "全国"}];
+        const optionsOfCity = pCAName(provinceList, data.areaId).optionsOfCity;
+        let currentArea = pCAName(provinceList, data.areaId).currentArea;
+        // if (provinceList.length) {
+        //     provinceList.forEach((item) => {
+        //         let children = [];
+        //         if (item.districtList) {
+        //             item.districtList.forEach((subItem) => {
+        //                 let subChildren = [];
+        //                 if (subItem.districtList) {
+        //                     subItem.districtList.forEach((thirdItem) => {
+        //                         subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
+        //                         if (Number(thirdItem.adcode) === data.areaId) {                          
+        //                             currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];// 当前城市设为选中项
+        //                         }
+        //                     });
+        //                 }
+        //                 children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
+        //             });
+        //         }
+        //         optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+        //     });
+        // }
 
         // 图片处理
         const beforeUpload = (file) => {
@@ -178,17 +180,20 @@ const ItemAddForm = Form.create()(
         
         // 已上传图片列表
         const photoExist = [];
-        picList.forEach((item, index) => {
-            photoExist.push(
-                <div className="photoExist-item clearfix" key={index + 1}>
-                    <img src={item.path} alt=""/>
-                    <div className="remove">
-                        <Button type="dashed"
-                                shape="circle" icon="minus" onClick={() => setPicList(index)}/>
+        if (picList.length) {
+            console.log(picList)
+            picList.forEach((item, index) => {
+                photoExist.push(
+                    <div className="photoExist-item clearfix" key={index + 1}>
+                        <img src={item} alt=""/>
+                        <div className="remove">
+                            <Button type="dashed" shape="circle" icon="minus" onClick={() => setPicList(index)}/>
+                        </div>
                     </div>
-                </div>
-            )
-        });
+                )
+            });
+        }
+        
         //  生活照
         const picHandleChange03 = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
@@ -229,7 +234,7 @@ const ItemAddForm = Form.create()(
                         <div className="videoCol">
                             <div className="chapter">序号{item.sort || (videoList.length - index)}</div>
                             <div className="videoSize">{item.videoSize} M</div>
-                            <video src={item.video} id="video" controls="controls" width="100%"></video>
+                            <video src={item.video} id="video" controls="controls" preload="auto" width="100%"></video>
                             <input className="videoCourseName" disabled={item.readOnly} onChange={(e) => onChangeCourseName(e.target.value, index)} defaultValue={item.name} placeholder="请输入明星名称"/>                       
                             <ul className="video-edit-ul-items">
                                 <li className="item-video" onClick={() => editVideo(index)}>
@@ -344,7 +349,7 @@ const ItemAddForm = Form.create()(
                                         initialValue: data.phone,                                      
                                         rules: [{
                                             required: true,
-                                            message: '联系方式不能为空',
+                                            validator: checkTel
                                         }],
                                     })(
                                         <Input placeholder="请输入联系方式"/>
@@ -381,7 +386,7 @@ const ItemAddForm = Form.create()(
                         <h4 className="add-form-title-h4">明星详情</h4>
                         <FormItem className="personalProfile" label="明星简介：">
                             {getFieldDecorator('personalProfile', {
-                                initialValue: data.personalProfile,
+                                initialValue: data.description,
                                 rules: [{
                                     required: true,
                                     message: '简介不能为空',
@@ -407,12 +412,15 @@ const ItemAddForm = Form.create()(
                                     {photoExist}
                                     <Upload
                                         name="file"
+                                        multiple                                        
                                         listType="picture-card"
                                         accept="image/*"
                                         showUploadList={false}
                                         beforeUpload={beforeUpload}
                                         customRequest={picHandleChange03}>
-                                        {viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}
+                                        {uploadButton03}
+                                        {/*{viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}*/}
+                                        {/*<p className="hint">（可上传1-5张图片）</p>*/}
                                     </Upload>
                                 </div>                       
                             )}
@@ -465,6 +473,7 @@ class ItemAdd extends Component {
             viewPic: "",
             photoLoading: false,
             viewPic03: "",
+            picList: [],
             photoLoading03: false,
             // 视频上传
             viewVideo: "",
@@ -477,12 +486,13 @@ class ItemAdd extends Component {
 
     // 获取明星基本信息
     getData = () => {
-        getStarDetail({id: this.props.id}).then((json) => {
+        NewestStar({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
                 // 信息写入
                 this.setState({
                     data: json.data.data,
                     viewPic: json.data.data.pic,
+                    picList: json.data.data.picList,
                     videoList: json.data.data.lesson
                 });
             } else {
@@ -584,10 +594,10 @@ class ItemAdd extends Component {
             complete (res) {
                 console.log(res);
                 message.success("图片提交成功");
-                let tempPicList = [];
-                tempPicList.push({path: configUrl.photoUrl + res.key});
+                let {picList} = _this.state; // 此行不加只能添加一张
+                picList.push(configUrl.photoUrl + res.key);
                 _this.setState({
-                    picList: tempPicList,
+                    picList: picList,
                     viewPic03: configUrl.photoUrl + res.key || "",           
                     photoLoading03: false,
                 })
@@ -634,8 +644,7 @@ class ItemAdd extends Component {
                 complete (res) {
                     console.log(res);
                     message.success("视频提交成功");
-                    let videoList = _this.state.videoList;                    
-                    
+                    let videoList = _this.state.videoList;
                     videoList.unshift({ 
                         sort: 0,                      
                         video: global.config.photoUrl + res.key,
@@ -658,16 +667,20 @@ class ItemAdd extends Component {
 
     // 视频编辑
     editVideo = (index) => {
+        // 视频没有播放完duration是undefined
         setTimeout(()=> {
             // let ele = document.getElementById('video' + index);
-            let duration = document.getElementById('video').duration;
+            // console.log(document.getElementById('video'))
+            // let duration = document.getElementById('video').duration;
+            console.log(duration);
+            let duration = 5;
             let {videoList} = this.state;
             this.setState({
                 videoList: videoList.map((item, idx) => idx === index ? {...item, duration: duration, readOnly: false,} : item).sort((a, b) => {return  a.sort - b.sort;})  
             },() => {
                 console.log(this.state.videoList)
             });
-        });
+        }, 1500);
     };    
     
     // 视频删除
@@ -711,6 +724,7 @@ class ItemAdd extends Component {
                 viewPic: "",
                 photoLoading: false,
                 viewPic03: "",
+                picList: [],
                 photoLoading03: false,
                 viewVideo: '',
                 videoList: [],
@@ -726,49 +740,38 @@ class ItemAdd extends Component {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             if (err) {return;}
-            // let { viewPic, allAuthorList, videoList} = this.state;
+            let { viewPic, viewPic03, picList, videoList } = this.state; // 模板字符串es6
             // 头像校验与写入
-            if (this.state.viewPic) {
-                values.avatar = this.state.viewPic.slice(configUrl.photoUrl.length);
+            if (viewPic) {
+                values.avatar = viewPic.slice(configUrl.photoUrl.length);
             } else {
                 message.error("头像未选择");
                 return false;
             }
             // 明星图片校验与写入
-            if (this.state.viewPic03) {
-                values.photo = this.state.viewPic03.slice(configUrl.photoUrl.length);
+            if (viewPic03) {
+                values.photo = viewPic03.slice(configUrl.photoUrl.length);
             } else {
-                message.error("图片未选择");
+                message.error("生活照未选择");
                 return false;
-            }
-
-            console.log(this.props.provinceList);
-            let provinceName = '';
-            let cityName = '';
-            let areaName = '';
-            let currentAreaName = [];
-            if (this.props.provinceList.length) {
-                this.props.provinceList.forEach((item) => {                    
-                    if (item.districtList) {
-                        item.districtList.forEach((subItem) => {
-                            if (subItem.districtList) {
-                                subItem.districtList.forEac((thirdItem) => {
-                                    if (thirdItem.adcode === values.area[3]) {
-                                        currentAreaName = [item.name, subItem.name, thirdItem.name]
-                                    }
-                                })
-                            }
-                        })
-                    }
-                })
-            }
-            
+            }            
+            // 生活照校验与写入
+            let tempPicList = [];
+            if (picList.length) {
+                picList.forEach((item, index) => {
+                    tempPicList.push(item.slice(configUrl.photoUrl.length));
+                });               
+            } else {
+                message.error("生活照未选择");
+                return false;
+            }           
+            // 省市区名称
+            let currentAreaName = pCAName(this.props.provinceList, values.area[2]).currentAreaName;
             // 明星视频写入与校验
             const tempVideoList = [];
-            let lesson = this.state.videoList;
-            console.log(lesson);
-            if (lesson.length) {
-                lesson.forEach((item, index) => {
+            console.log(videoList);
+            if (videoList.length) {
+                videoList.forEach((item, index) => {
                     tempVideoList.push({
                         name: item.name,
                         sort: item.sort,
@@ -785,16 +788,16 @@ class ItemAdd extends Component {
                 height: values.height,
                 weight: values.height,
                 provinceId: values.area[0],
-                // provinceName: values.provinceName,
+                provinceName: currentAreaName[0],
                 cityId: values.area[1],
-                // cityName: values.cityName,
+                cityName: currentAreaName[1],
                 areaId: values.area[2],
-                // areaName: values.areaName,
+                areaName: currentAreaName[2],
                 phone: values.phone,
                 photo: values.avatar,
-                desc: values.personalProfile,
-                piclist: [values.photo],
-                videoList: JSON.stringify(tempVideoList)
+                description: values.personalProfile,
+                piclist: tempPicList,
+                videoList: tempVideoList
             };
             this.setState({loading: true});
             saveStar(result).then((json) => {

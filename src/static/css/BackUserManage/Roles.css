@@ -1,0 +1,139 @@
+.role-form .ant-form-item.unnecessary label {
+    padding-left: 11px;
+}
+
+.role-form .ant-form-item.longItem .ant-form-explain {
+    left: 102%;
+}
+
+.role-authority .roleMenuList .ant-form-item-label {
+    display: block;
+    float: none;
+}
+
+.role-authority .roleMenuList .ant-form-item-control-wrapper {
+    margin: 0;
+}
+
+.role-authority .roleMenuList .itemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .subItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .thirdItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .subfourthItemBox {
+    float: left;
+    margin-left: 5px;
+}
+
+.role-authority .roleMenuList .fourthItemBox {
+    float: left;
+    margin-left: 50px;
+}
+
+.role-authority .roleMenuList .fourthItemBox div {
+    float: left;
+    margin-left: 5px;
+}
+
+/* new add csss */
+.role-add-member.role-edit.role-form {
+    display: flex;
+}
+
+.role-add-member div:first-child.left {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+}
+
+.role-add-member div:first-child.left .top {
+    height: 40px;
+    line-height: 40px;
+    background: #F5F5F5;
+    font-size: 16px;
+    color:  #999;
+    padding-left: 10px;
+}
+
+.role-add-member div:first-child.left .bottom {
+    padding: 10px 10px 0;
+}
+
+.role-add-member div:first-child.left .bottom Tree {
+
+}
+
+.role-add-member div:last-child.right {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    margin-left: 10px;  
+}
+
+.role-add-member div:last-child.right .top {
+    display: flex;
+    height: 40px;
+    line-height: 40px;
+    font-size: 16px;
+    background: #F5F5F5; 
+}
+
+.role-add-member div:last-child.right .top  div {
+    flex: 1;
+    padding-left: 10px;
+}
+
+.role-add-member div:last-child.right .top  div:last-child {
+    text-align: right;
+    padding-right: 10px;
+    color: #0079FE;
+}
+
+.role-add-member div:last-child.right .bottom {
+    padding-left: 0;
+    height: 300px;
+    overflow: auto;
+}
+
+.role-add-member div:last-child.right .bottom li {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    border: 1px solid #FFF;
+    display: flex;
+}
+
+.role-add-member div:last-child.right .bottom li:hover {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    background: #F5F5F5;
+    border: 1px solid #CCE4FF;
+}
+
+.role-add-member div:last-child.right .bottom li div:first-child {
+    flex: 5;
+}
+.role-add-member div:last-child.right .bottom li div:last-child {
+    flex: 1;
+    text-align: right;
+    color: #0079FE;
+}
+
+.role-add-member div:last-child.right .bottom li div:last-child {
+    text-align: right;
+}
+
+.role-add-member div:last-child.right .bottom li div:last-child:hover {
+    display: block;
+}
