@@ -39,8 +39,8 @@ const Cell = ({value}) => (
 // 新增、复制通告表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setStartTime, setEndTime, disabledStartDate, disabledEndDate, confirmLoading} = props;
-        const {getFieldDecorator} = form;
+        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setStartTime, setEndTime, disabledStartDate, disabledEndDate, mapObj, formattedAddress, setXY, setAddressComponent, confirmLoading} = props;
+        const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
         const optionsOfCity = [{value: "0", label: "全国"}];
@@ -72,6 +72,50 @@ const ItemAddForm = Form.create()(
         //         typeList.push(<Option key={item.id}>item.name</Option>)
         //     })
         // }
+
+        //地理编码
+        const toXY = (para) => {
+            console.log(para);
+            mapObj.plugin('AMap.Geocoder', function () {
+                const geocoder = new window.AMap.Geocoder({});
+                const marker = new window.AMap.Marker({
+                    map: mapObj,
+                    bubble: true
+                });
+                geocoder.getLocation(para, (status, result) => {
+                    if (status === 'complete' && result.info === 'OK') {
+                        result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;
+                        setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
+                        // setFieldsValue({"address": result.geocodes[0].formattedAddress});
+                        setAddressComponent(result.geocodes[0].addressComponent);
+                        marker.setPosition(result.geocodes[0].location);
+                        mapObj.setCenter(marker.getPosition())
+                    }
+                });
+            });
+        };
+        //定位
+        const location = () => {
+            mapObj.plugin('AMap.Geolocation', function () {
+                const geolocation = new window.AMap.Geolocation({});
+                mapObj.addControl(geolocation);
+                geolocation.getCurrentPosition();
+                //获取成功
+                window.AMap.event.addListener(geolocation, 'complete', function (data) {
+                    const x = data.position.getLng(), //定位成功返回的经度
+                        y = data.position.getLat(); //定位成功返回的纬度
+                    setXY({x: x, y: y});
+                    setFieldsValue({"address": data.formattedAddress});
+                    setAddressComponent(data.addressComponent);
+                });
+                //获取失败
+                window.AMap.event.addListener(geolocation, 'error', function (data) {
+                    if (data.info === 'FAILED') {
+                        console.log('获取当前位置失败！')
+                    }
+                });
+            });
+        };
 
         return (
             <Modal
@@ -146,12 +190,12 @@ const ItemAddForm = Form.create()(
                                 </FormItem>                                
                             </Col>
                             <Col span={8}>
-                                <FormItem className="location"  label="类型：">
-                                    {getFieldDecorator('location', {
-                                        initialValue: data.location,                                      
+                                <FormItem className="type"  label="类型：">
+                                    {getFieldDecorator('type', {
+                                        initialValue: data.type,                                      
                                         rules: [{
                                             required: true,
-                                            message: '通告名称不能为空',                                            
+                                            message: '类型未选择',
                                         }],
                                     })(
                                         <Select placeholder="请选择类型">
@@ -172,11 +216,13 @@ const ItemAddForm = Form.create()(
                                             message: '通告地点不能为空',                                            
                                         }],
                                     })(
-                                        <Input placeholder="请填写地点"/>
+                                        <Input placeholder="请填写地点" onBlur={(event) => toXY(event.target.value)}/>
                                     )}
                                 </FormItem>
                             </Col>
-                            
+                            <p onClick={location}
+                               style={{width: "120px", marginLeft: "100px", cursor: "pointer"}}>点击获取当前坐标</p>
+                            <div id="add-notice-container" name="container" tabIndex="0"/>
                         </Row>
                         <div className="ant-line"></div>
                         <FormItem className="claim" label="要求：">
@@ -217,7 +263,11 @@ class ItemAdd extends Component {
             startValue: null,
             endValue: null,
             startTime: null,
-            endTime: null
+            endTime: null,
+            mapObj: {},
+            formattedAddress: "",
+            xy: {},
+            addressComponent: {}
         };
     }
 
@@ -284,7 +334,55 @@ class ItemAdd extends Component {
         } else if (props === 2) {                       
             this.setState({data: {}});
         }        
-        this.setState({visible: true});
+        this.setState({visible: true}, () => {
+            setTimeout(() => {
+                this.setState({
+                    mapObj: new window.AMap.Map('add-notice-container', {
+                        resizeEnable: true,
+                        zoom: 16,
+                        center: [120.00485, 30.292234]
+                    })
+                }, () => {
+                    window.AMap.service('AMap.Geocoder', () => {
+                        const geocoder = new window.AMap.Geocoder({});
+                        this.state.mapObj.on('click', (e) => {
+                            this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
+                            geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
+                                if (status === 'complete' && result.info === 'OK') {
+                                    this.setFormattedAddress(result.regeocode.formattedAddress);
+                                    this.setAddressComponent(result.regeocode.addressComponent);
+                                }
+                            });
+                        });
+                    })
+                })
+            }, 500)
+        });
+    };
+
+    setXY = (para) => {
+        this.setState({
+            xy: para
+        })
+    };
+
+    setFormattedAddress = (para) => {
+        this.setState({
+            formattedAddress: para
+        }, () => {
+            // flag = true;
+        })
+    };
+
+    setAddressComponent = (para) => {
+        this.setState({
+            addressComponent: {
+                provinceName: para.province,
+                cityName: para.city,
+                areaName: para.district,
+                areaId: para.adcode
+            }
+        })
     };
 
     // 倒计时
@@ -314,8 +412,16 @@ class ItemAdd extends Component {
             visible: false
         }, () => {
             this.setState({
-                data: {},                            
+                data: {},
+                startValue: null,
+                endValue: null,
+                startTime: null,
+                endTime: null,                         
                 loading: false,
+                mapObj: {},
+                formattedAddress: "",
+                xy: {},
+                addressComponent: {}
             });
             form.resetFields();
         });
@@ -411,6 +517,10 @@ class ItemAdd extends Component {
                     setEndTime={this.setEndTime}
                     disabledStartDate={this.disabledStartDate}
                     disabledEndDate={this.disabledEndDate}
+                    mapObj={this.state.mapObj}
+                    formattedAddress={this.state.formattedAddress}
+                    setXY={this.setXY}
+                    setAddressComponent={this.setAddressComponent}
                     confirmLoading={this.state.loading}/>                
             </div>
         );

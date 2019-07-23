@@ -120,7 +120,7 @@ export  default {
     // 列表
     accountList: `${base}/cs/user/list`,
     // 添加
-    addAccouont: `${base}/cs/user/save`,
+    addAccount: `${base}/cs/user/save`,
     // 删除
     deleteAccount: `${base}/cs/user/delete`,
     // 编辑

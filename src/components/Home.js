@@ -272,65 +272,12 @@ class Home extends Component {
         const index02 = para.slice(index01 + 1).indexOf("/") + 1;
         return index02 ? para.slice(0, index01 + index02) : para;
     };
-
-    // 菜单分级处理函数
-    dataHandle = (data) => {
-        const dataEffective = (para) => {
-            return para && para.status === false
-        };
-        data = data.filter(dataEffective);
-        const tempResult = [];
-        const result = [];
-        const fnFilter01 = (para) => {
-            return para.parentId === 0
-        };
-        let data01 = data.filter(fnFilter01);
-        data01.sort((a, b) => {
-            return a.orderNum - b.orderNum
-        });
-        data01.forEach((item) => {
-            const temp = {
-                id: item.id,
-                name: item.name,
-                url: item.url,
-            };
-            tempResult.push(temp)
-        });
-        tempResult.forEach((item) => {
-            const fnFilter02 = (para) => {
-                return para.parentId === item.id
-            };
-            let data02 = data.filter(fnFilter02);
-            data02.sort((a, b) => {
-                return a.orderNum - b.orderNum
-            });
-            if (data02.length) {
-                item.children = [];
-                data02.forEach((subItem) => {
-                    const fnFilter03 = (para) => {
-                        return para.parentId === subItem.id
-                    };
-                    let data03 = data.filter(fnFilter03);
-                    const temp = {
-                        id: subItem.id,
-                        name: subItem.name,
-                        url: subItem.url,
-                        children: data03
-                    };
-                    item.children.push(temp)
-                });
-                // console.log(item)
-                result.push(item)
-            }
-        });
-        return result
-    };
     
     // 导航数据
     getMenuList = () => {
         const tempMenuList = [];           
         // 新改的菜单数据
-        const handleResult = JSON.parse(sessionStorage.menuListOne);           
+        const handleResult = JSON.parse(sessionStorage.menuListOne);       
         handleResult.forEach((item, index) => {
             tempMenuList.push(
                 <Menu.Item key={index + 1}>
@@ -342,21 +289,16 @@ class Home extends Component {
         });
         this.setState({
             menuList: tempMenuList
-        }, () => {
-            // console.log(this.props.location.pathname);
-            // 地址有误当有三级菜单路由时，暂时不改，有时间改
+        }, () => {            
             if (this.props.location.pathname === "/index") {
-                this.props.history.push(handleResult[0].url);
-                // console.log(handleResult[0].url);
+                this.props.history.push(handleResult[0].url);                
                 this.setState({
                     highlight: "1"
                 })
-            } else {
-                // console.log(this.props.location.pathname);
+            } else {               
                 const superiorPath = this.getSuperiorPath(this.props.location.pathname);
                 const tempMenuList = JSON.parse(sessionStorage.menuListOne);
-                tempMenuList.forEach((item, index) => {
-                    // console.log(superiorPath);
+                tempMenuList.forEach((item, index) => {                   
                     if (item.url === superiorPath) {
                         this.setState({
                             highlight: (index + 1).toString()
@@ -435,8 +377,8 @@ class Home extends Component {
                                 selectedKeys={[this.state.highlight]}
                                 style={{marginLeft: '150px', lineHeight: '64px'}}
                                 onClick={this.setHighlight}>
-                                {/*this.state.menuList*/}
-                                <Menu.Item key={1} style={{textAlign: "center"}}>
+                                {this.state.menuList}
+                                {/*<Menu.Item key={1} style={{textAlign: "center"}}>
                                     <Link to="/index/app-home">
                                         小咖爱
                                     </Link>
@@ -445,7 +387,7 @@ class Home extends Component {
                                     <Link to="/index/backUser-manage">
                                         账号管理
                                     </Link>
-                                </Menu.Item>
+                                </Menu.Item>*/}
                             </Menu>
                             {/*登录信息相关*/}
                             <div className="right-box">

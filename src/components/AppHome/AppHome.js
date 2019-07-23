@@ -21,76 +21,14 @@ const {Content, Sider} = Layout;
 class AppHome extends Component {
     constructor(props) {
         super(props);
-        this.rootSubmenuKeys = ['sub1', 'sub2', 'sub3'];
-        this.state = {
-            // 二级菜单组件列表
-            menuList: [],
-            // 二级菜单组件列表
-            // menuList02: [],
-            // 二级菜单组件列表
-            // menuList03: [],
-            // 高亮项索引
-            highlight: "",
-            openKeys: ['sub1'],
-        };
-        // 二级菜单列表
-        this.menu = [];
-        // this.menu02 = [];
-        // this.menu03 = [];  
+        this.state = {            
+            menuList: [],// 二级菜单组件列表            
+            highlight: ""// 高亮项索引
+        };        
+        this.menu = [];// 二级菜单列表
     }
 
-    // 二级菜单组件列表生成 (暂时不用)
-    menuHandle02 = () => {
-        let tempSubMenu = [];
-        // 获取当前页面一级菜单下属二级菜单列表
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            if (item.url === "/index/app-home") {
-                if (item.children) {
-                    this.menu03 = item.children;
-                    item.children.forEach((subItem, subIndex) => {
-                        let tempMenuList = [];
-                        if (subItem.children) {
-                            subItem.children.forEach((thirdItem, thirdIndex) => {
-                                tempMenuList.push(
-                                    <Menu.Item key={thirdIndex + 1} style={{textAlign: "center"}}>
-                                        <Link to={thirdItem.url}>
-                                            {thirdItem.name}
-                                        </Link>
-                                    </Menu.Item>
-                                )
-                            })
-                        }
-                        tempSubMenu.push(
-                            <SubMenu key={"sub" + (subIndex + 1)} title={<span>{subItem.name}</span>}>
-                                {tempMenuList}                         
-                            </SubMenu>
-                        )
-                    })
-                }         
-            }
-        });
-        // 二级菜单组件列表写入
-        this.setState({
-            menuList: tempSubMenu
-            // menuList03: tempSubMenu
-        });
-        // 路由中缺失二级菜单信息时默认跳转至当前一级菜单下属第一项二级菜单并标为高亮
-        if (this.props.location.pathname === "/index/app-home") {
-            this.menu03.forEach((item, index) => {
-                if (item.children) {
-                    item.children.forEach((subItem, subIndex) => {
-                        if (subItem.name === this.menu03[0].children[0].name) {
-                            this.setState({
-                                highlight: (subIndex + 1).toString()
-                            })
-                            this.props.history.push(subItem.url);
-                        }
-                    })                
-                }
-            });
-        }
-    };
-
+    // 二级菜单组件列表生成
     menuHandle = () => {
         const tempMenuList = [];
         JSON.parse(sessionStorage.menuListOne).forEach((item) => {
@@ -131,9 +69,8 @@ class AppHome extends Component {
     };
 
     componentWillMount() {
-        if (sessionStorage.menuListOne) {
-            // 获取二级菜单组件列表
-            this.menuHandle();
+        if (sessionStorage.menuListOne) {            
+            this.menuHandle();// 获取二级菜单组件列表
             if (this.props.location.search) {
                 console.log(this.menu[0].url)
                 this.props.history.push(this.menu[0].url)
@@ -141,8 +78,7 @@ class AppHome extends Component {
         }
     }
 
-    componentWillReceiveProps(nextProps) {
-        // url有变化，则重新设置高亮项
+    componentWillReceiveProps(nextProps) {// url有变化，则重新设置高亮项        
         if(nextProps.location.pathname!==this.props.location.pathname){
             this.menu.forEach((item, index) => {
                 if (item.url === nextProps.location.pathname) {
@@ -160,17 +96,6 @@ class AppHome extends Component {
         }
     }
 
-    onOpenChange = (openKeys) => {
-        const latestOpenKey = openKeys.find(key => this.state.openKeys.indexOf(key) === -1);
-        if (this.rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
-            this.setState({ openKeys });
-        } else {
-            this.setState({
-                openKeys: latestOpenKey ? [latestOpenKey] : [],
-            });
-        }
-    }
-
     render() {
         return (
             <Router>
@@ -178,16 +103,15 @@ class AppHome extends Component {
                     <Layout>
                         <Sider width={200} style={{background: '#fff', position: "fixed", top: "64px", left: "0",minHeight: 600}}>
                             <Menu
-                                mode="inline"
-                                openKeys={this.state.openKeys}
-                                onOpenChange={this.onOpenChange}
+                                mode="inline"                                
                                 selectedKeys={[this.state.highlight]}
+                                defaultOpenKeys={['sub1']}
                                 style={{height: '100%', borderRight: 0}}
                                 onClick={this.setHighlight}>
-                                {/*二级菜单栏*/}
-                                {/*this.state.menuList03*/}
-                                <SubMenu key={"sub" + (1)} title={<span>小咖爱</span>}>
-                                    <Menu.Item key={1} style={{textAlign: "center"}}>
+                                {/*二级菜单栏*/}                                
+                                <SubMenu key="sub1" title={<span>小咖爱</span>}>
+                                    {this.state.menuList}
+                                    {/*<Menu.Item key={1} style={{textAlign: "center"}}>
                                         <Link to="/index/app-home/category">
                                             分类管理
                                         </Link>
@@ -221,7 +145,7 @@ class AppHome extends Component {
                                         <Link to="/index/app-home/comment-manage">
                                             评论管理
                                         </Link>
-                                    </Menu.Item>                                    
+                                    </Menu.Item>*/}                                    
                                 </SubMenu>
                             </Menu>
                         </Sider>

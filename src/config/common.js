@@ -160,6 +160,132 @@ export function expectHandle (code, message) {
     }
 }
 
+// 菜单分级处理函数
+export const dataHandle01 = (data) => {
+    const dataEffective = (para) => {
+        return para && para.status === false
+    };
+    data = data.filter(dataEffective);
+    const tempResult = [];
+    const result = [];
+    const fnFilter01 = (para) => {
+        return para.parentId === 0
+    };
+    let data01 = data.filter(fnFilter01);
+    data01.sort((a, b) => {
+        return a.orderNum - b.orderNum
+    });
+    data01.forEach((item) => {
+        const temp = {
+            id: item.id,
+            name: item.name,
+            url: item.url,
+        };
+        tempResult.push(temp)
+    });
+    tempResult.forEach((item) => {
+        const fnFilter02 = (para) => {
+            return para.parentId === item.id
+        };
+        let data02 = data.filter(fnFilter02);
+        data02.sort((a, b) => {
+            return a.orderNum - b.orderNum
+        });
+        if (data02.length) {
+            item.children = [];
+            data02.forEach((subItem) => {
+                const fnFilter03 = (para) => {
+                    return para.parentId === subItem.id
+                };
+                let data03 = data.filter(fnFilter03);
+                const temp = {
+                    id: subItem.id,
+                    name: subItem.name,
+                    url: subItem.url,
+                    children: data03
+                };
+                item.children.push(temp)
+            });
+            result.push(item)
+        }
+    });
+    return result
+};
+
+// 菜单分级处理函数 (多了一级)
+export const dataHandle = (data) => {
+    console.log(88888888);
+    const dataEffective = (para) => {
+        return para && para.status === false
+    };
+    data = data.filter(dataEffective);        
+    const tempResult = [];
+    const result = [];
+    const fnFilter01 = (para) => {
+        return para.parentId === 0
+    };
+    let data01 = data.filter(fnFilter01);
+    // data01.sort((a, b) => {
+    //     return a.orderNum - b.orderNum
+    // });
+    data01.forEach((item) => {
+        const temp = {
+            id: item.id,
+            name: item.name,
+            url: item.url,
+            orderNum: item.orderNum
+        };
+        tempResult.push(temp)
+    });
+    tempResult.forEach((item) => {
+        const fnFilter02 = (para) => {
+            return para.parentId === item.id
+        };
+        let data02 = data.filter(fnFilter02);
+        // data02.sort((a, b) => {                
+        //     return b.id - a.id
+        // });
+        if (data02.length) {
+            item.children = [];
+            data02.forEach((subItem) => {
+                const fnFilter03 = (para) => {
+                    return para.parentId === subItem.id
+                };
+                let data03 = data.filter(fnFilter03);                   
+
+                // 多了一级
+                if (data03.length) {
+                    subItem.children = [];
+                    data03.forEach((thirdItem) => {
+                        const fnFilter04 = (para) => {
+                            return para.parentId === thirdItem.id
+                        };
+                        let data04 = data.filter(fnFilter04);
+                        const temp = {
+                            id: thirdItem.id,
+                            name: thirdItem.name,
+                            url: thirdItem.url,
+                            children: data04
+                        };
+                        subItem.children.push(temp)
+                    })
+                    item.children.push(subItem)
+                } else {
+                    const temp = {
+                        id: subItem.id,
+                        name: subItem.name,
+                        url: subItem.url,
+                        children: data03
+                    };
+                    item.children.push(temp)
+                }
+            });
+            result.push(item)
+        }
+    });
+    return result
+};
+
 function toLoginPage () {
     sessionStorage.clear();
     this.props.history.push('/')

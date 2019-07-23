@@ -561,10 +561,7 @@ class DataTable extends Component {
                     });
                     return
                 }
-                console.log(json.data.data.list)
-                json.data.data.list.forEach((item, index) => {
-                    console.log(55554)
-                    console.log(item)
+                json.data.data.list.forEach((item, index) => {                   
                     data.push({
                         key: index.toString(),
                         id: item.id,
@@ -576,10 +573,7 @@ class DataTable extends Component {
                         operateNum: item.fakeVisitorNum ? item.fakeVisitorNum : '',
                         createTime: item.createTime                        
                     });
-                    console.log(data);
                 });
-                console.log(444)
-                console.log(data)
                 this.setState({
                     loading: false,
                     data: data,

@@ -49,7 +49,7 @@ class BackUserManage extends Component {
             this.setState({
                 highlight: "1"
             });
-            // this.props.history.push(this.menu[0].url);
+            this.props.history.push(this.menu[0].url);
         }
     };
 
@@ -100,8 +100,8 @@ class BackUserManage extends Component {
                                 style={{height: '100%', borderRight: 0}}
                                 onClick={this.setHighlight}>
                                 <SubMenu key="sub1" title={<span>帐号管理</span>}>
-                                    {/*this.state.menuList*/}
-                                    <Menu.Item key={1} style={{textAlign: "center"}}>
+                                    {this.state.menuList}
+                                    {/*<Menu.Item key={1} style={{textAlign: "center"}}>
                                         <Link to="/index/backUser-manage/backUsers">
                                             所有账号
                                         </Link>
@@ -115,7 +115,7 @@ class BackUserManage extends Component {
                                         <Link to="/index/backUser-manage/Department">
                                             部门管理
                                         </Link>
-                                    </Menu.Item>
+                                    </Menu.Item>*/}
                                 </SubMenu>
                             </Menu>
                         </Sider>

@@ -339,9 +339,9 @@ class NumDetail extends Component {
     columns = [
             {
                 title: '姓名',
-                dataIndex: 'username',
+                dataIndex: 'userName',
                 width: '15%',
-                render: (text, record) => this.renderColumns(text, record, 'username'),
+                render: (text, record) => this.renderColumns(text, record, 'userName'),
             },
             {
                 title: '手机号',
@@ -456,8 +456,7 @@ const ItemEditForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 {
                     JSON.stringify(data) === "{}" ?
                         <div className="spin-box">
@@ -625,7 +624,7 @@ class DataTable extends Component {
             {
                 title: '序号',
                 dataIndex: 'index',
-                width: 70,
+                width: 100,
             },
             {
                 title: '部门名称',
@@ -640,8 +639,12 @@ class DataTable extends Component {
                 render: (text, record) => {
                     return (
                         <div className="editable-row-operations">
-                            <NumDetail id={record.id} parentId={record.parentId} num={record.num} recapture={this.getData}
-                                        toLoginPage={this.props.toLoginPage}/>
+                            <NumDetail 
+                                id={record.id} 
+                                parentId={record.parentId} 
+                                num={record.num} 
+                                recapture={this.getData}
+                                toLoginPage={this.props.toLoginPage}/>
                         </div>
                     )
                 }
@@ -717,12 +720,12 @@ class DataTable extends Component {
             const temp = {
                 key: item.id,
                 id: item.id,
-                parentId: item.parentId,
                 index: index + 1,
+                parentId: 0,
                 name: item.name,
                 num: item.num,
-                description: item.desc,
-                updateTime: item.updateDate,
+                description: item.description,
+                updateTime: item.updateTime,
                 children: item.children,
                 userList: item.userList,               
             };
@@ -731,12 +734,11 @@ class DataTable extends Component {
         result.forEach((item) => {
             if (item.children) {
                 item.children.forEach((subItem, subIndex) => {
-                    subItem.updateTime = subItem.updateDate;
+                    subItem.updateTime = subItem.updateTime;
                     subItem.key = subItem.id;
                     subItem.index = subIndex + 1;
                 });
-            }
-            
+            }            
         });
         console.log(result)
         return result;
@@ -750,7 +752,6 @@ class DataTable extends Component {
             pageSize: this.state.pagination.pageSize,
         };
         departmentList(params).then((json) => {
-            console.log(json)
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -764,9 +765,8 @@ class DataTable extends Component {
                     return
                 }
                 this.setState({
-                    loading: false,                    
-                    data: json.data.data.list,// 对原始菜单列表进行处理后写入
-                    // data: this.dataHandle(json.data.data.list),// 对原始菜单列表进行处理后写入
+                    loading: false,
+                    data: this.dataHandle(json.data.data.list),// 对原始菜单列表进行处理后写入
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,

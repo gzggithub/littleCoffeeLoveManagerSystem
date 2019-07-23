@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Form, Icon, Input, Button, Modal, Checkbox, Tooltip, message} from 'antd';
 import { getVerificationCode, login, resetPassword } from '../config';
+import { dataHandle } from '../config/common';
 import logo from "../static/images/logo.png";
 
 const FormItem = Form.Item;
@@ -254,7 +255,7 @@ class ResetPassword extends Component {
     }
 }
 
-// 登陆组件
+// 登录组件
 class NormalLoginForm extends Component {
     constructor(props) {
         super(props);
@@ -272,80 +273,7 @@ class NormalLoginForm extends Component {
         }
     }
 
-    // 菜单分级处理函数
-    dataHandle = (data) => {
-        const dataEffective = (para) => {
-            return para && para.status === false
-        };
-        data = data.filter(dataEffective);        
-        const tempResult = [];
-        const result = [];
-        const fnFilter01 = (para) => {
-            return para.parentId === 0
-        };
-        let data01 = data.filter(fnFilter01);
-        data01.sort((a, b) => {
-            return a.orderNum - b.orderNum
-        });
-        data01.forEach((item) => {
-            const temp = {
-                id: item.id,
-                name: item.name,
-                url: item.url,
-                orderNum: item.orderNum
-            };
-            tempResult.push(temp)
-        });
-        tempResult.forEach((item) => {
-            const fnFilter02 = (para) => {
-                return para.parentId === item.id
-            };
-            let data02 = data.filter(fnFilter02);
-            data02.sort((a, b) => {                
-                return a.id - b.id
-            });
-            if (data02.length) {
-                item.children = [];
-                data02.forEach((subItem) => {
-                    const fnFilter03 = (para) => {
-                        return para.parentId === subItem.id
-                    };
-                    let data03 = data.filter(fnFilter03);                   
-
-                    // 多了一级
-                    if (data03.length) {
-                        subItem.children = [];
-                        data03.forEach((thirdItem) => {
-                            const fnFilter04 = (para) => {
-                                return para.parentId === thirdItem.id
-                            };
-                            let data04 = data.filter(fnFilter04);
-                            const temp = {
-                                id: thirdItem.id,
-                                name: thirdItem.name,
-                                url: thirdItem.url,
-                                children: data04
-                            };
-                            subItem.children.push(temp)
-                        })
-                        item.children.push(subItem)
-                    } else {
-                        const temp = {
-                            id: subItem.id,
-                            name: subItem.name,
-                            url: subItem.url,
-                            children: data03
-                        };
-                        item.children.push(temp)
-                    }
-                });
-                result.push(item)
-            }
-        });
-        return result
-    };
-
-    // 登陆处理
+    // 登录处理
     handleSubmit = (e) => {
         e.preventDefault();
         // 表单内容校验
@@ -361,12 +289,10 @@ class NormalLoginForm extends Component {
                 login(data).then((json) => {
                     if (json.data.result === 0) {
                         // 登陆信息写入sessionStorage
-                        sessionStorage.token = json.data.data.token;     
-                        // orgId的数据类型是string
-                        sessionStorage.orgId = json.data.data.userInfo.orgId;
+                        sessionStorage.token = json.data.data.token;
                         sessionStorage.name = json.data.data.userInfo.username;
                         sessionStorage.phone = json.data.data.userInfo.phone;
-                        const menuListOne = this.dataHandle(json.data.data.menuList);
+                        const menuListOne = dataHandle(json.data.data.menuList);//菜单分级处理
                         sessionStorage.menuListOne = JSON.stringify(menuListOne);
                         // 账号密码缓存
                         let loginMsg = {};
@@ -382,9 +308,8 @@ class NormalLoginForm extends Component {
                                 remember: false
                             };
                         }
-                        localStorage.loginMsg = JSON.stringify(loginMsg);
-                        // 登录成功跳转
-                        this.props.history.push('/index');
+                        localStorage.loginMsg = JSON.stringify(loginMsg);                        
+                        this.props.history.push('/index');// 登录成功跳转
                     } else {                        
                         this.getCode();// 登录失败重新获取图片验证码
                         if (json.data.code === 603) {
@@ -419,13 +344,11 @@ class NormalLoginForm extends Component {
             codeStatus: false
         }, () => {
             setTimeout(() => {
-                this.setState({
-                    // 0-1000随机自然数生成
-                    key: Math.round(Math.random() * 1000)
+                this.setState({                    
+                    key: Math.round(Math.random() * 1000)// 0-1000随机自然数生成
                 }, () => {
-                    this.setState({
-                        // 获取图片验证码地址
-                        code: "/code?key=" + this.state.key,
+                    this.setState({                        
+                        code: "/code?key=" + this.state.key,// 获取图片验证码地址
                         codeStatus: true
                     })
                 })
@@ -445,21 +368,18 @@ class NormalLoginForm extends Component {
         })
     };
 
-    componentWillMount() {
-        // 已缓存登陆信息写入
-        if (localStorage.loginMsg) {
+    componentWillMount() {        
+        if (localStorage.loginMsg) {// 已缓存登陆信息写入
             const tempMsg = JSON.parse(localStorage.loginMsg);
             this.setState({
                 loginMsg: {
                     phone: tempMsg.phone,
-                    password: tempMsg.password,
-                    // 记住密码按钮状态
-                    remember: tempMsg.remember
+                    password: tempMsg.password,                    
+                    remember: tempMsg.remember// 记住密码按钮状态
                 }
             })
-        }
-        // 获取图片验证码
-        this.getCode()
+        }        
+        this.getCode();// 获取图片验证码
     }
 
     render() {

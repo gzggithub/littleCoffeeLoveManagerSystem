@@ -349,7 +349,7 @@ export const accountList = params => {
 // 添加
 export const addAccount = data => {
     setAuthorization();
-    return axios.post(api.addAccount, createPostParams(data));
+    return axios.post(api.addAccount, data);
 }
 
 // 删除
@@ -361,7 +361,7 @@ export const deleteAccount = params => {
 // 编辑
 export const updateAccount = data => {
     setAuthorization();
-    return axios.post(api.updateAccount, createPostParams(data));
+    return axios.post(api.updateAccount, data);
 }
 
 // 详情

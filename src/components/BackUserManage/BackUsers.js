@@ -37,20 +37,16 @@ const Cell = ({value}) => (
 //新增账号表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, orgList, handleSearch, handleChange, departmentList, onChangeDepartment, roleList, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, onChangeDepartment, departmentList, roleList, confirmLoading} = props;
         const {getFieldDecorator} = form;
-        
-        // 机构选项生成
-        const optionsOfOrgList = [];
-        orgList.forEach((item, index) => {
-            optionsOfOrgList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-        });
 
         // 角色选项生成
         const optionsOfRoleList = [];
-        roleList.forEach((item, index) => {
-            optionsOfRoleList.push(<Option key={index + 1} value={item.role.id}>{item.role.roleName}</Option>);
-        });        
+        if (roleList.length) {
+            roleList.forEach((item, index) => {
+                optionsOfRoleList.push(<Option key={index + 1} value={item.id}>{item.roleName}</Option>);
+            }); 
+        }                
 
         return (
             <Modal
@@ -103,37 +99,12 @@ const ItemAddForm = Form.create()(
                                     message: '请选择性别',
                                 }],
                             })(
-                                <RadioGroup 
-                                    style={{marginTop: "5px"}} 
-                                    onChange={(e) => {}}>
-                                    <Radio value={1}>男</Radio>
+                                <RadioGroup style={{marginTop: "5px"}}>
                                     <Radio value={0}>女</Radio>
+                                    <Radio value={1}>男</Radio>                                    
                                 </RadioGroup>
                             )}
-                        </FormItem>
-                        <FormItem className="orgId" {...formItemLayout_14} label="所属机构：">
-                            {getFieldDecorator('orgId', {                                
-                                rules: [{
-                                    required: true,
-                                    message: '机构不能为空',
-                                }]
-                            })(
-                                <Select
-                                    showSearch
-                                    style={{width: '100%'}}
-                                    placeholder="请选择机构"
-                                    onSearch={handleSearch}
-                                    onChange={handleChange}                        
-                                    filterOption={false}
-                                    // optionFilterProp="children"
-                                    notFoundContent={null} 
-                                    // onSelect}
-                                    // filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
-                                >
-                                    {optionsOfOrgList}
-                                </Select>                                
-                            )}
-                        </FormItem>
+                        </FormItem>                        
                         <FormItem className="departmentId" {...formItemLayout_14} label="所属部门：">
                             {getFieldDecorator('departmentId', {
                                 rules: [{
@@ -147,8 +118,7 @@ const ItemAddForm = Form.create()(
                                     allowClear
                                     treeData={departmentList}
                                     onChange={onChangeDepartment}
-                                    showCheckedStrategy={TreeSelect.SHOW_CHILD}
-                                />
+                                    showCheckedStrategy={TreeSelect.SHOW_CHILD}/>
                             )}
                         </FormItem>                       
                         <FormItem className="roleId" {...formItemLayout_14} label="当前角色：">
@@ -178,74 +148,24 @@ class ItemAdd extends Component {
         visible: false,
         // 账号所属部门值
         value: null,
-        // 账号所属机构列表
-        orgList: [],
         // 账号所属部门列表
         departmentList: [],
         // 账号可选角色列表
         roleList: [],
         loading: false
-    };
-
-    // 根据输入机构名字模糊查找机构列表
-    handleSearch = (value) => {
-        console.log(value);
-        orgList({orgName: value, status: 2}).then((json) => {
-            if (json.data.result === 0) {
-                const data = [];
-                if (json.data.data.list.length) {
-                    json.data.data.list.forEach((item, index) => {
-                        data.push({
-                            id: item.id,
-                            name: item.name,
-                        })
-                    });
-                }
-                this.setState({
-                    orgList: data
-                });
-            } else {
-                this.exceptHandle(json.data);
-            }
-        }).catch((err) => {this.errorHandle(err);})
-    };
-
-    handleChange = (value) => {
-        console.log(value)
-        this.getDepartmentList(value);
-        this.getRoleList(value);
-    };
-
-    // 机构列表departmentList写入（部门有子部门需要处理）
-    getOrgList = () => {
-        orgList({status: 2}).then((json) => {
-            if (json.data.result === 0) {                    
-                this.setState({
-                   orgList: json.data.data.list
-                });                     
-            } else {
-                this.exceptHandle(json.data);
-            }
-        }).catch((err) => {this.errorHandle();})
-    };
-
-    onChangeOrg =(value) => {
-        console.log(value);
-        this.getDepartmentList(value);
-        this.getRoleList(value);
-    };
+    };       
 
     // 部门列表departmentList写入（部门有子部门需要处理）
-    getDepartmentList = (orgId) => {
-        const params = { 
-            orgId: orgId,
-            name: '',
+    getDepartmentList = (name) => {
+        const params = {            
+            name: name,
             pageNum: 1,
-            pageSize: 10
-        };
+            pageSize: 20
+        };        
         departmentList(params).then((json) => {
             if (json.data.result === 0) {
                 const data = [];
+                console.log(json.data.data.list)
                 json.data.data.list.forEach((item) => {
                     let subData = [];
                     if (item.children) {
@@ -258,9 +178,9 @@ class ItemAdd extends Component {
                         })
                     }
                     data.push({
-                        key: item.sysDepartment.id,
-                        value: String(item.sysDepartment.id),
-                        title: item.sysDepartment.name,
+                        key: item.id,
+                        value: String(item.id),
+                        title: item.name,
                         children: subData
                     })
                 });
@@ -275,28 +195,20 @@ class ItemAdd extends Component {
 
     // 所属部门选择处理
     onChangeDepartment = (value) => {
-        console.log(value);
-        // if (value) {
-        //     this.getRoleList(value);
-        // } else {
-        //     this.setState({
-        //         roleList: [],
-        //     })
-        // }        
+        console.log(value);             
     };
 
     // 当前角色列表roleList写入
-    getRoleList = (orgId) => {
+    getRoleList = (roleName) => {
         const params = {            
-            roleName: '',
-            orgId: orgId,
+            roleName: roleName,
             pageNum: 1,
             pageSize: 10
         };
         roleList(params).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
-                    roleList: json.data.list
+                    roleList: json.data.data.list
                 });
             } else {
                 this.exceptHandle(json.data);
@@ -305,14 +217,9 @@ class ItemAdd extends Component {
     };
 
     // 弹框控制
-    showModal = () => {
-        // 获取账号可选所属机构列表
-        this.handleSearch();
-        // this.getOrgList();
-        // 获取账号可选所属部门列表
-        // this.getDepartmentList();
-        // 获取账号可选角色列表
-        this.getRoleList();
+    showModal = () => {        
+        this.getDepartmentList();// 获取账号可选所属部门列表        
+        this.getRoleList();// 获取账号可选角色列表
         this.setState({visible: true})
     };
 
@@ -336,13 +243,13 @@ class ItemAdd extends Component {
         const form = this.form;
         form.validateFields((err, values) => {            
             if (err) {return;}            
-            this.setState({loading: true});            
+            this.setState({loading: true});
+            console.log(values);          
             const data = {
                 phone: values.phone,
                 username: values.username,
                 password: values.password,
                 gender: values.gender,
-                orgId: values.orgId,                    
                 departmentId: values.departmentId,
                 roleId: values.roleId
             };
@@ -390,19 +297,14 @@ class ItemAdd extends Component {
                 <ItemAddForm
                     ref={this.saveFormRef}
                     visible={this.state.visible}
-                    value={this.state.value}                   
-                    onChangeOrg={this.onChangeOrg}
+                    value={this.state.value}
                     onChangeDepartment={this.onChangeDepartment}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    resetPassword={this.resetPassword}
-                    handleSearch={this.handleSearch}
-                    handleChange={this.handleChange}
-                    orgList={this.state.orgList}
+                    // resetPassword={this.resetPassword}                   
                     departmentList={this.state.departmentList}
                     roleList={this.state.roleList}
-                    confirmLoading={this.state.loading}
-                />
+                    confirmLoading={this.state.loading}/>
             </div>
         )
     }
@@ -411,16 +313,16 @@ class ItemAdd extends Component {
 //账号编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, checkPhone, checkPassword, handleChange, handleSearch, orgList, departmentList, roleList, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, handleChange, handleSearch, orgList, departmentList, roleList, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
         // 可选所属部门列表写入
-        const optionsOfOrgList = [];
-        if (orgList) {
-             orgList.forEach((item, index) => {                
-                optionsOfOrgList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-            });
-        }       
+        // const optionsOfOrgList = [];
+        // if (orgList) {
+        //      orgList.forEach((item, index) => {                
+        //         optionsOfOrgList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
+        //     });
+        // }       
 
         // 可选所属部门列表写入
         // const optionsOfDepartmentList = [];
@@ -432,7 +334,7 @@ const ItemEditForm = Form.create()(
         // 可选角色列表写入
         const optionsOfRoleList = [];
         roleList.forEach((item, index) => {
-            optionsOfRoleList.push(<Option key={index + 1} value={item.role.id}>{item.role.roleName}</Option>);
+            optionsOfRoleList.push(<Option key={index + 1} value={item.id}>{item.roleName}</Option>);
         });
         
         return (
@@ -443,8 +345,7 @@ const ItemEditForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 <div className="backUser-edit backUser-form">
                     <Form layout="vertical">
                         <FormItem className="phone" {...formItemLayout_14} label="手机号码：">
@@ -482,44 +383,16 @@ const ItemEditForm = Form.create()(
                         </FormItem>
                         <FormItem className="gender" {...formItemLayout_14} label="员工性别：">
                             {getFieldDecorator('gender', {
-                                initialValue: data.gender || 0,
+                                initialValue: data.gender || 1,
                                 rules: [{
                                     required: false,
                                     message: '请选择性别',
                                 }],
                             })(
                                 <RadioGroup style={{marginTop: "5px"}}>
-                                    <Radio value={1}>男</Radio>
                                     <Radio value={0}>女</Radio>
+                                    <Radio value={1}>男</Radio>                                    
                                 </RadioGroup>                                
-                            )}
-                        </FormItem>
-                        <FormItem className="orgId" {...formItemLayout_14} label="所属机构：">
-                            {getFieldDecorator('orgId', {
-                                initialValue: data.orgId,
-                                rules: [{
-                                    required: true,
-                                    message: '机构不能为空',
-                                }]
-                            })(
-                                <Select
-                                    showSearch
-                                    style={{width: '100%'}}
-                                    placeholder="请选择机构"
-                                    onSearch={handleSearch}
-                                    onChange={handleChange}
-                                    filterOption={false}
-                                    notFoundContent={null}
-                                >
-                                    {optionsOfOrgList}
-                                </Select>
-                                // <TreeSelect
-                                //     placeholder="请选择机构"
-                                //     dropdownStyle={{maxHeight: 400, overflow: "auto"}}
-                                //     allowClear
-                                //     treeData={orgList}
-                                //     showCheckedStrategy={TreeSelect.SHOW_CHILD}
-                                // />
                             )}
                         </FormItem>
                         <FormItem className="departmentId" {...formItemLayout_14} label="所属部门：">
@@ -530,19 +403,11 @@ const ItemEditForm = Form.create()(
                                     message: '部门不能为空',
                                 }]
                             })(
-                                // <Select
-                                //     // mode="multiple"
-                                //     style={{width: '100%'}}
-                                //     placeholder="请选择部门"
-                                // >
-                                //     {optionsOfDepartmentList}
-                                // </Select>
                                 <TreeSelect
                                     placeholder="请选择部门"
                                     dropdownStyle={{maxHeight: 400, overflow: "auto"}}
                                     treeData={departmentList}
-                                    showCheckedStrategy={TreeSelect.SHOW_CHILD}
-                                />
+                                    showCheckedStrategy={TreeSelect.SHOW_CHILD}/>
                             )}
                         </FormItem>                       
                         <FormItem className="roleId" {...formItemLayout_14} label="当前角色：">
@@ -569,8 +434,7 @@ const ItemEditForm = Form.create()(
 class ItemEdit extends Component {
     state = {
         visible: false,        
-        data: {},
-        orgList: [],       
+        data: {},      
         departmentList: [],       
         roleList: [],
         loading: false
@@ -580,80 +444,30 @@ class ItemEdit extends Component {
     getData = () => {
         accountDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {                
-                const tempData = {
-                    id: json.data.data.id,
-                    phone: json.data.data.phone,
-                    username: json.data.data.username,
-                    orgId: json.data.data.orgId,
-                    gender: json.data.data.gender,
-                    departmentName: json.data.data.departmentName,
-                    departmentId: json.data.data.departmentId,
-                    roleId: json.data.data.sysRole && json.data.data.sysRole.id ? json.data.data.sysRole.id : "",
-                    orgCode: json.data.data.orgCode,
-                };
-                console.log(tempData)
+                // const tempData = {
+                //     id: json.data.data.id,
+                //     phone: json.data.data.phone,
+                //     username: json.data.data.username,
+                //     orgId: json.data.data.orgId,
+                //     gender: json.data.data.gender,
+                //     departmentName: json.data.data.departmentName,
+                //     departmentId: json.data.data.departmentId,
+                //     roleId: json.data.data.sysRole && json.data.data.sysRole.id ? json.data.data.sysRole.id : "",
+                //     orgCode: json.data.data.orgCode,
+                // };
+                // console.log(tempData)
                 // console.log(json.data);
-                this.setState({
-                    data: tempData,
-                }, () => {
-                    // 所属机构查询
-                    this.handleSearch(json.data.data.orgName);
-                    this.getDepartmentList(json.data.data.orgId);
-                    this.getRoleList(json.data.data.orgId);
-                })
-                // this.getOrgList(json.data.orgId);
+                this.setState({data: json.data.data});                
             } else {
                 this.exceptHandle(json.data);
             }
         }).catch((err) => {this.errorHandle();})
-    };
-
-    // 所属机构按姓名模糊查找
-    handleSearch = (value) => {
-        console.log(value);        
-        orgList({orgName: value, status: 2}).then((json) => {
-            if (json.data.result === 0) {
-                const data = [];
-                if (json.data.data.list.length) {
-                    json.data.data.list.forEach((item, index) => {
-                        data.push({
-                            id: item.id,
-                            name: item.name,
-                        })
-                    });
-                }
-                this.setState({
-                    orgList: data
-                });
-            } else {
-                this.exceptHandle(json.data);
-            }
-        }).catch((err) => {this.errorHandle();})
-    };
-
-    handleChange = (value) => {
-        console.log(value);
-        this.getDepartmentList(value);
-        this.getRoleList(value);  
-    };
-    // 账号可选所属机构列表写入
-    getOrgList = () => {
-        orgList({status: 2}).then((json) => {
-            if (json.data.result === 0) {                    
-                this.setState({
-                   orgList: json.data.data.list
-                });                     
-            } else {
-                this.exceptHandle(json.data);
-            }
-        }).catch((err) => {this.errorHandle();})
-    };
+    };  
 
     // 账号可选所属部门列表写入
-    getDepartmentList = (orgId) => {       
+    getDepartmentList = (name) => {       
         const params = {                
-            name: "",            
-            orgId: orgId,
+            name: name,
             pageNum: 1,
             pageSize: 10,
         };
@@ -672,9 +486,9 @@ class ItemEdit extends Component {
                         })
                     }
                     data.push({
-                        key: item.sysDepartment.id,
-                        value: String(item.sysDepartment.id),
-                        label: item.sysDepartment.name,
+                        key: item.id,
+                        value: String(item.id),
+                        label: item.name,
                         children: subData
                     })
                 });
@@ -688,8 +502,13 @@ class ItemEdit extends Component {
     };
 
     // 账号可选角色列表写入
-    getRoleList = (orgId) => {       
-        roleList({orgId: orgId}).then((json) => {
+    getRoleList = (roleName) => {
+        const params = {                
+            roleName: '',
+            pageNum: 1,
+            pageSize: 15
+        };       
+        roleList(params).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     roleList: json.data.data.list
@@ -700,15 +519,9 @@ class ItemEdit extends Component {
         }).catch((err) => {this.errorHandle();});
     };
 
-    onChangeOrg =(value) => {
-        console.log(value);
-        this.getDepartmentList(value);
-        this.getRoleList(value);       
-    };
-
     showModal = () => {
-        // 所属机构按姓名模糊查找 先显示十条
-        this.handleSearch();
+        this.getDepartmentList();
+        this.getRoleList(); 
         this.getData();
         this.setState({visible: true});
     };
@@ -738,7 +551,6 @@ class ItemEdit extends Component {
                 password: values.password,
                 username: values.username,
                 gender: values.gender,
-                orgId: values.orgId,
                 departmentId: values.departmentId,
                 roleId: values.roleId,
             };            
@@ -789,14 +601,10 @@ class ItemEdit extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    data={this.state.data}                    
-                    onChangeOrg={this.onChangeOrg}
-                    handleChange={this.handleChange}
-                    handleSearch={this.handleSearch}
-                    orgList={this.state.orgList}
+                    data={this.state.data}
                     departmentList={this.state.departmentList}
                     roleList={this.state.roleList}
-                    confirmLoading={this.state.confirmLoading}/>
+                    confirmLoading={this.state.loading}/>
             </a>
         )
     }

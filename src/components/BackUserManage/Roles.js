@@ -1957,12 +1957,12 @@ class DataTable extends Component {
                 json.data.data.list.forEach((item, index) => {
                     data.push({
                         key: index.toString(),
-                        id: item.role.id,
+                        id: item.id,
                         index: index + 1,
-                        // name: item.role.roleName,
-                        // roleNums: item.userNum,
-                        // remark: item.role.remark,
-                        // updateTime: item.role.createTime,
+                        name: item.roleName,
+                        roleNums: item.userNum,
+                        remark: item.remark,
+                        updateTime: item.createTime,
                     })
                 })
                 this.setState({
