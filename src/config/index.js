@@ -349,7 +349,7 @@ export const accountList = params => {
 // 添加
 export const addAccount = data => {
     setAuthorization();
-    return axios.post(api.addAccount, data);
+    return axios.post(api.addAccount, createPostParams(data));
 }
 
 // 删除
@@ -361,7 +361,7 @@ export const deleteAccount = params => {
 // 编辑
 export const updateAccount = data => {
     setAuthorization();
-    return axios.post(api.updateAccount, data);
+    return axios.post(api.updateAccount, createPostParams(data));
 }
 
 // 详情
@@ -459,6 +459,12 @@ export const memberList = params => {
     setAuthorization();
     return axios.get(api.memberList, {params: params});
 }
+// 添加人员可分配的角色列表
+export const roleUserList = params => {
+    setAuthorization();
+    return axios.get(api.roleUserList, {params: params});
+}
+
 
 // 添加人员
 export const addMember = data => {
@@ -481,7 +487,7 @@ export const getPermission = params => {
 // 设置权限
 export const setPermission = data => {
     setAuthorization();
-    return axios.post(api.setPermission, createPostParams(data));
+    return axios.post(api.setPermission, data);
 }
 
 /*-------------------------------公共方法-------------------------------*/

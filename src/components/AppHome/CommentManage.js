@@ -41,7 +41,7 @@ class DataTable extends Component {
             {
                 title: '评价人',
                 dataIndex: 'nickname',
-                width: '8%',
+                width: '12%',
                 render: (text, record) => this.renderColumns(text, record, 'nickname'),
             },            
             {
@@ -53,7 +53,7 @@ class DataTable extends Component {
             {
                 title: '评价时间',
                 dataIndex: 'createTime',
-                width: '12%',
+                width: '15%',
                 render: (text, record) => this.renderColumns(text, record, 'createTime'),
             },
             {
@@ -73,8 +73,7 @@ class DataTable extends Component {
                                 okType="danger"
                                 okText="立即删除"
                                 cancelText="取消">
-                                <a>删除</a>
-                                {/*<a style={{display: this.props.opObj.delete ? "inline" : "none"}}>删除</a>*/}
+                                <a style={{display: this.props.opObj.delete ? "inline" : "none"}}>删除</a>
                             </Popconfirm>
                         </div>
                     )
@@ -114,36 +113,15 @@ class DataTable extends Component {
                     });
                     return
                 }
-                json.data.data.list.forEach((item, index) => {
-                    let tempCommentType = "";
-                    if (item.commentType === 0) {
-                        tempCommentType = "课程"
-                    }
-                    if (item.commentType === 1) {
-                        tempCommentType = "机构"
-                    }
-                    if (item.commentType === 2) {
-                        tempCommentType = "育儿"
-                    }
-                    if (item.commentType === 3) {
-                        tempCommentType = "资讯"
-                    }
-                    
+                json.data.data.list.forEach((item, index) => {                    
                     data.push({
                         key: index.toString(),
                         id: item.id,
                         index: index + 1,                        
-                        nickname: item.nickname,
-                        star: item.star,
-                        content: item.content.length > 18 ? item.content.slice(0, 18) + '...' : item.content,
-                        content_detail: item.content,
-                        photo: item.resourceList,
-                        targetId: item.targetId,                   
-                        targetName: item.targetName,
-                        createTime: item.createTime,
-                        commentTypeCode: item.commentType,
-                        commentType: tempCommentType,
-                        userId: item.userId,
+                        nickname: item.nickname,                       
+                        content: item.context.length > 18 ? item.context.slice(0, 18) + '...' : item.context,
+                        content_detail: item.context,
+                        createTime: item.createTime                      
                     });
                 });
                 this.setState({
@@ -226,7 +204,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    scroll={{ x: 1500 }}
+                    // scroll={{ x: 1500 }}
                     onChange={this.handleTableChange}/>;
     }
 }
@@ -235,10 +213,7 @@ class EvaluationManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                select: true,
-                delete: true,
-            },
+            opObj: {},
             // 获取评价列表所需关键词
             keyword: {
                 content: "",

@@ -122,7 +122,7 @@ class EditableCell extends Component {
 // 新增、复制明星表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03 ,picUpload02, picList, setPicList, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03, picUpload02, picList, setPicList, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
         // 城市选项生成
@@ -424,7 +424,7 @@ const ItemAddForm = Form.create()(
                                     </Upload>
                                 </div>                       
                             )}
-                        </FormItem> 
+                        </FormItem>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">视频作品</h4>
                         <Row gutter={24}>
@@ -764,7 +764,7 @@ class ItemAdd extends Component {
             } else {
                 message.error("生活照未选择");
                 return false;
-            }           
+            }
             // 省市区名称
             let currentAreaName = pCAName(this.props.provinceList, values.area[2]).currentAreaName;
             // 明星视频写入与校验

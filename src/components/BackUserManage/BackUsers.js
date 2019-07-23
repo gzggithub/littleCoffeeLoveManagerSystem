@@ -108,7 +108,7 @@ const ItemAddForm = Form.create()(
                         <FormItem className="departmentId" {...formItemLayout_14} label="所属部门：">
                             {getFieldDecorator('departmentId', {
                                 rules: [{
-                                    required: false,
+                                    required: true,
                                     message: '部门不能为空',
                                 }]
                             })(                               
@@ -172,14 +172,14 @@ class ItemAdd extends Component {
                         item.children.forEach((subItem) => {
                             subData.push({
                                 key: subItem.id,
-                                value: String(subItem.id),
+                                value: subItem.id,
                                 title: subItem.name
                             })
                         })
                     }
                     data.push({
                         key: item.id,
-                        value: String(item.id),
+                        value: item.id,
                         title: item.name,
                         children: subData
                     })
@@ -313,23 +313,8 @@ class ItemAdd extends Component {
 //账号编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, handleChange, handleSearch, orgList, departmentList, roleList, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, departmentList, roleList, confirmLoading} = props;
         const {getFieldDecorator} = form;
-
-        // 可选所属部门列表写入
-        // const optionsOfOrgList = [];
-        // if (orgList) {
-        //      orgList.forEach((item, index) => {                
-        //         optionsOfOrgList.push(<Option key={index + 1} value={item.id}>{item.name}</Option>);
-        //     });
-        // }       
-
-        // 可选所属部门列表写入
-        // const optionsOfDepartmentList = [];
-        // departmentList.forEach((item, index) => {
-        //     // optionsOfDepartmentList.push(<Option key={index + 1} value={item.id}>{item.departmentName}</Option>);
-        //     optionsOfDepartmentList.push(<Option key={index + 1} value={item.sysDepartment.id}>{item.sysDepartment.name}</Option>);
-        // });
 
         // 可选角色列表写入
         const optionsOfRoleList = [];
@@ -383,9 +368,9 @@ const ItemEditForm = Form.create()(
                         </FormItem>
                         <FormItem className="gender" {...formItemLayout_14} label="员工性别：">
                             {getFieldDecorator('gender', {
-                                initialValue: data.gender || 1,
+                                initialValue: Number(data.gender) || 1,
                                 rules: [{
-                                    required: false,
+                                    required: true,
                                     message: '请选择性别',
                                 }],
                             })(
@@ -399,7 +384,7 @@ const ItemEditForm = Form.create()(
                             {getFieldDecorator('departmentId', {
                                 initialValue: data.departmentId || undefined,
                                 rules: [{
-                                    required: false,
+                                    required: true,
                                     message: '部门不能为空',
                                 }]
                             })(
@@ -443,21 +428,8 @@ class ItemEdit extends Component {
     // 账号当前角色列表写入
     getData = () => {
         accountDetail({id: this.props.id}).then((json) => {
-            if (json.data.result === 0) {                
-                // const tempData = {
-                //     id: json.data.data.id,
-                //     phone: json.data.data.phone,
-                //     username: json.data.data.username,
-                //     orgId: json.data.data.orgId,
-                //     gender: json.data.data.gender,
-                //     departmentName: json.data.data.departmentName,
-                //     departmentId: json.data.data.departmentId,
-                //     roleId: json.data.data.sysRole && json.data.data.sysRole.id ? json.data.data.sysRole.id : "",
-                //     orgCode: json.data.data.orgCode,
-                // };
-                // console.log(tempData)
-                // console.log(json.data);
-                this.setState({data: json.data.data});                
+            if (json.data.result === 0) {
+                this.setState({data: json.data.data});
             } else {
                 this.exceptHandle(json.data);
             }
@@ -480,14 +452,14 @@ class ItemEdit extends Component {
                         item.children.forEach((subItem) => {
                             subData.push({
                                 key: subItem.id,
-                                value: String(subItem.id),
+                                value: subItem.id,
                                 label: subItem.name
                             })
                         })
                     }
                     data.push({
                         key: item.id,
-                        value: String(item.id),
+                        value: item.id,
                         label: item.name,
                         children: subData
                     })
@@ -750,12 +722,12 @@ class DataTable extends Component {
                     }
                     json.data.data.list.forEach((item, index) => {                           
                         let tempGender = "";
-                        if (item.gender === 1) {
-                            tempGender = "男";
-                        }
                         if (item.gender === 0) {
                             tempGender = "女";
                         }
+                        if (item.gender === 1) {
+                            tempGender = "男";
+                        }                        
                         let tempStatus = "";
                         if (item.status === 0) {
                             tempStatus = "禁用"

@@ -14,7 +14,7 @@ import {
     Tree,
     Icon,
 } from 'antd';
-import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
+import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, roleUserList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
 
 const Search = Input.Search;
 const {TextArea} = Input;
@@ -333,16 +333,16 @@ class ItemAddMember extends Component {
     
     // 获取部门列表
     getDepartmentList = (departmentName) => {
-        const params = {
-            name: departmentName,
-            orgId: this.props.orgId,
-            pageNum: 1,
-            pageSize: 20,
-        };
-        departmentList(params).then((json) => {
+        // const params = {
+        //     name: departmentName,
+        //     orgId: this.props.orgId,
+        //     pageNum: 1,
+        //     pageSize: 20,
+        // };
+        roleUserList().then((json) => {
             if (json.data.result === 0) {
                 const data = [];
-                json.data.forEach((item) => {
+                json.data.data.forEach((item) => {
                     let subData = [];
                     console.log(item.userList)
                     if (item.children) {
@@ -1477,6 +1477,7 @@ class RoleAuthority extends Component {
         setPermission({
             roleId: this.props.id,
             menuIds: this.state.menuListExist
+            // menuIds: JSON.stringify(this.state.menuListExist)
         }).then((json) => {
             if (json.data.result === 0) {
                 message.success("角色权限设置成功");

@@ -85,8 +85,11 @@ const ItemAddForm = Form.create()(
                 geocoder.getLocation(para, (status, result) => {
                     if (status === 'complete' && result.info === 'OK') {
                         result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;
+                        console.log("lng--" + result.geocodes[0].location.lng);
+                        console.log("lat--" + result.geocodes[0].location.lat);
+                        console.log("formattedAddress--" + result.geocodes[0].formattedAddress);
                         setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
-                        // setFieldsValue({"address": result.geocodes[0].formattedAddress});
+                        setFieldsValue({"location": result.geocodes[0].formattedAddress});
                         setAddressComponent(result.geocodes[0].addressComponent);
                         marker.setPosition(result.geocodes[0].location);
                         mapObj.setCenter(marker.getPosition())
@@ -95,7 +98,7 @@ const ItemAddForm = Form.create()(
             });
         };
         //定位
-        const location = () => {
+        /*const location = () => {
             mapObj.plugin('AMap.Geolocation', function () {
                 const geolocation = new window.AMap.Geolocation({});
                 mapObj.addControl(geolocation);
@@ -105,7 +108,7 @@ const ItemAddForm = Form.create()(
                     const x = data.position.getLng(), //定位成功返回的经度
                         y = data.position.getLat(); //定位成功返回的纬度
                     setXY({x: x, y: y});
-                    setFieldsValue({"address": data.formattedAddress});
+                    setFieldsValue({"location": data.formattedAddress});
                     setAddressComponent(data.addressComponent);
                 });
                 //获取失败
@@ -115,7 +118,7 @@ const ItemAddForm = Form.create()(
                     }
                 });
             });
-        };
+        };*/
 
         return (
             <Modal
@@ -127,6 +130,7 @@ const ItemAddForm = Form.create()(
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
+                maskClosable={false}
                 destroyOnClose={true}>
                 <div className="course-add course-form item-form quality-course-form notice-form">
                     <Form layout="vertical">
@@ -220,8 +224,8 @@ const ItemAddForm = Form.create()(
                                     )}
                                 </FormItem>
                             </Col>
-                            <p onClick={location}
-                               style={{width: "120px", marginLeft: "100px", cursor: "pointer"}}>点击获取当前坐标</p>
+                            {/*<p onClick={location}
+                               style={{width: "120px", marginLeft: "100px", cursor: "pointer"}}>点击获取当前坐标</p>*/}
                             <div id="add-notice-container" name="container" tabIndex="0"/>
                         </Row>
                         <div className="ant-line"></div>
@@ -369,8 +373,6 @@ class ItemAdd extends Component {
     setFormattedAddress = (para) => {
         this.setState({
             formattedAddress: para
-        }, () => {
-            // flag = true;
         })
     };
 

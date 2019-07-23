@@ -152,6 +152,9 @@ const ItemAddForm = Form.create()(
                 geocoder.getLocation(para, (status, result) => {
                     if (status === 'complete' && result.info === 'OK') {
                         result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;
+                        console.log(99999999)
+                        console.log("lng:" + result.geocodes[0].location.lng)
+                        console.log("lng:" + result.geocodes[0].location.lat)
                         setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
                         // setFieldsValue({"address": result.geocodes[0].formattedAddress});
                         setAddressComponent(result.geocodes[0].addressComponent);
@@ -748,9 +751,9 @@ const ItemEditForm = Form.create()(
                 });
                 geocoder.getLocation(para, (status, result) => {
                     if (status === 'complete' && result.info === 'OK') {
-                        result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;
+                        result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;                      
                         setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
-                        // setFieldsValue({"address": result.geocodes[0].formattedAddress});
+                        setFieldsValue({"address": result.geocodes[0].formattedAddress});
                         setAddressComponent(result.geocodes[0].addressComponent);
                         marker.setPosition(result.geocodes[0].location);
                         mapObj.setCenter(marker.getPosition())
@@ -1032,32 +1035,7 @@ class ItemEdit extends Component {
             data: {
                 id: this.props.id
             },
-            error: (XMLHttpRequest) => {
-                // const json = {
-                //     result: 0,
-                //     data: {
-                //         raiseTheClassInfo: {
-                //             id: 122,
-                //             name: "最好的钢琴课",
-                //             photo: "dda203fb72964df880aaaeb15539f5ca.jpg",
-                //             classIntroduce: "最好的钢琴课",
-                //             teacherName: "王小剑",
-                //             teacherPhoto: "cd5aaf757c8a4f999a293881780bbef2.png",
-                //             seniority: "3",
-                //             teacherBrief: "王小剑",
-                //             teacherDetails: "王小剑",
-                //             time: "2018-03-20",
-                //             price: 500,
-                //             targetNumber: 20,
-                //             targetPrice: 10000,
-                //             closingDate: "Sat Apr 14 2:05:00 CST 2018",
-                //             address: "杭州市萧山国际机场",
-                //             raisedNumber: 10,
-                //             raisedMoney: 5000,
-                //             status: 1,
-                //         }
-                //     },
-                // };
+            error: (XMLHttpRequest) => {                
             },
             success: (json) => {
                 if (json.result === 0) {
@@ -1719,7 +1697,12 @@ class CrowdFunding extends Component {
     constructor(props) {
         super(props);
         this.state = {
-						opObj: {},
+			opObj: {
+                add: true,
+                delete: true,
+                modify: true,
+                select: true,
+            },
             flag_add: false
         }
     };
@@ -1731,19 +1714,19 @@ class CrowdFunding extends Component {
     };
 
     componentWillMount() {
-				JSON.parse(sessionStorage.menuList).forEach((item)=>{
-						item.children.forEach((subItem)=>{
-								if(subItem.url===this.props.location.pathname){
-										let data={};
-										subItem.children.forEach((thirdItem)=>{
-												data[thirdItem.url]=true;
-										})
-										this.setState({
-												opObj: data
-										})
-								}
-						})
-				})
+		// JSON.parse(sessionStorage.menuListOne).forEach((item)=>{
+		// 	item.children.forEach((subItem)=>{
+		// 		if(subItem.url===this.props.location.pathname){
+		// 			let data={};
+		// 			subItem.children.forEach((thirdItem)=>{
+		// 				data[thirdItem.url]=true;
+		// 			})
+		// 			this.setState({
+		// 				opObj: data
+		// 			})
+		// 		}
+		// 	})
+		// })
         if (this.props.location.search) {
             this.props.history.push(this.props.location.pathname)
         }

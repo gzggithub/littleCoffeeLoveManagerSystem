@@ -161,10 +161,12 @@ export  default {
     roleDetail: `${base}/cs/role/getById`,
     // 成员列表
     memberList: `${base}/cs/role/getRolePage`,
+    // 添加人员可分配的角色列表
+    roleUserList: `${base}/cs/role/getRoleListByUserId`,
     // 添加人员
-    addMember: `${base}/cs/role/bindUserRole`,
-    // 获取权限项
-    getPermissionList: `${base}/cs/role/getRoleListByUserId`,
+    addMember: `${base}/cs/role/bindUserRole`,    
+    // 获取权限项    
+    getPermissionList: `${base}/cs/user/getMenuListByUserId`,
     // 获取已有权限
     getPermission: `${base}/cs/role/getInfoByRoleId`,
     // 设置权限

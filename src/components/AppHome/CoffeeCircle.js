@@ -10,8 +10,12 @@ import {
     Col,
     Modal,
     Button,
+    Icon,
+    Upload
 } from 'antd';
-import { coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
+import * as qiniu from 'qiniu-js';
+import * as UUID from 'uuid-js';
+import { configUrl, getToken, coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -49,7 +53,7 @@ class EditableCell extends Component {
     }
 
     sort = (props1, e, dataIndex) => {
-        const { record, handleSort } = this.props;
+        const { record, handleSort, setViewNum } = this.props;
         this.form.validateFields((error, values) => {
             if (error && error[e.currentTarget.id]) {
                 return;
@@ -63,7 +67,7 @@ class EditableCell extends Component {
                 }
             } else {
                 if (props1 !== Number(values.operateNum)) {
-                    handleSort({ ...record, ...values });
+                    setViewNum({ ...record, ...values });
                 }
             }
         });
@@ -71,7 +75,7 @@ class EditableCell extends Component {
 
     render() {
         const { editing } = this.state;
-        const { editable, dataIndex, title, record, index, handleSort, ...restProps } = this.props;
+        const { editable, dataIndex, title, record, index, handleSort, setViewNum, ...restProps } = this.props;
         return (
         <td {...restProps}>
             {editable ? (
@@ -90,23 +94,19 @@ class EditableCell extends Component {
                                 })(
                                 <Input style={{textAlign: "center"}}
                                     // allowClear
-                                    ref={node => (this.input = node)}
-                                    // onPressEnter={this.sort.bind(this, record[dataIndex], dataIndex)}
+                                    ref={node => (this.input = node)}                                    
                                     onPressEnter={() => this.sort(this, record[dataIndex], dataIndex)}
                                     onBlur={() => this.sort(this, record[dataIndex], dataIndex)}
-                                    // onBlur={this.sort.bind(this, record[dataIndex])}
                                     placeholder={dataIndex === 'sort' ? "双击设置排序" : "双击设置浏览数"}/>
                             )}
                         </FormItem>
                         ) : (
-                        <div
-                            className="editable-cell-value-wrap "
-                            onClick={this.toggleEdit}>
+                        <div className="editable-cell-value-wrap" onClick={this.toggleEdit}>
                             <Input style={{textAlign: "center"}}
                                 // allowClear
                                 ref= {node => (this.input = node)}
                                 value={record[dataIndex]}
-                                placeholder="双击设置排序"
+                                placeholder={dataIndex === 'sort' ? "双击设置排序" : "双击设置浏览数"}
                             />
                         </div>
                         )
@@ -122,8 +122,51 @@ class EditableCell extends Component {
 // 编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, reqwestUploadToken, picList, viewPic, picUpload, setPicList, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
+
+        // 已上传图片列表
+        const photoExist = [];
+        if (picList.length) {
+            console.log(picList)
+            picList.forEach((item, index) => {
+                photoExist.push(
+                    <div className="photoExist-item clearfix" key={index + 1}>
+                        <img src={item} alt=""/>
+                        <div className="remove">
+                            <Button type="dashed" shape="circle" icon="minus" onClick={() => setPicList(index)}/>
+                        </div>
+                    </div>
+                )
+            });
+        }
+
+        // 图片处理
+        const beforeUpload = (file) => {
+            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+            if (!isIMG) {
+                message.error('文件类型错误');
+            }
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isLt2M) {
+                message.error('文件不能大于2M');
+            }         
+            reqwestUploadToken(file);
+            return isIMG && isLt2M;
+        };
+
+        //  生活照
+        const picHandleChange = (info) => {
+            setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
+                picUpload(info.file);
+            }, 500);
+        };
+        const uploadButton = (
+            <div>
+                <Icon type={photoLoading ? 'loading' : 'plus'}/>
+                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+            </div>
+        );
         
         return (
             <Modal
@@ -136,26 +179,9 @@ const ItemEditForm = Form.create()(
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
                 destroyOnClose={true}>
-                <div className="course-add item-form quality-course-form coffee-form">
+                <div className="course-add course-form item-form quality-course-form star-manage-form coffee-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
-                        {/*<Row gutter={24}>
-                            <Col span={8}>
-                                <FormItem className="name"  label="发帖人：">
-                                    {getFieldDecorator('name', {
-                                        initialValue: data.name,                                      
-                                        rules: [{
-                                            required: true,
-                                            message: '发帖人不能为空',
-                                        }],
-                                    })(
-                                        <Input placeholder="请输入发帖人"/>
-                                    )}
-                                </FormItem>                                
-                            </Col>                            
-                        </Row>
-                        <div className="ant-line"></div>*/}
-                        {/*<h4 className="add-form-title-h4">明星详情</h4>*/}
                         <FormItem className="content" label="内容：">
                             {getFieldDecorator('content', {
                                 initialValue: data.content,
@@ -164,14 +190,37 @@ const ItemEditForm = Form.create()(
                                     message: '不能为空',
                                 }],
                             })(
-                                <TextArea 
-                                    // className="ckeditor"
+                                <TextArea
                                     style={{resize: "none"}}                                    
                                     placeholder="请填写内容"
                                     autosize={{minRows: 5, maxRows: 10}}/>                                
                             )}
                         </FormItem>                        
-                        <div className="ant-line"></div>                     
+                        <div className="ant-line"></div>
+                        <FormItem className="photo"  label="图片">
+                            {getFieldDecorator('photo', {
+                                initialValue: viewPic,
+                                rules: [{
+                                    required: true,
+                                    message: '明星图片不能为空',
+                                }],
+                            })( 
+                                <div className="itemBox">
+                                    {photoExist}
+                                    <Upload
+                                        name="file"
+                                        multiple                                        
+                                        listType="picture-card"
+                                        accept="image/*"
+                                        showUploadList={false}
+                                        beforeUpload={beforeUpload}
+                                        customRequest={picHandleChange}>
+                                        {uploadButton}
+                                        {/*<p className="hint">（可上传1-9张图片）</p>*/}
+                                    </Upload>
+                                </div>                       
+                            )}
+                        </FormItem>                     
                     </Form>
                 </div>
             </Modal>
@@ -187,6 +236,10 @@ class ItemEdit extends Component {
             visible: false,
             // 明星基本信息
             data: {},
+            uploadToken: '',
+            viewPic: '',
+            picList: [],
+            photoLoading: false,
             // 提交按钮状态变量
             loading: false,                  
         };
@@ -202,10 +255,11 @@ class ItemEdit extends Component {
                 // 富文本数据写入
                 // this.editor.setData(json.data.data.characteristic);
                 // 信息写入
+                console.log(json.data.data.resourceList)
                 this.setState({
                     data: json.data.data,
-                    viewPic: json.data.data.pic,
-                    videoList: json.data.data.lesson
+                    viewPic: json.data.data.resourceList[0].resource,
+                    picList: json.data.data.resourceList
                 });
             } else {
                 this.props.exceptHandle(json.data);
@@ -222,6 +276,60 @@ class ItemEdit extends Component {
         // });
     };
 
+    // 图片处理    
+    reqwestUploadToken = () => { // 请求上传凭证，需要后端提供接口
+        getToken().then((json) => {
+            if (json.data.result === 0) {
+                    this.setState({
+                        uploadToken: json.data.data,
+                    })
+                } else {
+                    this.props.exceptHandle(json.data);
+                }
+        }).catch((err) => {
+            message.error("发送失败");
+        });
+    };
+
+    // 图片上传
+    picUpload = (para) => {
+        const _this = this;
+        this.setState({photoLoading: true});
+        const file = para;
+        const key = UUID.create().toString().replace(/-/g, "");
+        const token = this.state.uploadToken;
+        const config = {region: qiniu.region.z0};
+        const observer = {
+            next (res) {console.log(res)},
+            error (err) {
+                console.log(err)
+                message.error(err.message ? err.message : "图片提交失败");
+                _this.setState({photoLoading03: false})
+            }, 
+            complete (res) {
+                console.log(res);
+                message.success("图片提交成功");
+                let {picList} = _this.state; // 此行不加只能添加一张
+                picList.push(configUrl.photoUrl + res.key);
+                _this.setState({
+                    picList: picList,
+                    viewPic: configUrl.photoUrl + res.key || "",           
+                    photoLoading: false,
+                })
+            }
+        }
+        const observable = qiniu.upload(file, key, token, config);
+        observable.subscribe(observer); // 上传开始        
+    };
+
+    setPicList = (index) => {
+        let data = this.state.picList;
+        data.splice(index, 1);
+        this.setState({
+            picList: data
+        });
+    };
+
     // 取消处理
     handleCancel = () => {
         const form = this.form;
@@ -229,7 +337,11 @@ class ItemEdit extends Component {
             visible: false
         }, () => {
             this.setState({
-                data: {},                                      
+                data: {},
+                uploadToken: '',
+                viewPic: '',
+                picList: [],
+                photoLoading: false,                                   
                 loading: false,
             });
             this.editor = ""
@@ -242,19 +354,28 @@ class ItemEdit extends Component {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             if (err) {return;}
-            
-            // 富文本内容处理
-            // values.content = this.editor.getData();
-            // console.log(values.riches)
+            let { picList } = this.state;            
+            // 生活照校验与写入
+            let tempPicList = [];
+            if (picList.length) {
+                picList.forEach((item, index) => {
+                    tempPicList.push({
+                        resource: item.slice(configUrl.photoUrl.length)
+                    });
+                });               
+            } else {
+                message.error("生活照未选择");
+                return false;
+            }
             const result = {
-                id: this.props.id,
-                // name: values.name,                
-                content: values.content,               
+                id: this.props.id,                
+                content: values.content,
+                resourceList: tempPicList
             };
             this.setState({loading: true});
             updateCoffee(result).then((json) => {
                 if (json.data.result === 0) {
-                    message.success("编辑明星成功");
+                    message.success("编辑成功");
                     this.handleCancel();
                     this.props.recapture();                            
                 } else {
@@ -297,7 +418,13 @@ class ItemEdit extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}                                   
-                    data={this.state.data}                        
+                    data={this.state.data}
+                    reqwestUploadToken={this.reqwestUploadToken}
+                    viewPic={this.state.viewPic}
+                    picList={this.state.picList}
+                    picUpload={this.picUpload}
+                    setPicList={this.setPicList}
+                    photoLoading={this.state.photoLoading}                    
                     confirmLoading={this.state.loading}
                 />                
             </a>
@@ -308,8 +435,22 @@ class ItemEdit extends Component {
 // 详情表单
 const ItemDetailsForm = Form.create()(
     (props) => {
-        const {visible, onCancel, form, data, confirmLoading} = props;
+        const {visible, onCancel, form, data, resourceList, confirmLoading} = props;
         const {getFieldDecorator} = form;
+
+        let imgList = [];
+        if (resourceList.length) {
+            resourceList.forEach((item, index) => {
+                imgList.push(
+                    <Col span={6} key={index + 1}>
+                        <img src={item.resource} alt=""/>
+                        {/*<div className="photoExist-item clearfix" key={index + 1}>
+                            <img src={item} alt=""/>                            
+                        </div>*/}
+                    </Col>
+                )
+            })
+        }
 
         return (
             <Modal
@@ -321,25 +462,7 @@ const ItemDetailsForm = Form.create()(
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form">
-                    <Form layout="vertical">
-                        <h4 className="add-form-title-h4">基本信息</h4>
-                        {/*<Row gutter={24}>
-                            <Col span={8}>
-                                <FormItem className="courseName"  label="发帖人：">
-                                    {getFieldDecorator('courseName', {
-                                        initialValue: data.appUserId,
-                                        rules: [{
-                                            required: true,
-                                            message: '发帖人不能为空',
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入发帖人"/>
-                                    )}
-                                </FormItem>                                
-                            </Col>                            
-                            <div className="ant-line"></div>
-                        </Row>
-                        <div className="ant-line"></div>*/}
+                    <Form layout="vertical">                      
                         <Row gutter={24}>
                             <Col span={24}>
                                 <FormItem className="characteristic" label="内容：">
@@ -355,7 +478,11 @@ const ItemDetailsForm = Form.create()(
                                 </FormItem>
                             </Col>
                         </Row>                        
-                        <div className="ant-line"></div>                                        
+                        <div className="ant-line"></div>
+                        <h4 className="add-form-title-h4">图片</h4>
+                        <Row gutter={24}>
+                            {imgList}
+                        </Row>                                        
                     </Form>
                 </div>
             </Modal>
@@ -369,6 +496,7 @@ class ItemDetails extends Component {
         visible: false,
         loading: true,
         data: "",
+        resourceList: []
     };
 
     // 获取基本信息
@@ -378,6 +506,7 @@ class ItemDetails extends Component {
                 this.setState({
                     loading: false,
                     data: json.data.data,
+                    resourceList: json.data.data.resourceList
                 });
             } else {
                 this.exceptHandle(json.data);                         
@@ -393,9 +522,9 @@ class ItemDetails extends Component {
     handleCancel = () => {
         this.setState({
             visible: false,
-            loading: true,
-            videoList: [],            
+            loading: true,           
             data: "",
+            resourceList: []
         });
     };
 
@@ -427,6 +556,7 @@ class ItemDetails extends Component {
                     ref={this.saveFormRef}
                     visible={this.state.visible}                                       
                     data={this.state.data}
+                    resourceList={this.state.resourceList}
                     onCancel={this.handleCancel}/>
             </a>
         );
@@ -482,7 +612,7 @@ class DataTable extends Component {
             {
                 title: '运营浏览数',
                 dataIndex: 'operateNum',
-                width: 130,
+                width: 150,
                 editable: true,
             },
             {
@@ -519,8 +649,7 @@ class DataTable extends Component {
                                 okType="danger"
                                 okText="立即删除"
                                 cancelText="取消">
-                                <a>删除</a>
-                                {/*<a style={{display: this.props.opObj.delete ? "inline" : "none"}}>删除</a>*/}
+                                <a style={{display: this.props.opObj.delete ? "inline" : "none"}}>删除</a>
                             </Popconfirm>
                         </div>
                     )
@@ -596,7 +725,7 @@ class DataTable extends Component {
             id: row.id,// 广告Id
             sort: Number(row.sort),// 排序
         }).then((json) => {
-            if (json.result === 0) {
+            if (json.data.result === 0) {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
@@ -610,9 +739,9 @@ class DataTable extends Component {
         this.setState({loading: true});
         viewNum({
             id: row.id,
-            sort: Number(row.sort),// 浏览数
+            num: Number(row.operateNum),// 浏览数
         }).then((json) => {
-            if (json.result === 0) {
+            if (json.data.result === 0) {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
@@ -718,12 +847,7 @@ class CoffeeCircle extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                select: true,
-                add: true,
-                modify: true,
-                delete: true,
-            },
+            opObj: {},
             // 获取评价列表所需关键词
             keyword: {
                 content: "",
