@@ -11,9 +11,16 @@ import {
     Popconfirm,
     Spin
 } from 'antd';
-import { configUrl, getOrgTypeList, getToken, addOrgType, deleteOrgType, getOrgTypeDetail, updateOrgType, sortOrgType } from '../../config';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
+import { configUrl, getToken, typeList, addType, deleteType, updateType, typeDetail,  sortType } from '../../config';
+import { getPower } from '../../config/common';
+
+message.config({
+  top: 50,
+  duration: 2,
+  maxCount: 3,
+});
 
 const FormItem = Form.Item;
 
@@ -219,9 +226,7 @@ class ItemAdd extends Component {
     }
 
     showModal = () => {
-        this.setState({
-            visible: true
-        });       
+        this.setState({visible: true});       
     };
 
     // 请求上传凭证，需要后端提供接口
@@ -234,9 +239,7 @@ class ItemAdd extends Component {
                 } else {
                     this.exceptHandle(json.data);
                 }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     picUpload01 = (para) => {
@@ -285,7 +288,7 @@ class ItemAdd extends Component {
                 icon: this.state.viewPic.slice(configUrl.photoUrl.length),
                 background: values.background
             };
-            addOrgType(data).then((json) => {
+            addType(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("类型添加成功");
                     this.handleCancel();
@@ -293,10 +296,7 @@ class ItemAdd extends Component {
                 } else {
                     this.exceptHandle(json.data);
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            })
+            }).catch((err) => this.errorHandle(err));
         });
     };
 
@@ -311,7 +311,12 @@ class ItemAdd extends Component {
             message.error(json.message);
             this.setState({loading: false});
         }
-    }
+    };
+
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
+    };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -319,7 +324,6 @@ class ItemAdd extends Component {
 
     render() {
         return (
-            // 注释也要在一个根标签里，否则报错
             <div style={{display: this.props.opStatus ? "block" : "none"}}>
                 <Button style={{marginBottom: "10px"}} type="primary" onClick={this.showModal}>添加类型</Button>
                 <ItemAddForm
@@ -439,14 +443,13 @@ class ItemEdit extends Component {
     state = {
         visible: false,
         data: {},
-        viewPic: "",
-        // 图片提交按钮状态变量
-        photoLoading: false,
+        viewPic: "",        
+        photoLoading: false,// 图片提交按钮状态变量
         loading: false
     };
 
     getData = () => {
-        getOrgTypeDetail({id: this.props.id}).then((json) => {
+        typeDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     data: json.data.data,
@@ -525,9 +528,7 @@ class ItemEdit extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }            
+            if (err) {return;}            
             if (this.state.viewPic) {
                 values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
             } else {
@@ -541,7 +542,7 @@ class ItemEdit extends Component {
                 icon: values.photo,                
             };            
             this.setState({loading: true});
-            updateOrgType(result).then((json) => {
+            updateType(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("编辑成功");
                     this.handleCancel();
@@ -626,13 +627,7 @@ class DataTable extends Component {
                 dataIndex: 'name',
                 width: '40%',
                 render: (text, record) => this.renderColumns(text, record, 'name')
-            },
-            // {
-            //     title: '状态',
-            //     dataIndex: 'status',
-            //     width: '10%',
-            //     render: (text, record) => this.renderColumns(text, record, 'name')
-            // },
+            },            
             // {
             //     title: 'Icon',
             //     dataIndex: 'photo',
@@ -690,24 +685,7 @@ class DataTable extends Component {
                 sort: item.sort !== 0 ? item.sort : '',                
                 name: item.name,
                 photo: item.photo
-            };
-            // if (item.list) {
-            //     const tempChildren = [];
-            //     const dataItem = item.list;
-            //     dataItem.forEach((subItem, subIndex) => {
-            //         const temp = {
-            //             index: subIndex + 1,
-            //             key: subItem.id,
-            //             id: subItem.id,
-            //             sort: subItem.sort !== 0 ? subItem.sort : '',
-            //             parentId: subItem.parentId,                        
-            //             name: subItem.name,
-            //             photo: subItem.photo,
-            //         };
-            //         tempChildren.push(temp)
-            //     });
-            //     temp.children = tempChildren
-            // }
+            };            
             result.push(temp)
         });
         return result;
@@ -715,15 +693,11 @@ class DataTable extends Component {
 
     // 获取本页信息
     getData = () => {
-        this.setState({
-            loading: true
-        });
-        const params = {
+        this.setState({loading: true});
+        typeList({
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
-        };
-        getOrgTypeList(params)
-        .then((json) => {
+        }).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     loading: false,
@@ -737,46 +711,36 @@ class DataTable extends Component {
             } else {
                 this.expectHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 排序
     handleSort = (row) => {
         this.setState({loading: true});
-        const data = {                
+        sortType({                
             id: row.id,// 机构Id                
             sort: Number(row.sort),// 排序
-        };
-        sortOrgType(data).then((json) => {
+        }).then((json) => {
             if (json.data.result === 0) {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
                 this.expectHandle(json.data);                
             }
-        }).catch((err) => {
-            message.error("发送失败");
-            this.setState({loading: false});
-        })
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 删除
     itemDelete = (para) => {
         this.setState({loading: true});
-        deleteOrgType({id: para}).then((json) => {
+        deleteType({id: para}).then((json) => {
             if (json.data.result === 0) {
                 message.success("删除成功");
                 this.getData();
             } else {
                 this.expectHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 异常处理
@@ -791,6 +755,11 @@ class DataTable extends Component {
             message.error(data.message);
             this.setState({loading: false});
         }
+    };
+
+    errorHandle = () => {
+        message.error("获取失败");
+        this.setState({loading: false});
     };
 
     //表格参数变化处理
@@ -822,23 +791,21 @@ class DataTable extends Component {
     render() {
         const components = {
             body: {
-              row: EditableFormRow,
-              cell: EditableCell,
-            },
+                row: EditableFormRow,
+                cell: EditableCell,
+            }
         };
         const columns = this.columns.map((col) => {
-            if (!col.editable) {
-              return col;
-            }
+            if (!col.editable) {return col;}
             return {
-              ...col,
-              onCell: record => ({
-                record,
-                editable: col.editable,
-                dataIndex: col.dataIndex,
-                title: col.title,
-                handleSort: this.handleSort,
-              }),
+                ...col,
+                onCell: record => ({
+                    record,
+                    editable: col.editable,
+                    dataIndex: col.dataIndex,
+                    title: col.title,
+                    handleSort: this.handleSort,
+                }),
             };
         });
         return <Table 
@@ -856,45 +823,18 @@ class Category extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                add: true,                
-                delete: true,
-                modify: true,
-                select: true,
-            },
+            opObj: {},
             flag_add: false
         }
     };
 
     // 获取当前登录人对此菜单的操作权限 
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {                
-                subItem.children.forEach((thirdItem) => {                   
-                    if (thirdItem.url === this.props.location.pathname) {
-                        let data = {};
-                        thirdItem.children.forEach((fourthItem) => {                           
-                            data[fourthItem.url] = true;
-                        });                        
-                        this.setState({
-                            opObj: data
-                        })
-                    }
-                })
-                
-            })
-        });        
+        this.setState({opObj: getPower(this)});     
     };
 
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add});
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -923,8 +863,7 @@ class Category extends Component {
                 {
                     this.state.opObj.select ?
                         <div>
-                            <header className="clearfix">
-                                {/*<span>类型列表</span>*/}
+                            <header className="clearfix">                               
                                 <div className="add-button" style={{float: "right"}}>
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add} 
@@ -932,6 +871,7 @@ class Category extends Component {
                                         toLoginPage={this.toLoginPage}/>
                                 </div>
                             </header>
+                            {/*类型列表*/}
                             <div className="table-box">
                                 <DataTable 
                                     opObj={this.state.opObj} 

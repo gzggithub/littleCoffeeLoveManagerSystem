@@ -11,7 +11,7 @@ import {
     Form,
     TreeSelect,
 } from 'antd';
-import { accountList, addAccount, deleteAccount, updateAccount, accountDetail, ban, resetPwd, orgList, departmentList, roleList } from '../../config';
+import { accountList, addAccount, deleteAccount, updateAccount, accountDetail, ban, resetPwd, departmentList, roleList } from '../../config';
 import { checkPhone, checkPassword } from '../../config/common';
 
 const Search = Input.Search;

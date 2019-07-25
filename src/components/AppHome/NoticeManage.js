@@ -18,18 +18,22 @@ import {
     Cascader,
     Popconfirm,
     Tooltip,
+    Spin
 } from 'antd';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
-import '../../config/config';
-import { noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReview } from '../../config';
+import moment from 'moment';
+import { configUrl, getToken, noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReview, typeList } from '../../config';
 import reqwest from 'reqwest';
+import { checkTel, pCAName, getPower } from '../../config/common';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
 const {TextArea} = Input;
 const {Option} = Select;
 const RadioGroup = Radio.Group;
+
+const dateFormat = "YYYY-MM-DD HH:mm:ss";
 
 //单元格
 const Cell = ({value}) => (
@@ -39,39 +43,20 @@ const Cell = ({value}) => (
 // 新增、复制通告表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setStartTime, setEndTime, disabledStartDate, disabledEndDate, mapObj, formattedAddress, setXY, setAddressComponent, confirmLoading} = props;
+        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, startTime, setEndTime, disabledStartDate, disabledEndDate, mapObj, formattedAddress, setXY, setAddressComponent, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        const optionsOfCity = [{value: "0", label: "全国"}];
-        let currentCity = [];
-        if (provinceList.length) {
-            provinceList.forEach((item) => {
-                let children = [];
-                if (item.districtList) {
-                    item.districtList.forEach((subItem) => {
-                        if (Number(subItem.adcode) === data.cityId) {                          
-                            currentCity = [item.adcode, subItem.adcode];// 当前城市设为选中项
-                        }
-                        children.push({value: subItem.adcode, label: subItem.name});
-                    });
-                }
-                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+        const optionsOfCity = pCAName(provinceList, data.cityId).optionsOfCity;
+        let currentCity = pCAName(provinceList, data.cityId).currentCity;
+
+        // 分类选项生成
+        const optionsOfType =[]
+        if (allTypeList.length) {
+            allTypeList.forEach((item, index) => {
+                optionsOfType.push(<Option key={item.id} value={item.id}>{item.name}</Option>)
             });
         }
-
-        const typeList =[
-            <Option key={0}>广告片拍摄</Option>,
-            <Option key={1}>品牌发布会</Option>,
-            <Option key={2}>平面拍摄</Option>,
-            <Option key={3}>品牌试衣</Option>,
-            <Option key={4}>定货会</Option>,
-        ]
-        // if (allTypeList.length) {
-        //     allTypeList.forEach((item, index) => {
-        //         typeList.push(<Option key={item.id}>item.name</Option>)
-        //     })
-        // }
 
         //地理编码
         const toXY = (para) => {
@@ -83,42 +68,78 @@ const ItemAddForm = Form.create()(
                     bubble: true
                 });
                 geocoder.getLocation(para, (status, result) => {
+                    console.log(para)
+                    console.log(status)
+                    console.log(result)
                     if (status === 'complete' && result.info === 'OK') {
                         result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;
                         console.log("lng--" + result.geocodes[0].location.lng);
                         console.log("lat--" + result.geocodes[0].location.lat);
                         console.log("formattedAddress--" + result.geocodes[0].formattedAddress);
                         setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
-                        setFieldsValue({"location": result.geocodes[0].formattedAddress});
+                        setFieldsValue({"address": result.geocodes[0].formattedAddress});
                         setAddressComponent(result.geocodes[0].addressComponent);
                         marker.setPosition(result.geocodes[0].location);
                         mapObj.setCenter(marker.getPosition())
+                    } else {
+                        message.error("经纬度获取失败，请输入详细地点")
                     }
                 });
             });
         };
         //定位
-        /*const location = () => {
-            mapObj.plugin('AMap.Geolocation', function () {
-                const geolocation = new window.AMap.Geolocation({});
-                mapObj.addControl(geolocation);
-                geolocation.getCurrentPosition();
-                //获取成功
-                window.AMap.event.addListener(geolocation, 'complete', function (data) {
-                    const x = data.position.getLng(), //定位成功返回的经度
-                        y = data.position.getLat(); //定位成功返回的纬度
-                    setXY({x: x, y: y});
-                    setFieldsValue({"location": data.formattedAddress});
-                    setAddressComponent(data.addressComponent);
-                });
-                //获取失败
-                window.AMap.event.addListener(geolocation, 'error', function (data) {
-                    if (data.info === 'FAILED') {
-                        console.log('获取当前位置失败！')
-                    }
-                });
-            });
-        };*/
+        // const location = () => {
+        //     mapObj.plugin('AMap.Geolocation', function () {
+        //         const geolocation = new window.AMap.Geolocation({});
+        //         mapObj.addControl(geolocation);
+        //         geolocation.getCurrentPosition();
+        //         //获取成功
+        //         window.AMap.event.addListener(geolocation, 'complete', function (data) {
+        //             const x = data.position.getLng(), //定位成功返回的经度
+        //                 y = data.position.getLat(); //定位成功返回的纬度
+        //             console.log(x);
+        //             console.log(y);
+        //             setXY({x: x, y: y});
+        //             setFieldsValue({"address": data.formattedAddress});
+        //             setAddressComponent(data.addressComponent);
+        //         });
+        //         //获取失败
+        //         window.AMap.event.addListener(geolocation, 'error', function (data) {
+        //             if (data.info === 'FAILED') {
+        //                 console.log('获取当前位置失败！')
+        //             }
+        //         });
+        //     });
+        // };
+
+        const setStartTime = (date, dateString) => {           
+            setFieldsValue({"time":  dateString});            
+        };
+
+        // 图片相关
+        const beforeUpload = (file) => {
+            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+            if (!isIMG) {
+                message.error('文件类型错误');
+            }
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isLt2M) {
+                message.error('文件不能大于2M');
+            }         
+            reqwestUploadToken(file);
+            return isIMG && isLt2M;
+        };
+        const picHandleChange = (info) => {
+            setTimeout(()=>{
+                picUpload01(info.file);
+            }, 500);   
+        };
+        const uploadButton = (
+            <div>
+                <Icon type={photoLoading ? 'loading' : 'plus'}/>
+                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+            </div>
+        );
 
         return (
             <Modal
@@ -128,10 +149,10 @@ const ItemAddForm = Form.create()(
                 onCancel={onCancel}
                 footer={[
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
-                    <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
+                    <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate()}>确定</Button>
                 ]}
                 maskClosable={false}
-                destroyOnClose={true}>
+                destroyOnClose={true}>                    
                 <div className="course-add course-form item-form quality-course-form notice-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
@@ -146,14 +167,14 @@ const ItemAddForm = Form.create()(
                                             max: 18
                                         }],
                                     })(
-                                        <Input placeholder="请填写通告标题（18字以内）"/>
+                                        <Input allowClear placeholder="请填写通告标题（18字以内）"/>
                                     )}
                                 </FormItem>                                
                             </Col>
                             <Col span={8}>                                
                                 <FormItem className="cityId" label="展示城市：">
                                     {getFieldDecorator('cityId', {
-                                        // initialValue: currentCity,
+                                        initialValue: data.cityId ? currentCity : ["0"],
                                         rules: [{
                                             required: true,
                                             message: '展示城市不能为空',
@@ -169,23 +190,28 @@ const ItemAddForm = Form.create()(
                             <Col span={16}>
                                 <FormItem className="time"  label="有效时间：">
                                     {getFieldDecorator('time', {
-                                        initialValue: "2019-07-18",                                      
+                                        initialValue: data.beginDate,
                                         rules: [{
                                             required: true,
-                                            message: '通告名称不能为空',                                            
+                                            message: '开始时间不能为空',                                            
                                         }],
                                     })(
                                         <div className="efficiencyTime">
                                             <DatePicker 
                                                 onChange={setStartTime}
-                                                showTime
+                                                defaultValue={data.beginDate ? moment(data.beginDate, dateFormat): null}
+                                                format={dateFormat}
                                                 disabledDate={disabledStartDate}
+                                                showTime
                                                 style={{width: "180px"}}
                                                 placeholder="请选择开始日期"/>
                                             <span style={{margin: "0 10px"}}>至</span>
                                             <DatePicker
-                                                disabledDate={disabledEndDate}
                                                 onChange={setEndTime}
+                                                defaultValue={data.endDate ? moment(data.endTime, dateFormat): null}
+                                                format={dateFormat}
+                                                disabledDate={disabledEndDate}
+                                                showTime
                                                 style={{width: "180px"}}
                                                 placeholder="请选择结束日期"/>
                                             <span style={{margin: "0 10px",fontSize: "12px"}}><Icon type="alert" /> 结束时间不填则表示长期有效</span>
@@ -203,7 +229,7 @@ const ItemAddForm = Form.create()(
                                         }],
                                     })(
                                         <Select placeholder="请选择类型">
-                                            {typeList}
+                                            {optionsOfType}
                                         </Select>
                                     )}
                                 </FormItem>
@@ -213,14 +239,14 @@ const ItemAddForm = Form.create()(
                         <Row gutter={24}>
                             <Col span={16}>
                                 <FormItem className="location"  label="地点：">
-                                    {getFieldDecorator('location', {
-                                        initialValue: data.location,                                      
+                                    {getFieldDecorator('address', {
+                                        initialValue: data.address,                                      
                                         rules: [{
                                             required: true,
                                             message: '通告地点不能为空',                                            
                                         }],
                                     })(
-                                        <Input placeholder="请填写地点" onBlur={(event) => toXY(event.target.value)}/>
+                                        <Input onBlur={(event) => toXY(event.target.value)} allowClear placeholder="请填写地点" />
                                     )}
                                 </FormItem>
                             </Col>
@@ -229,16 +255,39 @@ const ItemAddForm = Form.create()(
                             <div id="add-notice-container" name="container" tabIndex="0"/>
                         </Row>
                         <div className="ant-line"></div>
+                        <Row>
+                            <Col span={10}>
+                                <FormItem className="photo" label="通告图片：">
+                                    {getFieldDecorator('photo', {
+                                        initialValue: viewPic,
+                                        rules: [{
+                                            required: true,
+                                            message: '请上传通告图片',
+                                        }],
+                                    })(
+                                        <Upload
+                                            name="file"
+                                            listType="picture-card"
+                                            className="avatar-uploader"
+                                            showUploadList={false}
+                                            beforeUpload={beforeUpload}
+                                            customRequest={picHandleChange}>
+                                            {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
+                                        </Upload>
+                                    )}
+                                </FormItem>                                
+                            </Col>
+                        </Row> 
                         <FormItem className="claim" label="要求：">
                             {getFieldDecorator('claim', {
-                                initialValue: data.claim,
+                                initialValue: data.description,
                                 rules: [{
                                     required: true,
                                     message: '要求不能为空',
                                 }],
                             })(
                                 <TextArea 
-                                    style={{resize: "none"}}                                    
+                                    style={{resize: "none"}}                                  
                                     placeholder="请填写身高、风格、报名需提供材料等要求"
                                     autosize={{minRows: 5, maxRows: 10}}/>                                
                             )}
@@ -248,7 +297,7 @@ const ItemAddForm = Form.create()(
                             <Button type="primary" onClick={keepAddNotice}>继续添加通告</Button>
                         </div>                       
                     </Form>
-                </div>
+                </div>                
             </Modal>
         )
     }
@@ -259,11 +308,9 @@ class ItemAdd extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            visible: false,
-            // 通告基本信息
-            data: {},                     
-            // 提交按钮状态变量
-            loading: false,
+            visible: false,           
+            data: {}, // 通告基本信息
+            allTypeList: [],
             startValue: null,
             endValue: null,
             startTime: null,
@@ -271,14 +318,618 @@ class ItemAdd extends Component {
             mapObj: {},
             formattedAddress: "",
             xy: {},
-            addressComponent: {}
+            addressComponent: {},                  
+            uploadToken: '',// 上传Token
+            viewPic: "",
+            photoLoading: false,
+            keepData: [],
+            loading: false // 提交按钮状态变量
         };
     }
 
     // 设置开始时间
     setStartTime = (date, dateString) => {
-        console.log(date)
-        console.log(dateString)
+        // console.log(date)
+        // console.log(dateString)
+        this.setState({
+            startValue: date,
+            startTime: dateString
+        });
+        return dateString;
+    };
+    
+    // 设置结束时间
+    setEndTime = (date, dateString) => {
+        this.setState({
+            endValue: date,
+            endTime: dateString,
+        });
+    };
+
+    // 禁用开始日期之前的日期
+    disabledStartDate = (startValue) => {
+        const endValue = this.state.endValue;
+        if (!startValue || !endValue) {
+            return false;
+        }
+        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
+    };
+
+    // 禁用结束日期之后的日期
+    disabledEndDate = (endValue) => {
+        const startValue = this.state.startValue;
+        if (!endValue || !startValue) {
+          return false;
+        }
+        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
+    };
+
+    getTypeList = () => {
+        typeList({
+            pageNum: 1,
+            pageSize: 20,
+        }).then((json) => {
+            if (json.data.result === 0) {
+                console.log(json.data.data)
+                this.setState({
+                    allTypeList: json.data.data.list                   
+                });
+            } else {
+                this.expectHandle(json.data);
+            }
+        }).catch((err) => this.errorHandle(err));
+    };
+
+    // 获取通告基本信息
+    getData = () => {
+        NewestNotice().then((json) => {
+            if (json.data.result === 0) {
+                this.setState({// 信息写入
+                    visible: true,
+                    data: json.data.data,
+                    viewPic: json.data.data.photo,
+                    xy: {
+                        x: json.data.data.lng,
+                        y: json.data.data.lat
+                    },
+                    keepData: [json.data.data]                  
+                }, () => {
+                    this.map();
+                });
+            } else {
+                this.exceptHandle(json.data);
+            }
+        }).catch((err) => {this.errorHandle(err);});
+    };
+
+    showModal = (props, event) => {
+        this.getTypeList(); // 分类选项
+        if (props === 1) {// 复制通告           
+            this.getData();
+        } else if (props === 2) {
+            this.setState({
+                data: {},
+                visible: true
+            }, () => {
+                this.map();
+            });
+        }
+    };
+
+    map = () => {
+        setTimeout(() => {
+            this.setState({
+                mapObj: new window.AMap.Map('add-notice-container', {
+                    resizeEnable: true,
+                    zoom: 16,
+                    center: [120.00485, 30.292234]
+                })
+            }, () => {
+                window.AMap.service('AMap.Geocoder', () => {
+                    const geocoder = new window.AMap.Geocoder({});
+                    this.state.mapObj.on('click', (e) => {
+                        this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
+                        geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
+                            if (status === 'complete' && result.info === 'OK') {
+                                this.setFormattedAddress(result.regeocode.formattedAddress);
+                                this.setAddressComponent(result.regeocode.addressComponent);
+                            }
+                        });
+                    });
+                })
+            })
+        }, 500);
+    };
+
+    setXY = (para) => {
+        this.setState({xy: para});
+    };
+
+    setFormattedAddress = (para) => {
+        this.setState({formattedAddress: para});
+    };
+
+    setAddressComponent = (para) => {
+        this.setState({
+            addressComponent: {
+                provinceName: para.province,
+                cityName: para.city,
+                areaName: para.district,
+                areaId: para.adcode
+            }
+        });
+    };
+
+    // 倒计时
+    countDown = () => {
+        let secondsToGo = 3;
+        const modal = Modal.success({
+            title: `温馨提示`,
+            content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
+        });
+        const timer = setInterval(() => {
+            secondsToGo -= 1;
+            modal.update({
+               content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
+            });
+        }, 1000);
+        setTimeout(() => {
+            clearInterval(timer);
+            sessionStorage.removeItem("courseData");
+            modal.destroy();
+        }, secondsToGo * 1000);
+    };
+
+    reqwestUploadToken = () => {
+        getToken().then((json) => {
+            if (json.data.result === 0) {
+                    this.setState({
+                        uploadToken: json.data.data,
+                    })
+                } else {
+                    this.exceptHandle(json.data);
+                }
+        }).catch((err) => {
+            message.error("发送失败");
+        });
+    };
+
+    picUpload01 = (para) => {
+        const _this = this;
+        this.setState({photoLoading: true,});
+        const file = para;
+        const key = UUID.create().toString().replace(/-/g,"");
+        const token = this.state.uploadToken;
+        const config = {
+            region: qiniu.region.z0
+        };
+        const observer = {
+            next (res) {console.log(res)},
+            error (err) {
+                console.log(err)
+                message.error(err.message ? err.message : "图片提交失败");                
+                _this.setState({photoLoading: false});
+            }, 
+            complete (res) {
+                console.log(res);
+                message.success("图片提交成功");
+                _this.setState({
+                    viewPic: configUrl.photoUrl + res.key || "",                               
+                    photoLoading: false,
+                })
+            }
+        }
+        const observable = qiniu.upload(file, key, token, config);
+        observable.subscribe(observer); // 上传开始     
+    };
+
+    // 取消处理
+    handleCancel = () => {
+        const form = this.form;
+        this.setState({
+            visible: false
+        }, () => {
+            this.setState({
+                data: {},
+                allTypeList: [],
+                startValue: null,
+                endValue: null,
+                startTime: null,
+                endTime: null,
+                mapObj: {},
+                formattedAddress: "",
+                xy: {},
+                addressComponent: {},
+                uploadToken: '',// 上传Token
+                viewPic: "",
+                photoLoading: false,
+                keepData: [],
+                loading: false
+            });
+            form.resetFields();
+        });
+    };
+
+    keepAddNotice = () => {
+        const form = this.form;                
+        form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
+            if (err) {return;} 
+             // 广告图片校验
+            values.photo = this.state.viewPic;
+            if (!values.photo) {
+                message.error("图片未提交");
+                return
+            }
+            if (values.photo && this.state.viewPic) {
+                values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
+            }          
+            // 省市区名称
+            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            console.log(currentCityName)
+            this.state.keepData.push({
+                name: values.courseName,
+                provinceId: values.cityId[0],
+                provinceName: values.cityId[0] === "0" ? '全国' : currentCityName[0],
+                cityId: values.cityId[1] || values.cityId[0],
+                cityName: values.cityId[0] === "0" ? '全国'  : (currentCityName[1] || currentCityName[0]),
+                beginDate: values.time,
+                endDate: this.state.endTime,
+                type: values.type,
+                address: values.address,
+                lat: this.state.xy.lat,
+                lng: this.state.xy.lng,
+                photo: values.photo,
+                description: values.claim,                
+            })
+            form.resetFields();
+            console.log(999999999)
+            console.log(this.state.keepData)            
+        });
+        console.log(this.state.keepData)
+        return this.state.keepData;
+    };
+
+    // 确认处理
+    handleCreate = () => {
+        const data = this.keepAddNotice();
+        console.log(data)
+        if (data.length) {
+            this.setState({loading: true});            
+            addNotice(data).then((json) => {
+                if (json.data.result === 0) {
+                    message.success("添加通告成功");
+                    this.handleCancel();
+                    this.props.recapture();
+                } else {
+                    this.exceptHandle(json.data);
+                }
+            }).catch((err) => {this.errorHandle(err);});
+        }        
+    };
+
+    // 异常处理
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");            
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 1206) {// 判断没有添加数据时，提示信息                    
+            this.countDown();
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }
+    };
+    
+    // 错误处理
+    errorHandle = (err) => {
+        message.error(err.message);
+        this.setState({loading: false});
+    };
+
+    saveFormRef = (form) => {
+        this.form = form;
+    };
+
+    render() {
+        return (
+            <div style={{display: this.props.opStatus ? "block" : "none"}}>
+                <Button onClick={() => {this.showModal(1)}}>复制</Button>
+                <Button type="primary" onClick={() => {this.showModal(2)}} style={{marginLeft: 10}}>添加</Button>
+                <ItemAddForm
+                    ref={this.saveFormRef}
+                    visible={this.state.visible}
+                    onCancel={this.handleCancel}
+                    onCreate={this.handleCreate}
+                    keepAddNotice={this.keepAddNotice}
+                    provinceList={this.props.provinceList}
+                    allTypeList={this.state.allTypeList}
+                    data={this.state.data}
+                    startTime={this.state.starTime}
+                    setStartTime={this.setStartTime}
+                    setEndTime={this.setEndTime}
+                    disabledStartDate={this.disabledStartDate}
+                    disabledEndDate={this.disabledEndDate}
+                    mapObj={this.state.mapObj}
+                    formattedAddress={this.state.formattedAddress}
+                    setXY={this.setXY}
+                    setAddressComponent={this.setAddressComponent}
+                    reqwestUploadToken={this.reqwestUploadToken}
+                    viewPic={this.state.viewPic}
+                    picUpload01={this.picUpload01}
+                    photoLoading={this.state.photoLoading}
+                    confirmLoading={this.state.loading}/>             
+            </div>
+        );
+    }
+}
+
+// 通告编辑表单
+const ItemEditForm = Form.create()(
+    (props) => {
+        const {visible, onCancel, onCreate, provinceList, allTypeList, form, data, startTime, setEndTime, disabledStartDate, disabledEndDate, mapObj, formattedAddress, setXY, setAddressComponent, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
+        const {getFieldDecorator, setFieldsValue} = form;
+
+        // 城市选项生成
+        const optionsOfCity = pCAName(provinceList, data.cityId).optionsOfCity;
+        let currentCity = pCAName(provinceList, data.cityId).currentCity;
+
+        // 分类选项生成
+        const optionsOfType =[]
+        if (allTypeList.length) {
+            allTypeList.forEach((item, index) => {
+                optionsOfType.push(<Option key={item.id} value={item.id}>{item.name}</Option>)
+            });
+        }
+
+        //地理编码
+        const toXY = (para) => {
+            console.log(para);
+            mapObj.plugin('AMap.Geocoder', function () {
+                const geocoder = new window.AMap.Geocoder({});
+                const marker = new window.AMap.Marker({
+                    map: mapObj,
+                    bubble: true
+                });
+                geocoder.getLocation(para, (status, result) => {
+                    if (status === 'complete' && result.info === 'OK') {
+                        result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;                        
+                        setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
+                        setFieldsValue({"address": result.geocodes[0].formattedAddress});
+                        setAddressComponent(result.geocodes[0].addressComponent);
+                        marker.setPosition(result.geocodes[0].location);
+                        mapObj.setCenter(marker.getPosition())
+                    } else {
+                        message.error("经纬度获取失败，请输入详细地点")
+                    }
+                });
+            });
+        };
+        
+        const setStartTime = (date, dateString) => {
+            setFieldsValue({"time": dateString});            
+        };
+
+        // 图片相关
+        const beforeUpload = (file) => {
+            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+            if (!isIMG) {
+                message.error('文件类型错误');
+            }
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isLt2M) {
+                message.error('文件不能大于2M');
+            }         
+            reqwestUploadToken(file);
+            return isIMG && isLt2M;
+        };
+        const picHandleChange = (info) => {
+            setTimeout(()=>{
+                picUpload01(info.file);
+            }, 500);   
+        };
+        const uploadButton = (
+            <div>
+                <Icon type={photoLoading ? 'loading' : 'plus'}/>
+                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+            </div>
+        );
+
+        return (
+            <Modal
+                visible={visible}
+                title="编辑通告"
+                width={1000}
+                onCancel={onCancel}
+                footer={[
+                    <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
+                    <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate()}>确定</Button>
+                ]}
+                maskClosable={false}
+                destroyOnClose={true}>
+                {
+                    JSON.stringify(data) === '{}' ?
+                        <div className="spin-box">
+                            <Spin/>
+                        </div>
+                        :
+                        <div className="course-add course-form item-form quality-course-form notice-form">
+                            <Form layout="vertical">
+                                <h4 className="add-form-title-h4">基础信息</h4>
+                                <Row gutter={24}>
+                                    <Col span={16}>
+                                        <FormItem className="courseName"  label="通告名称：">
+                                            {getFieldDecorator('courseName', {
+                                                initialValue: data.name,                                      
+                                                rules: [{
+                                                    required: true,
+                                                    message: '通告名称不能为空',
+                                                    max: 18
+                                                }],
+                                            })(
+                                                <Input allowClear placeholder="请填写通告标题（18字以内）"/>
+                                            )}
+                                        </FormItem>                                
+                                    </Col>
+                                    <Col span={8}>                                
+                                        <FormItem className="cityId" label="展示城市：">
+                                            {getFieldDecorator('cityId', {
+                                                initialValue: data.cityId === 0 ? ["0"] : currentCity,
+                                                rules: [{
+                                                    required: true,
+                                                    message: '展示城市不能为空',
+                                                }],
+                                            })(
+                                                <Cascader options={optionsOfCity} placeholder="请选择展示城市"/>                                        
+                                            )}
+                                        </FormItem>
+                                    </Col>
+                                </Row>                        
+                                <div className="ant-line"></div>
+                                <Row gutter={24}>
+                                    <Col span={16}>
+                                        <FormItem className="time"  label="有效时间：">
+                                            {getFieldDecorator('time', {
+                                                initialValue: data.beginDate,
+                                                rules: [{
+                                                    required: true,
+                                                    message: '开始时间不能为空',                                            
+                                                }],
+                                            })(
+                                                <div className="efficiencyTime">
+                                                    <DatePicker 
+                                                        onChange={setStartTime}
+                                                        // 时间回显有问题显示不出来(data.beginDate 刚开始undefined，最后才有数据)
+                                                        defaultValue={data.beginDate ? moment(data.beginDate, dateFormat) : ''}
+                                                        format={dateFormat}                                                
+                                                        disabledDate={disabledStartDate}
+                                                        showTime
+                                                        style={{width: "180px"}}
+                                                        placeholder="请选择开始日期"/>
+                                                    <span style={{margin: "0 10px"}}>至</span>
+                                                    <DatePicker
+                                                        onChange={setEndTime}
+                                                        defaultValue={data.endDate ? moment(data.endDate, dateFormat) : null}
+                                                        format={dateFormat}
+                                                        disabledDate={disabledEndDate}
+                                                        showTime
+                                                        style={{width: "180px"}}
+                                                        placeholder="请选择结束日期"/>
+                                                    <span style={{margin: "0 10px",fontSize: "12px"}}><Icon type="alert" /> 结束时间不填则表示长期有效</span>
+                                                </div>
+                                            )}
+                                        </FormItem>                                
+                                    </Col>
+                                    <Col span={8}>
+                                        <FormItem className="type"  label="类型：">
+                                            {getFieldDecorator('type', {
+                                                initialValue: data.type,                                      
+                                                rules: [{
+                                                    required: true,
+                                                    message: '类型未选择',
+                                                }],
+                                            })(
+                                                <Select placeholder="请选择类型">
+                                                    {optionsOfType}
+                                                </Select>
+                                            )}
+                                        </FormItem>
+                                    </Col>
+                                </Row>
+                                <div className="ant-line"></div>
+                                <Row gutter={24}>
+                                    <Col span={16}>
+                                        <FormItem className="location"  label="地点：">
+                                            {getFieldDecorator('address', {
+                                                initialValue: data.address,                                      
+                                                rules: [{
+                                                    required: true,
+                                                    message: '通告地点不能为空',                                            
+                                                }],
+                                            })(
+                                                <Input onBlur={(event) => toXY(event.target.value)} allowClear placeholder="请填写地点" />
+                                            )}
+                                        </FormItem>
+                                    </Col>
+                                    {/*<p onClick={location}
+                                       style={{width: "120px", marginLeft: "100px", cursor: "pointer"}}>点击获取当前坐标</p>*/}
+                                    <div id="add-notice-container" name="container" tabIndex="0"/>
+                                </Row>
+                                <div className="ant-line"></div>
+                                <Row>
+                                    <Col span={10}>
+                                        <FormItem className="photo" label="通告图片：">
+                                            {getFieldDecorator('photo', {
+                                                initialValue: viewPic,
+                                                rules: [{
+                                                    required: true,
+                                                    message: '请上传通告图片',
+                                                }],
+                                            })(
+                                                <Upload
+                                                    name="file"
+                                                    listType="picture-card"
+                                                    className="avatar-uploader"
+                                                    showUploadList={false}
+                                                    beforeUpload={beforeUpload}
+                                                    customRequest={picHandleChange}>
+                                                    {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
+                                                </Upload>
+                                            )}
+                                        </FormItem>                                
+                                    </Col>
+                                </Row> 
+                                <FormItem className="claim" label="要求：">
+                                    {getFieldDecorator('claim', {
+                                        initialValue: data.description,
+                                        rules: [{
+                                            required: true,
+                                            message: '要求不能为空',
+                                        }],
+                                    })(
+                                        <TextArea 
+                                            style={{resize: "none"}}                                  
+                                            placeholder="请填写身高、风格、报名需提供材料等要求"
+                                            autosize={{minRows: 5, maxRows: 10}}/>                                
+                                    )}
+                                </FormItem>
+                                <div className="ant-line"></div>                                            
+                            </Form>
+                        </div>
+                }
+                
+            </Modal>
+        )
+    }
+);
+
+// 通告编辑组件
+class ItemEdit extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            visible: false,            
+            data: {}, // 通告基本信息                   
+            allTypeList: [],
+            startValue: null,
+            endValue: null,
+            startTime: null,
+            endTime: null,
+            mapObj: {},
+            formattedAddress: "",
+            xy: {},
+            addressComponent: {},                  
+            uploadToken: '',// 上传Token
+            viewPic: "",
+            photoLoading: false,
+            keepData: [],
+            loading: false // 提交按钮状态变量                  
+        };        
+    }
+    // 设置开始时间
+    setStartTime = (date, dateString) => {
         this.setState({
             startValue: date,
             startTime: dateString
@@ -311,70 +962,85 @@ class ItemAdd extends Component {
         return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
     };
 
+    getTypeList = () => {
+        typeList({
+            pageNum: 1,
+            pageSize: 20,
+        }).then((json) => {
+            if (json.data.result === 0) {
+                console.log(json.data.data)
+                this.setState({
+                    allTypeList: json.data.data.list                   
+                });
+            } else {
+                this.expectHandle(json.data);
+            }
+        }).catch((err) => this.errorHandle(err));
+    };
+
     // 获取通告基本信息
     getData = () => {
-        NewestNotice().then((json) => {
+        noticeDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
-                // 已有所属分类写入                    
-                // json.data.data.typeId = json.data.data.excellentCourseType.typeId;                                      
-                // 富文本数据写入入
-                // this.editor.setData(json.data.data.characteristic);
-                // 信息写入
                 this.setState({
-                    visible: true,
                     data: json.data.data,
-                    viewPic: json.data.data.pic,
-                    videoList: json.data.data.lesson
+                    viewPic: json.data.data.photo,
+                    startTime: json.data.data.beginDate,
+                    endTime: json.data.data.endDate,                    
+                    xy: {
+                        x: json.data.data.lng,
+                        y: json.data.data.lat
+                    },
+                    keepData: [json.data.data]
+                }, () => {
+                    console.log(this.state.keepData)
                 });
+
             } else {
                 this.exceptHandle(json.data);
             }
         }).catch((err) => {this.errorHandle(err);});
     };
 
+    showModal = () => {
+        this.getTypeList();
+        this.getData();       
+        this.setState({visible: true}, () => {
+            this.map();
+        });
+    };
 
-    showModal = (props, event) => {
-        if (props === 1) {// 复制通告            
-            this.getData();
-        } else if (props === 2) {
-            this.setState({visible: true,data: {}}, () => {
-                setTimeout(() => {
-                    this.setState({
-                        mapObj: new window.AMap.Map('add-notice-container', {
-                            resizeEnable: true,
-                            zoom: 16,
-                            center: [120.00485, 30.292234]
-                        })
-                    }, () => {
-                        window.AMap.service('AMap.Geocoder', () => {
-                            const geocoder = new window.AMap.Geocoder({});
-                            this.state.mapObj.on('click', (e) => {
-                                this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
-                                geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
-                                    if (status === 'complete' && result.info === 'OK') {
-                                        this.setFormattedAddress(result.regeocode.formattedAddress);
-                                        this.setAddressComponent(result.regeocode.addressComponent);
-                                    }
-                                });
-                            });
-                        })
-                    })
-                }, 500)
-            });
-        }        
-        
+    map = () => {
+        setTimeout(() => {
+            this.setState({
+                mapObj: new window.AMap.Map('add-notice-container', {
+                    resizeEnable: true,
+                    zoom: 16,
+                    center: [120.00485, 30.292234]
+                })
+            }, () => {
+                window.AMap.service('AMap.Geocoder', () => {
+                    const geocoder = new window.AMap.Geocoder({});
+                    this.state.mapObj.on('click', (e) => {
+                        this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
+                        geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
+                            if (status === 'complete' && result.info === 'OK') {
+                                this.setFormattedAddress(result.regeocode.formattedAddress);
+                                this.setAddressComponent(result.regeocode.addressComponent);
+                            }
+                        });
+                    });
+                })
+            })
+        }, 500);
     };
 
     setXY = (para) => {
-        this.setState({
-            xy: para
-        })
+        this.setState({xy: para});
     };
 
     setFormattedAddress = (para) => {
-        this.setState({
-            formattedAddress: para
-        })
+        this.setState({formattedAddress: para});
     };
 
     setAddressComponent = (para) => {
@@ -385,207 +1051,51 @@ class ItemAdd extends Component {
                 areaName: para.district,
                 areaId: para.adcode
             }
-        })
-    };
-
-    // 倒计时
-    countDown = () => {
-        let secondsToGo = 3;
-        const modal = Modal.success({
-            title: `温馨提示`,
-            content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
         });
-        const timer = setInterval(() => {
-            secondsToGo -= 1;
-            modal.update({
-               content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
-            });
-        }, 1000);
-        setTimeout(() => {
-            clearInterval(timer);
-            sessionStorage.removeItem("courseData");
-            modal.destroy();
-        }, secondsToGo * 1000);
-    };
+    };   
 
-    // 取消处理
-    handleCancel = () => {
-        const form = this.form;
-        this.setState({
-            visible: false
-        }, () => {
-            this.setState({
-                data: {},
-                startValue: null,
-                endValue: null,
-                startTime: null,
-                endTime: null,                         
-                loading: false,
-                mapObj: {},
-                formattedAddress: "",
-                xy: {},
-                addressComponent: {}
-            });
-            form.resetFields();
-        });
-    };
-
-    keepAddNotice = () => {
-        const form = this.form;        
-        form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
-            if (err) {return;}
-            // let { viewPic, allAuthorList, videoList} = this.state;            
-            const result = {
-                name: values.name,
-            };
-            const data = [];
-            data.push({
-                name: values.name,                
-            })
-        });
-    };
-
-    // 确认处理
-    handleCreate = (type) => {
-        const form = this.form;        
-        form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
-            if (err) {return;}           
-            
-            const data = {
-                name: values.name,
-                provinceId: values.cityId[0],
-                provinceName: values.provinceName,
-                cityId: values.cityId[1] || values.cityId[0],
-                cityName: values.cityName,
-                beginDate: this.state.startTime,
-                endDate: this.state.endTime,
-                type: values.type,
-                address: values.address,
-                lat: values.lat,
-                lng: values.lng,
-                description: values.description,
-            };
-            this.setState({loading: true});            
-            addNotice(data).then((json) => {
-                if (json.data.result === 0) {
-                    message.success("添加通告成功");
-                    this.handleCancel();
-                    this.props.recapture();
+    reqwestUploadToken = () => {
+        getToken().then((json) => {
+            if (json.data.result === 0) {
+                    this.setState({
+                        uploadToken: json.data.data,
+                    })
                 } else {
                     this.exceptHandle(json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => {
+            message.error("发送失败");
         });
     };
 
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 1206) {// 判断没有添加数据时，提示信息                    
-            this.countDown();
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("保存失败");
-        this.setState({loading: false});
-    };
-
-    saveFormRef = (form) => {
-        this.form = form;
-    };
-
-    render() {
-        return (
-            <div style={{display: this.props.opStatus ? "block" : "none"}}>
-                <Button onClick={() => {this.showModal(1)}}>复制</Button>
-                <Button type="primary" onClick={() => {this.showModal(2)}} style={{marginLeft: 10}}>添加</Button>
-                <ItemAddForm
-                    ref={this.saveFormRef}
-                    visible={this.state.visible}
-                    onCancel={this.handleCancel}
-                    onCreate={this.handleCreate}
-                    keepAddNotice={this.keepAddNotice}
-                    provinceList={this.props.provinceList}
-                    allTypeList={this.state.allTypeList}
-                    data={this.state.data}
-                    setStartTime={this.setStartTime}
-                    setEndTime={this.setEndTime}
-                    disabledStartDate={this.disabledStartDate}
-                    disabledEndDate={this.disabledEndDate}
-                    mapObj={this.state.mapObj}
-                    formattedAddress={this.state.formattedAddress}
-                    setXY={this.setXY}
-                    setAddressComponent={this.setAddressComponent}
-                    confirmLoading={this.state.loading}/>                
-            </div>
-        );
-    }
-}
-
-// 通告编辑表单
-const ItemEditForm = Form.create()(
-    (props) => {
-        const {visible, onCancel, onCreate, allTypeList, provinceList, form, data, confirmLoading} = props;
-        const {getFieldDecorator} = form;
-       
-        return (
-            <Modal
-                visible={visible}
-                title="编辑通告"
-                width={1000}
-                onCancel={onCancel}
-                footer={[
-                    <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
-                    <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
-                ]}
-                maskClosable={false}
-                destroyOnClose={true}>
-                <div className="course-add course-form item-form quality-course-form">
-                    
-                </div>
-            </Modal>
-        )
-    }
-);
-
-// 通告编辑组件
-class ItemEdit extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            visible: false,
-            // 通告基本信息
-            data: {},                       
-            // 提交按钮状态变量
-            loading: false,                  
-        };        
-    }
-
-    // 获取通告基本信息
-    getData = () => {
-        noticeDetail({id: this.props.id}).then((json) => {
-            if (json.data.result === 0) {
-                this.setState({data: json.data.data});
-            } else {
-                this.exceptHandle(json.data);
+    picUpload01 = (para) => {
+        const _this = this;
+        this.setState({photoLoading: true,});
+        const file = para;
+        const key = UUID.create().toString().replace(/-/g,"");
+        const token = this.state.uploadToken;
+        const config = {
+            region: qiniu.region.z0
+        };
+        const observer = {
+            next (res) {console.log(res)},
+            error (err) {
+                console.log(err)
+                message.error(err.message ? err.message : "图片提交失败");                
+                _this.setState({photoLoading: false});
+            }, 
+            complete (res) {
+                console.log(res);
+                message.success("图片提交成功");
+                _this.setState({
+                    viewPic: configUrl.photoUrl + res.key || "",                               
+                    photoLoading: false,
+                })
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }
+        const observable = qiniu.upload(file, key, token, config);
+        observable.subscribe(observer); // 上传开始     
     };
-
-    showModal = () => {
-        this.getData();       
-        this.setState({visible: true});
-    };   
 
     // 取消处理
     handleCancel = () => {
@@ -595,7 +1105,20 @@ class ItemEdit extends Component {
         }, () => {
             this.setState({
                 data: {},
-                loading: false,
+                allTypeList: [],
+                startValue: null,
+                endValue: null,
+                startTime: null,
+                endTime: null,
+                mapObj: {},
+                formattedAddress: "",
+                xy: {},
+                addressComponent: {},
+                uploadToken: '',// 上传Token
+                viewPic: "",
+                photoLoading: false,
+                keepData: [],
+                loading: false
             });
             form.resetFields();
         });
@@ -606,19 +1129,32 @@ class ItemEdit extends Component {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             if (err) {return;}
+            // 广告图片校验
+            values.photo = this.state.viewPic;
+            if (!values.photo) {
+                message.error("图片未提交");
+                return
+            }
+            if (values.photo && this.state.viewPic) {
+                values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
+            }          
+            // 省市区名称
+            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            console.log(currentCityName)
+            console.log(values.time)
             const result = {
                 id: this.props.id,
                 name: values.name,
                 provinceId: values.cityId[0],
-                provinceName: values.provinceName,
+                provinceName: values.cityId[0] === "0" ? '全国' : currentCityName[0],
                 cityId: values.cityId[1] || values.cityId[0],
-                cityName: values.cityName,
-                beginDate: this.state.startTime,
+                cityName: values.cityId[0] === "0" ? '全国'  : (currentCityName[1] || currentCityName[0]),
+                beginDate: values.time,
                 endDate: this.state.endTime,
                 type: values.type,
                 address: values.address,
-                lat: values.lat,
-                lng: values.lng,
+                lng: this.state.xy.x,
+                lat: this.state.xy.y,                
                 description: values.description,
             };
 
@@ -651,7 +1187,7 @@ class ItemEdit extends Component {
     
     // 错误处理
     errorHandle = (err) => {
-        message.error("保存失败");
+        message.error(err.message);
         this.setState({loading: false});
     };
 
@@ -668,10 +1204,22 @@ class ItemEdit extends Component {
                     ref={this.saveFormRef}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
-                    onCreate={this.handleCreate}
+                    onCreate={this.handleCreate}                    
                     provinceList={this.props.provinceList}
                     allTypeList={this.state.allTypeList}
                     data={this.state.data}
+                    startTime={this.state.starTime}                    
+                    setEndTime={this.setEndTime}
+                    disabledStartDate={this.disabledStartDate}
+                    disabledEndDate={this.disabledEndDate}
+                    mapObj={this.state.mapObj}
+                    formattedAddress={this.state.formattedAddress}
+                    setXY={this.setXY}
+                    setAddressComponent={this.setAddressComponent}
+                    reqwestUploadToken={this.reqwestUploadToken}
+                    viewPic={this.state.viewPic}
+                    picUpload01={this.picUpload01}
+                    photoLoading={this.state.photoLoading}
                     confirmLoading={this.state.loading}/>                
             </a>
         );
@@ -1861,9 +2409,23 @@ class DataTable extends Component {
             },
             {
                 title: '通告时间',
-                dataIndex: 'nickname',
+                // dataIndex: 'noticeTime',
                 width: '12%',
-                render: (text, record) => this.renderColumns(text, record, 'nickname'),
+                render: (text, record) => {
+                    return (
+                        <div>
+                            {
+                                record.endDate ? 
+                                    <div>
+                                        <div>{record.beginDate}</div>
+                                        <div>{record.endDate}</div>
+                                    </div>
+                                    :
+                                    <div>长期有效</div>
+                            }
+                        </div>
+                    );
+                },
             },
             {
                 title: '状态',
@@ -1909,14 +2471,15 @@ class DataTable extends Component {
                     return (
                         <div className="editable-row-operations">
                             {/*通告详情*/}
-                            <ItemDetails 
+                            {/*<ItemDetails 
                                 id={record.id}
                                 opStatus={this.props.opObj.select}
-                                toLoginPage={this.props.toLoginPage}/>
+                                toLoginPage={this.props.toLoginPage}/>*/}
                             {/*通告编辑*/}
                             <ItemEdit 
                                 id={record.id} 
                                 recapture={this.getData}
+                                provinceList={this.props.provinceList}
                                 opStatus={this.props.opObj.modify}
                                 toLoginPage={this.props.toLoginPage}/>
                             {/*往期回顾*/}
@@ -1991,22 +2554,14 @@ class DataTable extends Component {
                     });
                     return
                 }
-                json.data.data.list.forEach((item, index) => {
-                    // 性别 女：0，男： 1
-                    let tempGender = "";
-                    if (item.gender === 0) {
-                        tempGender = "女";
-                    }
-                    if (item.source  === 1) {
-                        tempGender = "男";
-                    }                     
+                json.data.data.list.forEach((item, index) => {                                 
                     // 通告状态
                     let tempStatus = "";
-                    if (item.status === 2) {
-                        tempStatus = "上架";
+                    if (item.status === 1) {
+                        tempStatus = "进行中";
                     }
-                    if (item.status  === 3) {
-                        tempStatus = "下架";
+                    if (item.status  === 2) {
+                        tempStatus = "已结束";
                     }
                     data.push({
                         key: index.toString(),
@@ -2014,9 +2569,13 @@ class DataTable extends Component {
                         index: index + 1,
                         sort: item.sort !== 0 ? item.sort : '',
                         name: item.name,
-                        nickname: item.nickname,
-                        genderCode: item.gender,
-                        gender: tempGender,
+                        beginDate: item.beginDate,
+                        endDate: item.endDate,
+                        noticeTime: item.endDate ? (item.beginDate + ' 至 ' + item.endDate) : '长期有效',
+                        signNum: item.applyNum,
+                        city: item.cityName || '全国',
+                        createUser: item.creatorName,
+                        viewNum: item.vistorNum || 0,
                         createTime: item.createTime,
                         statusCode: item.status,
                         status: tempStatus,
@@ -2065,8 +2624,8 @@ class DataTable extends Component {
     };
 
     // 错误处理
-    errorHandle = () => {
-        message.error("保存失败");
+    errorHandle = (err) => {
+        message.error(err.message);
         this.setState({loading: false});
     };
 
@@ -2113,17 +2672,11 @@ class NotificationManage extends Component {
         super(props);
         this.state = {
             // 通告权限
-            opObj: {
-                add: true,
-                copy: true,
-                select: true,
-                modify: true,
-                putAway: true,
-            },
+            opObj: {},
             // 获取通告列表所需关键词
             keyword: {
                 cityCode: null,
-                status: 0,
+                status: null,
                 noticeName: '',
                 startTime: "",
                 endTime: "",
@@ -2134,37 +2687,16 @@ class NotificationManage extends Component {
             mapObj: {},// 地图控件对象
             provinceList: [],// 省市列表
         };
-        this.optionsOfCity = [{value: "0", label: "全国"}];
         this.optionsStatus = [
-            <Option key={0}>全部</Option>,
-            <Option key={1}>未开始</Option>,
-            <Option key={2}>进行中</Option>,
-            <Option key={2}>已结束</Option>,
+            <Option key="" value="">全部</Option>,,
+            <Option key={1} value={1}>进行中</Option>,
+            <Option key={2} value={2}>已结束</Option>,
         ];     
     };
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {                
-                subItem.children.forEach((thirdItem) => {
-                    if (thirdItem.url === this.props.location.pathname) {
-                        let data = {};
-                        thirdItem.children.forEach((fourthItem) => {
-                            data[fourthItem.url] = true;
-                        });
-                        this.setState({
-                            opObj: data
-                        })
-                    }
-                })
-            })
-        })
+        this.setState({opObj: getPower(this)}); 
     };
 
     // 获取省市列表信息及当前城市地区代码
@@ -2181,8 +2713,6 @@ class NotificationManage extends Component {
                 districtSearch.search('中国', (status, result) => {               
                     this.setState({
                         provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
-                    }, () => {
-                        this.cityList();
                     });
                 })
             });
@@ -2198,21 +2728,6 @@ class NotificationManage extends Component {
                 })
             })
         })
-    };
-
-    // 城市选项生成
-    cityList = () => {
-        if (this.state.provinceList.length) {
-            this.state.provinceList.forEach((item) => {
-                let children = [];
-                if (item.districtList) {
-                    item.districtList.forEach((subItem) => {
-                        children.push({value: subItem.adcode, label: subItem.name});                    
-                    });
-                }
-                this.optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-            });
-        }        
     };
     
     // 设置展示城市
@@ -2242,7 +2757,7 @@ class NotificationManage extends Component {
     };
 
     // 搜索及通告名称设置
-    search = (type, value) => {
+    search = (value) => {
         this.setState({
             keyword: {
                 cityCode: this.state.keyword.cityCode,
@@ -2340,13 +2855,13 @@ class NotificationManage extends Component {
                                 {/*展示城市筛选*/}
                                 <Cascader 
                                     className="star-select" 
-                                    options={this.optionsOfCity} 
+                                    options={pCAName(this.state.provinceList).optionsOfCity} 
                                     onChange={this.setCity} 
                                     placeholder="请选择展示城市"/>
                                 {/*状态筛选*/}
                                 <Select 
-                                    className="star-select" 
-                                    onChange={this.setStatus} 
+                                    onChange={this.setStatus}
+                                    className="star-select"  
                                     placeholder="请选择状态" 
                                     allowClear>
                                     {this.optionsStatus}
@@ -2354,7 +2869,9 @@ class NotificationManage extends Component {
                                 {/*通告名筛选*/}
                                 <Search 
                                     onSearch={(value) => this.search(value)} 
-                                    enterButton className="star-search" 
+                                    enterButton
+                                    allowClear 
+                                    className="star-search" 
                                     placeholder="请输入通告名称"/>
                                 {/*通告创建日期筛选*/}
                                 <span>日期筛选： </span>
@@ -2385,6 +2902,7 @@ class NotificationManage extends Component {
                                 <DataTable                                    
                                     opObj={this.state.opObj}
                                     keyword={this.state.keyword}
+                                    provinceList={this.state.provinceList}
                                     flag_add={this.state.flag_add}
                                     toLoginPage={this.toLoginPage}/>
                             </div>

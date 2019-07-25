@@ -55,20 +55,23 @@ export function checkPassword (rule, value, callback) {
 };
 
 // 根据省市区id 查找 省市区name
-export const pCAName = (provinceList, adcode) => {
-    console.log(adcode)
+export const pCAName = (provinceList, adcode) => {    
     const optionsOfCity = [{value: "0", label: "全国"}];
+    const optionsOfArea = [{value: "0", label: "全国"}];
+    let currentCityName = [];
+    let currentCity = [];
     let currentAreaName = [];
     let currentArea = [];
     if (provinceList.length) {        
         provinceList.forEach((item) => {
-            let children = [];                   
+            let childrenCity = [];
+            let childrenArea = [];
             if (item.districtList) {
                 item.districtList.forEach((subItem) => {
-                    let subChildren = [];
+                    let subChildrenArea = [];
                     if (subItem.districtList) {
                         subItem.districtList.forEach((thirdItem) => {
-                            subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
+                            subChildrenArea.push({value: thirdItem.adcode, label: thirdItem.name});
                             if (thirdItem.adcode === String(adcode)) {
                                 console.log(888)
                                 currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];
@@ -76,13 +79,20 @@ export const pCAName = (provinceList, adcode) => {
                             }
                         })
                     }
-                    children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
+                    if (subItem.adcode === String(adcode)) {
+                        console.log(777)
+                        currentCity = [item.adcode, subItem.adcode];
+                        currentCityName = [item.name, subItem.name];
+                    }
+                    childrenCity.push({value: subItem.adcode, label: subItem.name});
+                    childrenArea.push({value: subItem.adcode, label: subItem.name, children: subChildrenArea});
                 })
             }
-            optionsOfCity.push({value: item.adcode, label: item.name, children: children});
+            optionsOfCity.push({value: item.adcode, label: item.name, children: childrenCity});
+            optionsOfArea.push({value: item.adcode, label: item.name, children: childrenArea});
         })
     }
-    return { optionsOfCity, currentArea, currentAreaName };
+    return { optionsOfCity, currentCity, currentCityName, optionsOfArea, currentArea, currentAreaName };
 }
 
 // 获取当前登录人对此菜单的操作权限 (多一级)

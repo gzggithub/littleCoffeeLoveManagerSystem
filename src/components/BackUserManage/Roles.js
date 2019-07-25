@@ -14,7 +14,7 @@ import {
     Tree,
     Icon,
 } from 'antd';
-import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, roleUserList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
+import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
 
 const Search = Input.Search;
 const {TextArea} = Input;

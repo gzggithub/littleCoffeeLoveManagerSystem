@@ -20,17 +20,17 @@ export  default {
     resetPassword: `${base}/cs/user/resetPassword`,
     /*-------------------------------分类管理-------------------------------*/
     // 列表
-    getOrgTypeList: `${base}/cs/annunciateType/list`,    
+    typeList: `${base}/cs/annunciateType/list`,    
     // 添加
-    addOrgType: `${base}/cs/annunciateType/save`,
+    addType: `${base}/cs/annunciateType/save`,
     // 删除
-    deleteOrgType: `${base}/cs/annunciateType/delete`,
+    deleteType: `${base}/cs/annunciateType/delete`,
     // 编辑
-    updateOrgType: `${base}/cs/annunciateType/update`,
+    updateType: `${base}/cs/annunciateType/update`,
     // 详情
-    getOrgTypeDetail: `${base}/cs/annunciateType/getById`,    
+    typeDetail: `${base}/cs/annunciateType/getById`,    
     // 排序
-    sortOrgType: `${base}/cs/annunciateType/updateSort`,
+    sortType: `${base}/cs/annunciateType/updateSort`,
     /*-------------------------------广告管理-------------------------------*/
     // 列表
     advList: `${base}/cs/banner/list`,

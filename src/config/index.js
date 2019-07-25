@@ -70,39 +70,39 @@ export const resetPassword = data => {
 
 /*-------------------------------分类管理-------------------------------*/
 // 列表
-export const getOrgTypeList = params => {
+export const typeList = params => {
     setAuthorization();
-    return axios.get(api.getOrgTypeList, {params: params});
+    return axios.get(api.typeList, {params: params});
 }
 
 // 添加
-export const addOrgType = data => {
+export const addType = data => {
     setAuthorization();
-    return axios.post(api.addOrgType, createPostParams(data));
+    return axios.post(api.addType, createPostParams(data));
 }
 
 // 删除
-export const deleteOrgType = params => {
+export const deleteType = params => {
     setAuthorization();
-    return axios.delete(api.deleteOrgType, {params: params});
+    return axios.delete(api.deleteType, {params: params});
 }
 
 // 编辑
-export const updateOrgType = data => {
+export const updateType = data => {
     setAuthorization();
-    return axios.post(api.updateOrgType, createPostParams(data));
+    return axios.post(api.updateType, createPostParams(data));
 }
 
 // 详情
-export const getOrgTypeDetail = params => {
+export const typeDetail = params => {
     setAuthorization();
-    return axios.get(api.getOrgTypeDetail, {params: params});
+    return axios.get(api.typeDetail, {params: params});
 }
 
 // 排序
-export const sortOrgType = data => {
+export const sortType = data => {
     setAuthorization();
-    return axios.post(api.sortOrgType, createPostParams(data));
+    return axios.post(api.sortType, createPostParams(data));
 }
 
 /*-------------------------------广告管理-------------------------------*/
@@ -158,7 +158,6 @@ export const starList = params => {
 // 添加
 export const saveStar = data => {
     setAuthorization();
-    axios.defaults.headers['Content-Type'] = 'application/json';
     return axios.post(api.saveStar, data);
 }
 
@@ -213,13 +212,13 @@ export const noticeList = params => {
 // 添加
 export const addNotice = data => {
     setAuthorization();
-    return axios.post(api.addNotice, createPostParams(data));
+    return axios.post(api.addNotice, data);
 }
 
 // 编辑
 export const updateNotice = data => {
     setAuthorization();
-    return axios.post(api.updateNotice, createPostParams(data));
+    return axios.post(api.updateNotice, data);
 }
 
 // 详情

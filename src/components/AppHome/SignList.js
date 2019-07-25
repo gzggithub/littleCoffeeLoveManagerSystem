@@ -12,6 +12,7 @@ import {
     DatePicker,
 } from 'antd';
 import '../../config/config';
+import { signList, signDetail, downloadSignList } from '../../config';
 import reqwest from 'reqwest';
 
 const Search = Input.Search;
@@ -117,42 +118,21 @@ class ItemDownload extends Component {
             // 报名名单基本信息
             data: {},          
             // 提交按钮状态变量
-            confirmLoading: false,      
+            loading: false,
         };
     }
 
     // 获取报名名单基本信息
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/copy',
-            type: 'json',
-            method: 'get',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {},
-            success: (json) => {
-                if (json.result === 0) {                    
-                    this.setState({
-                        data: json.data,
-                        viewPic: json.data.pic,
-                        videoList: json.data.lesson
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 1005) {                        
-                        this.countDown();// 判断没有添加数据是，提示信息
-                    } else {
-                        message.error(json.message);
-                    }
-                }
+        downloadSignList().then((json) => {
+            if (json.result === 0) {                    
+                this.setState({
+                    data: json.data.data                    
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     showModal = (props, event) => {         
@@ -165,42 +145,22 @@ class ItemDownload extends Component {
         this.setState({
             visible: false,
             data: {},
-            confirmLoading: false,
+            loading: false,
         });
     };
 
     // 确认处理
-    handleCreate = () => {
-        const result = {
-            // linkAddress: linkAddress,
-        };
-        this.setState({
-            confirmLoading: true
-        });
-        reqwest({
-            url: '/sys/excellentCourse/save',
-            type: 'json',
-            method: 'post',
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            data: result,
-            error: (XMLHttpRequest) => {
-                message.error("保存失败");
-                this.setState({confirmLoading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
+    handleCreate = () => {        
+        this.setState({loading: true});        
+        downloadSignList().then((json) => {
+            if (json.data.result === 0) {
                     message.success("链接复制成功");
-                    this.handleCancel();
-                    this.props.recapture();                          
+                    this.handleCancel();                         
                 } else {
-                    message.error(json.message);
-                    sessionStorage.removeItem("courseData");
-                    this.setState({confirmLoading: false});
+                    message.error(json.message);                   
+                    this.setState({loading: false});
                 }
-            }
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     saveFormRef = (form) => {
@@ -218,8 +178,8 @@ class ItemDownload extends Component {
                     className="sign-list-download"
                     onCancel={this.handleCancel}
                     footer={[
-                        <Button key="submit" type="primary" loading={this.state.confirmLoading} onClick={this.handleCreate}>复制链接</Button>,
-                        <Button key="back" onClick={this.handleCancel} disabled={this.state.confirmLoading}>取消</Button>                        
+                        <Button key="submit" type="primary" loading={this.state.loading} onClick={this.handleCreate}>复制链接</Button>,
+                        <Button key="back" onClick={this.handleCancel} disabled={this.state.loading}>取消</Button>                        
                     ]}
                     maskClosable={false}
                     destroyOnClose={true}>
@@ -245,7 +205,7 @@ const ItemDetailsForm = Form.create()(
                 tempVideoList.push(
                     <Col span={8} key={index+1}>
                         <div className="video">
-                            <div className="chapter">第{item.sort}节</div>
+                            {/*<div className="chapter">第{item.sort}节</div>*/}
                             <div className="videoSource">                                
                                 <div className="videoSrc">
                                     <video controls="controls" width="100%">
@@ -388,10 +348,41 @@ const ItemDetailsForm = Form.create()(
                         </Row>                        
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">模卡</h4>
+                        <Row gutter={24}>
+                            <Col span={4}></Col>
+                            <Col span={8}>
+                                <img src={data.modelCard} style={{width: "100%"}} alt=""/>
+                            </Col>                         
+                        </Row>
                         <h4 className="add-form-title-h4">自我介绍视频</h4>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <div className="video">                                   
+                                    <div className="videoSource">                                
+                                        <div className="videoSrc">
+                                            <video controls="controls" width="100%">
+                                                <source src={data.selfIntroduce} type="video/mp4" />                                                
+                                            </video>
+                                        </div>
+                                    </div>                                    
+                                </div>
+                            </Col>                         
+                        </Row>
+                        <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">作品视频</h4>                        
                         <div className="ant-line"></div>
                         <Row gutter={24}>
+                            <Col span={8}>
+                                <div className="video">                                   
+                                    <div className="videoSource">                                
+                                        <div className="videoSrc">
+                                            <video controls="controls" width="100%">
+                                                <source src={data.selfIntroduce} type="video/mp4" />                                                
+                                            </video>
+                                        </div>
+                                    </div>                                    
+                                </div>
+                            </Col>
                             {tempVideoList}                           
                         </Row>                       
                     </Form>
@@ -405,73 +396,35 @@ const ItemDetailsForm = Form.create()(
 class ItemDetails extends Component {
     state = {
         visible: false,
-        loading: true,        
-        // 报名名单课时列表
-        videoList: [],
-        // 报名名单基本信息
-        data: "",
+        data: {},// 报名名单基本信息
+        videoList: []
     };
 
     // 获取报名名单基本信息
     getData = () => {
-        reqwest({
-            url: '/sys/excellentCourse/detail',
-            type: 'json',
-            method: 'get',
-            data: {
-                id: this.props.id
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    // 已有所属分类写入
-                    json.data.typeIds = json.data.excellentCourseType.parentTypeName + '/' + json.data.excellentCourseType.typeName;
-                    this.setState({
-                        loading: false,
-                        data: json.data,
-                        videoList: json.data.lesson,
-                    });
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");
-                        // 返回登陆页
-                        this.props.toLoginPage();
-                    } else {
-                        message.error(json.message);
-                        this.setState({
-                            loading: false
-                        })
-                    }
-                }
+        this.setState({loading: true});
+        signDetail({id: this.props.id}).then((json) => {
+            if (json.result === 0) {               
+                this.setState({
+                    loading: false,
+                    data: json.data.data,
+                });
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     showModal = () => {        
         this.getData();
-        this.setState({
-            visible: true,
-        })
+        this.setState({visible: true});
     };
 
     handleCancel = () => {
         this.setState({
-            visible: false,
-            loading: true,           
-            // 报名名单课时列表
-            videoList: [],
-            // 报名名单基本信息
-            data: "",
+            visible: false,          
+            data: {},
+            videoList: []
         });
     };
 
@@ -541,9 +494,9 @@ class DataTable extends Component {
             },
             {
                 title: '所在地区',
-                dataIndex: 'gender',
+                dataIndex: 'area',
                 width: '10%',
-                render: (text, record) => this.renderColumns(text, record, 'gender'),
+                render: (text, record) => this.renderColumns(text, record, 'arear'),
             },            
             {
                 title: '报名时间',
@@ -553,9 +506,9 @@ class DataTable extends Component {
             },            
             {
                 title: '联系方式',
-                dataIndex: 'telephone',
+                dataIndex: 'phone',
                 width: '12%',                
-                render: (text, record) => this.renderColumns(text, record, 'telephone'),
+                render: (text, record) => this.renderColumns(text, record, 'phone'),
             },         
             {
                 title: '操作',
@@ -583,127 +536,88 @@ class DataTable extends Component {
         );
     }
 
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {                        
+            let tempGender = "";// 性别 女：0，男： 1
+            if (item.gender === 0) {
+                tempGender = "女";
+            }
+            if (item.source  === 1) {
+                tempGender = "男";
+            }
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,
+                sort: item.sort !== 0 ? item.sort : '',
+                name: item.name,
+                genderCode: item.gender,
+                gender: tempGender,
+                height: (item.height ? item.height : 0) + 'cm' ,
+                weight: (item.weigth ? item.weight : 0) + 'kg',
+                area: item.provinceName + '/' + item.cityName,
+                signTime: item.createTime,
+                phone: item.phone,
+            });
+        });
+        return result;
+    };
+
     // 获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
-        reqwest({
-            url: '/sys/excellentCourse/list',
-            type: 'json',
-            method: 'get',
-            data: {                              
-                name: keyword ? keyword.name : this.props.keyword.name,
-                startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
-                endTime: keyword ? keyword.endTime : this.props.keyword.endTime,                
-                pageNum: this.state.pagination.current,
-                pageSize: this.state.pagination.pageSize
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});                
-            },
-            success: (json) => {
-                const data = [];
-                if (json.result === 0) {
-                    if (json.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
-                    json.data.list.forEach((item, index) => {
-                        // 性别 女：0，男： 1
-                        let tempGender = "";
-                        if (item.gender === 0) {
-                            tempGender = "女";
-                        }
-                        if (item.source  === 1) {
-                            tempGender = "男";
-                        }
-                        data.push({
-                            key: index.toString(),
-                            id: item.id,
-                            index: index + 1,
-                            sort: item.sort !== 0 ? item.sort : '',
-                            name: item.name,
-                            nickname: item.nickname,
-                            height: (item.height ? item.height : 0) + 'cm' ,
-                            weight: (item.weigth ? item.weight : 0) + 'kg',
-                            genderCode: item.gender,
-                            gender: tempGender,
-                            signTime: item.createTime,
-                            telephone: item.telephone,
-                        });
-                    });
+        signList({                              
+            name: keyword ? keyword.name : this.props.keyword.name,
+            startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
+            endTime: keyword ? keyword.endTime : this.props.keyword.endTime,                
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize
+        }).then((json) => {
+            if (json.data.result === 0) {
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
-                        loading: false,
-                        data: data,
                         pagination: {
-                            total: json.data.total,
-                            current: this.state.pagination.current,
+                            current: 1,
                             pageSize: this.state.pagination.pageSize
                         }
-                    })
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false})
+                    }, () => {
+                        this.getData();
+                    });
+                    return
+                }                    
+                this.setState({
+                    loading: false,
+                    data: this.dataHandle(json.data.data.list),
+                    pagination: {
+                        total: json.data.data.total,
+                        current: this.state.pagination.current,
+                        pageSize: this.state.pagination.pageSize
                     }
-                }
+                })
+            } else {
+                this.exceptHandle(json.data);
             }
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
-    // 设置排序
-    handleSort = (row) => {
-        this.setState({loading: true});
-        reqwest({
-            url: '/sys/excellentCourse/updateSort',
-            type: 'json',
-            method: 'post',
-            data: {                
-                id: row.id,// 报名名单Id                
-                sort: Number(row.sort),// 排序
-            },
-            headers: {
-                Authorization: sessionStorage.token
-            },
-            error: (XMLHttpRequest) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            },
-            success: (json) => {
-                if (json.result === 0) {
-                    this.setState({loading: false});
-                    this.getData();
-                } else {
-                    if (json.code === 901) {
-                        message.error("请先登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else if (json.code === 902) {
-                        message.error("登录信息已过期，请重新登录");                        
-                        this.props.toLoginPage();// 返回登陆页
-                    } else {
-                        message.error(json.message);
-                        this.setState({loading: false});
-                    }
-                }
-            }
-        });
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false})
+        }
     };
+
+    errorHandle = (err) => {
+        message.error(err.message);
+        this.setState({loading: false});
+    };s
 
     // 表格参数变化处理
     handleTableChange = (pagination, filters) => {

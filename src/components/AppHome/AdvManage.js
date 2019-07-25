@@ -186,8 +186,8 @@ const ItemAddForm = Form.create()(
                                         ],
                                     })(
                                         <Select style={{width: '100%'}} placeholder="请选择广告位置">                                           
-                                            <Option key={3} value={3}>育儿资讯轮播 </Option>
-                                            <Option key={4} value={4}>首页轮播</Option>
+                                            <Option key={1} value={1}>明星banner</Option>
+                                            <Option key={2} value={2}>通告banner</Option>
                                         </Select>                                       
                                     )}
                                 </FormItem>
@@ -339,9 +339,7 @@ class ItemAdd extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFieldsAndScroll((err, values) => {
-            if (err) {
-                return;
-            }
+            if (err) {return;}
             // 广告图片校验
             values.photo = this.state.viewPic;
             if (!values.photo) {
@@ -512,8 +510,8 @@ const ItemEditForm = Form.create()(
                                                 ],
                                             })(
                                                 <Select style={{width: '100%'}} placeholder="请选择广告位置">
-                                                    <Option key={3} value={3}>育儿资讯轮播</Option>
-                                                    <Option key={4} value={4}>首页轮播</Option>
+                                                    <Option key={1} value={1}>明星banner</Option>
+                                                    <Option key={2} value={2}>通告banner</Option>
                                                 </Select>
                                             )}
                                         </FormItem>
@@ -908,25 +906,19 @@ class DataTable extends Component {
                 }
                 json.data.data.list.forEach((item, index) => {                    
                     let tempStatus = "";
-                    if (item.status === 1) {
-                        tempStatus = "审核中"
-                    }
                     if (item.status === 2) {
-                        tempStatus = "启用"
+                        tempStatus = "上架"
                     }
                     if (item.status === 3) {
-                        tempStatus = "审核失败"
-                    }
-                    if (item.status === 0) {
-                        tempStatus = "禁用"
-                    }
+                        tempStatus = "下架"
+                    }                    
                     // 广告位置
                     let tempTypeName = "";                    
-                    if (item.type === 3) {
-                        tempTypeName = "育儿资讯轮播"
+                    if (item.type === 1) {
+                        tempTypeName = "明星banner"
                     }
-                    if (item.type === 4) {
-                        tempTypeName = "首页轮播"
+                    if (item.type === 2) {
+                        tempTypeName = "通告banner"
                     }
                     data.push({
                         key: index.toString(),
@@ -1002,7 +994,7 @@ class DataTable extends Component {
     // 广告上架,下架
     itemBan = (id, status) => {
         this.setState({loading: true});
-        const data = {
+        const data = { // 2:上架, 3:下架
             id: id,
             status: status === "上架" ? 3 : 2
         };

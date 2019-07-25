@@ -12,7 +12,6 @@ import {
     message,
     Row,
     Col,
-    Radio,
     InputNumber,
     DatePicker,    
     Cascader,
@@ -22,7 +21,7 @@ import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import moment from 'moment';
 import { checkTel, pCAName, getPower } from '../../config/common';
-import { configUrl, getToken, starList, saveStar, starDetail, updateStar, NewestStar, sortStar, putAwayStar, starTypeList, childrenList } from '../../config';
+import { configUrl, getToken, starList, saveStar, starDetail, updateStar, NewestStar, sortStar, putAwayStar, childrenList } from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -127,7 +126,7 @@ const ItemAddForm = Form.create()(
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        const optionsOfCity = pCAName(provinceList, data.areaId).optionsOfCity;
+        const optionsOfArea = pCAName(provinceList, data.areaId).optionsOfArea;
         let currentArea = pCAName(provinceList, data.areaId).currentArea;
         
         // 孩子选项生成
@@ -181,7 +180,6 @@ const ItemAddForm = Form.create()(
                 <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择头像</div>
             </div>
         );
-
         
         // 已上传图片列表
         const photoExist = [];
@@ -210,8 +208,7 @@ const ItemAddForm = Form.create()(
                 <Icon type={photoLoading03 ? 'loading' : 'plus'}/>
                 <div className="ant-upload-text" style={{display: photoLoading03 ? "none" : "block"}}>选择图片</div>
             </div>
-        );
-        
+        );        
 
         // 视频上传 处理
         const beforeUpload02 = (file) => {           
@@ -345,7 +342,7 @@ const ItemAddForm = Form.create()(
                                             message: '所在地区不能为空',
                                         }],
                                     })(
-                                        <Cascader options={optionsOfCity} placeholder="请选择所在地区"/>
+                                        <Cascader options={optionsOfArea} placeholder="请选择所在地区"/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -403,8 +400,7 @@ const ItemAddForm = Form.create()(
                             </Col>
                             <Col span={8}>
                                 <FormItem className="birthday"  label="生日：">
-                                    {getFieldDecorator('birthday', {
-                                        // initialValue: data.birthday,
+                                    {getFieldDecorator('birthday', {                                       
                                         initialValue: moment(data.birthday || new Date(), "YYYY-MM-DD"),
                                         rules: [{
                                             required: true,
@@ -962,7 +958,7 @@ const ItemEditForm = Form.create()(
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        const optionsOfCity = pCAName(provinceList, data.areaId).optionsOfCity;
+        const optionsOfArea = pCAName(provinceList, data.areaId).optionsOfArea;
         let currentArea = pCAName(provinceList, data.areaId).currentArea;
         
         // 孩子选项生成
@@ -1180,7 +1176,7 @@ const ItemEditForm = Form.create()(
                                             message: '所在地区不能为空',
                                         }],
                                     })(
-                                        <Cascader options={optionsOfCity} placeholder="请选择所在地区"/>
+                                        <Cascader options={optionsOfArea} placeholder="请选择所在地区"/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -1239,7 +1235,6 @@ const ItemEditForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="birthday"  label="生日：">
                                     {getFieldDecorator('birthday', {
-                                        // initialValue: data.birthday,
                                         initialValue: moment(data.birthday || new Date(), "YYYY-MM-DD"),
                                         rules: [{
                                             required: true,
@@ -1754,7 +1749,7 @@ class ItemEdit extends Component {
 // 明星详情表单
 const ItemDetailsForm = Form.create()(
     (props) => {
-        const {visible, onCancel, form, data, setChildren, childList, picList, videoList, confirmLoading} = props;
+        const {visible, onCancel, form, data, childList, picList, videoList, confirmLoading} = props;
         const {getFieldDecorator, setFieldsValue} = form;
 
         const optionsOfChild = [];
@@ -1916,23 +1911,22 @@ const ItemDetailsForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="childId"  label="孩子：">
                                     {getFieldDecorator('childId', {
-                                        // initialValue: data.childId || (childList.length === 0 ? 0 : undefined),
+                                        initialValue: data.childId || (childList.length === 0 ? 0 : undefined),
                                         rules: [{
                                             required: true,
                                             message: "孩子不能为空"
                                         }],
                                     })(
-                                    <div></div>
-                                        /*<Select  disabled allowClear onChange={(value) => setRelationship(value)} placeholder="请选择孩子">
+                                        <Select  disabled allowClear onChange={(value) => setRelationship(value)} placeholder="请选择孩子">
                                             {optionsOfChild}
-                                        </Select>*/
+                                        </Select>
                                     )}
                                 </FormItem>
                             </Col>
                             <Col span={8}>
                                 <FormItem className="relationship"  label="用户与孩子关系：">
                                     {getFieldDecorator('relationship', {
-                                        // initialValue: data.relationship,
+                                        initialValue: data.relationship,
                                         rules: [{
                                             required: true,
                                             message: "用户与孩子关系不能为空"
@@ -2046,7 +2040,7 @@ class ItemDetails extends Component {
         }).catch((err) => this.errorHandle(err));
     };
 
-    showModal = () => {        
+    showModal = () => {
         this.getData();
         this.setState({visible: true});
     };
@@ -2230,15 +2224,14 @@ class DataTable extends Component {
     // 获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
-        const params = {
-            name: keyword ? keyword.courseName : this.props.keyword.courseName,
+        starList({
+            name: keyword ? keyword.name : this.props.keyword.name,
             gender: keyword ? keyword.gender : this.props.keyword.gender,
             startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
             endTime: keyword ? keyword.endTime : this.props.keyword.endTime,                
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
-        };
-        starList(params).then((json) => {
+        }).then((json) => {
             const data = [];
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
@@ -2294,69 +2287,60 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.props.exceptHandle(json.data);
-                this.setState({loading: false});
+                this.exceptHandle(json.data);               
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 设置排序
     handleSort = (row) => {
         this.setState({loading: true});
-        const data = {
+        sortStar({
             id: row.id,// 明星Id                
             sort: Number(row.sort),// 排序
-        };
-        sortStar(data).then((json) => {
+        }).then((json) => {
             if (json.data.result === 0) {
                 this.setState({loading: false});
                 this.getData();
             } else {
-                this.props.exceptHandle(json.data);
-                this.setState({loading: false});
+                this.exceptHandle(json.data);                
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 明星上架,下架
     itemBan = (id, status) => {
         this.setState({loading: true});
-        const data = {
+        putAwayStar({
             id: id,
-            status: status === "上架" ? 3 : 2
-        };
-        putAwayStar(data).then((json) => {
+            status: status === "上架" ? 3 : 2 // 2:上架，3:下架
+        }).then((json) => {
             if (json.data.result === 0) {
                 message.success(status === "上架" ? "明星下架成功" : "明星上架成功");
                 this.getData();
             } else {
-                this.props.exceptHandle(json.data);
-                this.setState({loading: false});
+                this.exceptHandle(json.data);                
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");                        
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");                        
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else {
-    //         message.error(json.message);
-    //     }
-    //     this.setState({loading: false});
-    // };
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false});
+        }        
+    };
+
+    errorHandle = (err) => {
+        message.error('获取失败');
+        this.setState({loading:false});
+    }
 
     // 表格参数变化处理
     handleTableChange = (pagination, filters) => {
@@ -2426,10 +2410,10 @@ class StarManage extends Component {
             opObj: {},
             // 获取明星列表所需关键词
             keyword: {
-                courseName: '',
-                startTime: "",
-                endTime: "",
+                name: '',
                 gender: '',
+                startTime: "",
+                endTime: ""                
             },
             startValue: null,
             endValue: null,
@@ -2480,13 +2464,12 @@ class StarManage extends Component {
         this.setState({opObj: getPower(this)});        
     };
 
-    // 搜索及明星名称，姓名，昵称设置
+    // 搜索及明星姓名，昵称设置
     search = (value) => {
         this.setState({
             keyword: {
-                courseName: value,
-                gender:this.state.keyword.gender,
-                cityCode: this.state.keyword.cityCode,
+                name: value,
+                gender:this.state.keyword.gender,               
                 startTime: this.state.keyword.startTime,
                 endTime: this.state.keyword.endTime,
             }
@@ -2497,9 +2480,8 @@ class StarManage extends Component {
     setGender = (value) => {
         this.setState({
             keyword: {
-                courseName: this.state.keyword.courseName,
-                gender: value,
-                cityCode: this.state.keyword.cityCode,                
+                name: this.state.keyword.name,
+                gender: value,                              
                 startTime: this.state.keyword.startTime,
                 endTime: this.state.keyword.endTime,
             }
@@ -2511,9 +2493,8 @@ class StarManage extends Component {
         this.setState({
             startValue: date,
             keyword: {
-                courseName: this.state.keyword.courseName,
-                gender: this.state.keyword.gender,
-                cityCode: this.state.keyword.cityCode,
+                name: this.state.keyword.name,
+                gender: this.state.keyword.gender, 
                 startTime: dateString,
                 endTime: this.state.keyword.endTime,
             }
@@ -2525,9 +2506,8 @@ class StarManage extends Component {
         this.setState({
             endValue: date,
             keyword: {
-                courseName: this.state.keyword.courseName,
-                gender: this.state.keyword.gender,
-                cityCode: this.state.keyword.cityCode,                
+                name: this.state.keyword.name,
+                gender: this.state.keyword.gender,                              
                 startTime: this.state.keyword.startTime,
                 endTime: dateString,
             }
