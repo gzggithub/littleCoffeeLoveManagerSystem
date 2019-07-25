@@ -165,13 +165,13 @@ export const saveStar = data => {
 // 编辑
 export const updateStar = data => {
     setAuthorization();
-    return axios.post(api.updateStar, createPostParams(data));
+    return axios.post(api.updateStar, data);
 }
 
 // 详情
-export const getStarDetail = params => {
+export const starDetail = params => {
     setAuthorization();
-    return axios.get(api.getStarDetail, {params: params});
+    return axios.get(api.starDetail, {params: params});
 }
 // 复制
 export const NewestStar = params => {
@@ -198,9 +198,9 @@ export const starTypeList = params => {
 }
 
 // 列表项
-export const getStarList = params => {
+export const childrenList = params => {
     setAuthorization();
-    return axios.get(api.getStarList, {params: params});
+    return axios.get(api.childrenList, {params: params});
 }
 
 /*-------------------------------通告管理-------------------------------*/
@@ -465,11 +465,10 @@ export const roleUserList = params => {
     return axios.get(api.roleUserList, {params: params});
 }
 
-
 // 添加人员
 export const addMember = data => {
     setAuthorization();
-    return axios.post(api.addMember, createPostParams(data));
+    return axios.post(api.addMember, data);
 }
 
 // 获取权限项

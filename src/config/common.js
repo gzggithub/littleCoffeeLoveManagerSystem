@@ -56,6 +56,7 @@ export function checkPassword (rule, value, callback) {
 
 // 根据省市区id 查找 省市区name
 export const pCAName = (provinceList, adcode) => {
+    console.log(adcode)
     const optionsOfCity = [{value: "0", label: "全国"}];
     let currentAreaName = [];
     let currentArea = [];
@@ -68,7 +69,7 @@ export const pCAName = (provinceList, adcode) => {
                     if (subItem.districtList) {
                         subItem.districtList.forEach((thirdItem) => {
                             subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
-                            if (thirdItem.adcode === adcode) {
+                            if (thirdItem.adcode === String(adcode)) {
                                 console.log(888)
                                 currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];
                                 currentAreaName = [item.name, subItem.name, thirdItem.name];
@@ -83,6 +84,49 @@ export const pCAName = (provinceList, adcode) => {
     }
     return { optionsOfCity, currentArea, currentAreaName };
 }
+
+// 获取当前登录人对此菜单的操作权限 (多一级)
+export const getPower01 = (_this) => {
+    let data = {};
+    // 菜单信息为空则直接返回登陆页
+    if (!sessionStorage.menuListOne) {
+        _this.toLoginPage();
+        return
+    }
+    JSON.parse(sessionStorage.menuListOne).forEach((item) => {
+        item.children.forEach((subItem) => {                
+            subItem.children.forEach((thirdItem) => {
+                if (thirdItem.url === _this.props.location.pathname) {                   
+                    thirdItem.children.forEach((fourthItem) => {
+                        data[fourthItem.url] = true;
+                    });                    
+                }
+            })
+        })
+    })
+    return data;
+};
+
+// 获取当前登录人对此菜单的操作权限
+export const getPower = (_this) => {
+    console.log(555);
+    let data = {};
+    // 菜单信息为空则直接返回登陆页
+    if (!sessionStorage.menuListOne) {
+        _this.toLoginPage();
+        return
+    }
+    JSON.parse(sessionStorage.menuListOne).forEach((item) => {
+        item.children.forEach((subItem) => {
+            if (subItem.url === _this.props.location.pathname) {
+                subItem.children.forEach((thirdItem) => {
+                    data[thirdItem.url] = true;
+                });
+            }
+        })
+    });
+    return data;
+};
 
 // 日期处理函数
 export const timeHandle = (para)  => {

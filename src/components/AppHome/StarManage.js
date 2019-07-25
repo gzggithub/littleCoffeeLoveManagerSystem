@@ -20,8 +20,9 @@ import {
 } from 'antd';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
-import { checkTel, pCAName } from '../../config/common';
-import { configUrl, getToken, starList, saveStar, getStarDetail, updateStar, NewestStar, sortStar, putAwayStar, starTypeList, getStarList } from '../../config';
+import moment from 'moment';
+import { checkTel, pCAName, getPower } from '../../config/common';
+import { configUrl, getToken, starList, saveStar, starDetail, updateStar, NewestStar, sortStar, putAwayStar, starTypeList, childrenList } from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -122,33 +123,37 @@ class EditableCell extends Component {
 // 新增、复制明星表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03, picUpload02, picList, setPicList, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
-        const {getFieldDecorator} = form;
+        const {visible, onCancel, onCreate, form, data, setChildren, childList, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03, picUpload02, picList, setPicList, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
+        const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        // const optionsOfCity = [{value: "0", label: "全国"}];
         const optionsOfCity = pCAName(provinceList, data.areaId).optionsOfCity;
         let currentArea = pCAName(provinceList, data.areaId).currentArea;
-        // if (provinceList.length) {
-        //     provinceList.forEach((item) => {
-        //         let children = [];
-        //         if (item.districtList) {
-        //             item.districtList.forEach((subItem) => {
-        //                 let subChildren = [];
-        //                 if (subItem.districtList) {
-        //                     subItem.districtList.forEach((thirdItem) => {
-        //                         subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
-        //                         if (Number(thirdItem.adcode) === data.areaId) {                          
-        //                             currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];// 当前城市设为选中项
-        //                         }
-        //                     });
-        //                 }
-        //                 children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
-        //             });
-        //         }
-        //         optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-        //     });
-        // }
+        
+        // 孩子选项生成
+        const optionsOfChild = [];
+        if (childList.length) {
+            childList.forEach((item) => {
+                optionsOfChild.push(<Option key={item.id} value={item.id}>{item.name}</Option>)
+            })
+        }
+
+        const setRelationship = (value) => {
+            if (value === 0) {
+                setFieldsValue({"relationship": 0});
+            } else {
+                const fnFilter = (para) => {
+                    return para.id === value;
+                };
+                if (childList.length) {
+                    let tempChildList = childList.filter(fnFilter);
+                    setFieldsValue({
+                        "relationship": tempChildList[0].relationship, 
+                        "birthday": moment(tempChildList[0].birthday)
+                    });
+                }                
+            }
+        };        
 
         // 图片处理
         const beforeUpload = (file) => {
@@ -234,8 +239,8 @@ const ItemAddForm = Form.create()(
                         <div className="videoCol">
                             <div className="chapter">序号{item.sort || (videoList.length - index)}</div>
                             <div className="videoSize">{item.videoSize} M</div>
-                            <video src={item.video} id="video" controls="controls" preload="auto" width="100%"></video>
-                            <input className="videoCourseName" disabled={item.readOnly} onChange={(e) => onChangeCourseName(e.target.value, index)} defaultValue={item.name} placeholder="请输入明星名称"/>                       
+                            <video src={item.resource} id="video" controls="controls" preload="auto" width="100%"></video>
+                            <input className="videoCourseName" disabled={item.readOnly} onChange={(e) => onChangeCourseName(e.target.value, index)} defaultValue={item.name} placeholder="请输入作品名称"/>
                             <ul className="video-edit-ul-items">
                                 <li className="item-video" onClick={() => editVideo(index)}>
                                     <Icon type="edit" />编辑
@@ -262,6 +267,7 @@ const ItemAddForm = Form.create()(
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
+                maskClosable={false}
                 destroyOnClose={true}>
                 <div className="course-add course-form item-form quality-course-form star-manage-form">
                     <Form layout="vertical">
@@ -352,7 +358,60 @@ const ItemAddForm = Form.create()(
                                             validator: checkTel
                                         }],
                                     })(
-                                        <Input placeholder="请输入联系方式"/>
+                                        <Input onBlur={(e) => setChildren(e.target.value)} placeholder="请输入联系方式"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="childId"  label="孩子：">
+                                    {getFieldDecorator('childId', {
+                                        initialValue: data.childId || (childList.length === 0 ? 0 : undefined),
+                                        rules: [{
+                                            required: true,
+                                            message: "孩子不能为空"
+                                        }],
+                                    })(
+                                        <Select allowClear onChange={(value) => setRelationship(value)} placeholder="请选择孩子">
+                                            {optionsOfChild}
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="relationship"  label="用户与孩子关系：">
+                                    {getFieldDecorator('relationship', {
+                                        initialValue: data.relationship,
+                                        rules: [{
+                                            required: true,
+                                            message: "用户与孩子关系不能为空"
+                                        }],
+                                    })(
+                                        <Select allowClear placeholder="请选择用户与孩子关系">
+                                            <Option value={0}>妈妈</Option>
+                                            <Option value={1}>爸爸</Option>
+                                            <Option value={2}>爷爷</Option>
+                                            <Option value={3}>奶奶</Option>
+                                            <Option value={4}>外公</Option>
+                                            <Option value={5}>外婆</Option>
+                                            <Option value={6}>其他</Option>
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="birthday"  label="生日：">
+                                    {getFieldDecorator('birthday', {
+                                        // initialValue: data.birthday,
+                                        initialValue: moment(data.birthday || new Date(), "YYYY-MM-DD"),
+                                        rules: [{
+                                            required: true,
+                                            message: "生日不能为空"
+                                        }],
+                                    })(
+                                        <DatePicker style={{width: "100%"}} placeholder="请选择生日"/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -468,6 +527,7 @@ class ItemAdd extends Component {
             visible: false,
             // 明星基本信息
             data: {},
+            childList: [],
             // 明星图片相关变量            
             uploadToken: "",// 获取上传图片token
             viewPic: "",
@@ -488,14 +548,18 @@ class ItemAdd extends Component {
     getData = () => {
         NewestStar({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
-                // 信息写入
                 this.setState({
+                    visible: true,
                     data: json.data.data,
-                    viewPic: json.data.data.pic,
+                    viewPic: json.data.data.photo,
+                    viewPic03: json.data.data.picList.length ? json.data.data.picList[0] : '',
                     picList: json.data.data.picList,
-                    videoList: json.data.data.lesson
-                });
-            } else {
+                    videoList: json.data.data.videoList
+                }, () => {
+                    console.log(this.state.data)
+                    this.setChildren(json.data.data.phone);
+                });           
+            } else {               
                 this.exceptHandle(json.data);                
             }
         }).catch((err) => {
@@ -508,9 +572,11 @@ class ItemAdd extends Component {
         if (props === 1) {// 复制明星            
             this.getData();
         } else if (props === 2) {                       
-            this.setState({data: {}});
-        }        
-        this.setState({visible: true}); 
+            this.setState({
+                data: {},
+                visible: true
+            });
+        }
     };
 
     // 倒计时
@@ -531,6 +597,19 @@ class ItemAdd extends Component {
             sessionStorage.removeItem("courseData");
             modal.destroy();
         }, secondsToGo * 1000);
+    };
+    
+    // 孩子列表
+    setChildren = (value) => {
+        childrenList({phone: value}).then((json) => {
+            if(json.data.result === 0) {
+                this.setState({
+                    childList: json.data.data           
+                })
+            } else {
+                this.exceptHandle(json.data);
+            }
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 图片处理    
@@ -606,7 +685,8 @@ class ItemAdd extends Component {
         const observable = qiniu.upload(file, key, token, config);
         observable.subscribe(observer); // 上传开始        
     };
-
+    
+    // 图片删除
     setPicList = (index) => {
         let data = this.state.picList;
         data.splice(index, 1);
@@ -637,9 +717,7 @@ class ItemAdd extends Component {
                 error (err) {
                     console.log(err)
                     message.error(err.message ? err.message : "视频提交失败");
-                    _this.setState({
-                        videoLoading: false,
-                    })
+                    _this.setState({videoLoading: false});
                 }, 
                 complete (res) {
                     console.log(res);
@@ -647,7 +725,7 @@ class ItemAdd extends Component {
                     let videoList = _this.state.videoList;
                     videoList.unshift({ 
                         sort: 0,                      
-                        video: global.config.photoUrl + res.key,
+                        resource: configUrl.photoUrl + res.key,
                         videoSize: videoSize,
                         readOnly: true,
                     });
@@ -670,10 +748,10 @@ class ItemAdd extends Component {
         // 视频没有播放完duration是undefined
         setTimeout(()=> {
             // let ele = document.getElementById('video' + index);
-            // console.log(document.getElementById('video'))
-            // let duration = document.getElementById('video').duration;
+            console.log(document.getElementById('video'))
+            let duration = document.getElementById('video').duration;
             console.log(duration);
-            let duration = 5;
+            // let duration = 5;
             let {videoList} = this.state;
             this.setState({
                 videoList: videoList.map((item, idx) => idx === index ? {...item, duration: duration, readOnly: false,} : item).sort((a, b) => {return  a.sort - b.sort;})  
@@ -720,7 +798,8 @@ class ItemAdd extends Component {
             visible: false
         }, () => {
             this.setState({
-                data: {},               
+                data: {},
+                childList: [],             
                 viewPic: "",
                 photoLoading: false,
                 viewPic03: "",
@@ -777,7 +856,7 @@ class ItemAdd extends Component {
                         sort: item.sort,
                         duration: item.duration,
                         // video: item.video.slice(configUrl.photoUrl.length)
-                        resource: item.video.slice(configUrl.photoUrl.length)
+                        resource: item.resource.slice(configUrl.photoUrl.length)
                     })
                 })
             }
@@ -786,7 +865,7 @@ class ItemAdd extends Component {
                 name: values.name,
                 gender: values.gender,
                 height: values.height,
-                weight: values.height,
+                weight: values.weight,
                 provinceId: values.area[0],
                 provinceName: currentAreaName[0],
                 cityId: values.area[1],
@@ -794,9 +873,12 @@ class ItemAdd extends Component {
                 areaId: values.area[2],
                 areaName: currentAreaName[2],
                 phone: values.phone,
+                childId: values.childId,
+                relationship: values.relationship,
+                birthday: values.birthday.format('YYYY-MM-DD'),
                 photo: values.avatar,
                 description: values.personalProfile,
-                piclist: tempPicList,
+                picList: tempPicList,
                 videoList: tempVideoList
             };
             this.setState({loading: true});
@@ -808,10 +890,7 @@ class ItemAdd extends Component {
                 } else {
                     this.exceptHandle(json.data);
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            })
+            }).catch((err) => this.errorHandle(err));
         });
     };
 
@@ -822,18 +901,24 @@ class ItemAdd extends Component {
         } else if (json.code === 902) {
             message.error("登录信息已过期，请重新登录");                        
             this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 1205) {// 判断没有添加数据时，提示信息                    
+            this.countDown();
         } else {
             message.error(json.message);
             this.setState({loading: false})
         }
     };
 
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
+    };
+
     saveFormRef = (form) => {
         this.form = form;
     };
 
-    render() {
-        console.log(this.props.provinceList);
+    render() {        
         return (
             <div style={{display: this.props.opStatus ? "block" : "none"}}>
                 <Button onClick={() => {this.showModal(1)}}>复制</Button>
@@ -844,6 +929,8 @@ class ItemAdd extends Component {
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}                                        
                     data={this.state.data}
+                    setChildren={this.setChildren}
+                    childList={this.state.childList}
                     provinceList={this.props.provinceList}                   
                     reqwestUploadToken={this.reqwestUploadToken}                                        
                     picUpload={this.picUpload}
@@ -857,14 +944,12 @@ class ItemAdd extends Component {
                     picUpload02={this.picUpload02}
                     viewVideo={this.state.viewVideo}                  
                     videoList={this.state.videoList}
-                    setVideoList={this.setVideoList}
                     videoLoading={this.state.videoLoading}
                     editVideo={this.editVideo}                   
                     deleteVideo={this.deleteVideo}
                     onChangeCourseName={this.onChangeCourseName}
                     onChangeSort={this.onChangeSort}               
-                    confirmLoading={this.state.loading}
-                />                
+                    confirmLoading={this.state.loading}/>                
             </div>
         );
     }
@@ -873,36 +958,40 @@ class ItemAdd extends Component {
 // 明星信息编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, editVideo, deleteVideo, onChangeCourseName, onChangeSort, form, data, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03, picUpload02, viewVideo, videoList, videoLoading, confirmLoading} = props;
-        const {getFieldDecorator} = form;
+        const {visible, onCancel, onCreate, form, data, setChildren, childList, provinceList, reqwestUploadToken, viewPic, picUpload, photoLoading, viewPic03, picUpload03, photoLoading03, picUpload02, picList, setPicList, viewVideo, videoList, editVideo, deleteVideo, onChangeCourseName, onChangeSort, videoLoading, confirmLoading} = props;
+        const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        const optionsOfCity = [{value: "0", label: "全国"}];
-        let currentArea = [];
-        if (provinceList.length) {
-            provinceList.forEach((item) => {
-                let children = [];
-                if (item.districtList) {
-                    item.districtList.forEach((subItem) => {
-                        let subChildren = [];
-                        if (subItem.districtList) {
-                            subItem.districtList.forEach((thirdItem) => {
-                                subChildren.push({value: thirdItem.adcode, label: thirdItem.name});
-                                if (Number(thirdItem.adcode) === data.areaId) {                          
-                                    currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];// 当前城市设为选中项
-                                }
-                            });
-                        }
-                        children.push({value: subItem.adcode, label: subItem.name, children: subChildren});
-                    });
-                }
-                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-            });
+        const optionsOfCity = pCAName(provinceList, data.areaId).optionsOfCity;
+        let currentArea = pCAName(provinceList, data.areaId).currentArea;
+        
+        // 孩子选项生成
+        const optionsOfChild = [];
+        if (childList.length) {
+            childList.forEach((item) => {
+                optionsOfChild.push(<Option key={item.id} value={item.id}>{item.name}</Option>)
+            })
         }
+
+        const setRelationship = (value) => {
+            if (value === 0) {
+                setFieldsValue({"relationship": 0});
+            } else {
+                const fnFilter = (para) => {
+                    return para.id === value;
+                };
+                if (childList.length) {
+                    let tempChildList = childList.filter(fnFilter);
+                    setFieldsValue({
+                        "relationship": tempChildList[0].relationship, 
+                        "birthday": moment(tempChildList[0].birthday)
+                    });
+                }                
+            }
+        };
 
         // 图片处理
         const beforeUpload = (file) => {
-            console.log("file--1212121")
             const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
             if (!isIMG) {
                 message.error('文件类型错误');
@@ -915,13 +1004,12 @@ const ItemEditForm = Form.create()(
             return isIMG && isLt2M;
         };
 
+        // Avatar 头像
         const picHandleChange = (info) => {
-            // 渲染的问题，加个定时器延迟半秒
-            setTimeout(()=>{
+            setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 picUpload(info.file);
             }, 500);
         };
-
         const uploadButton = (
             <div>
                 <Icon type={photoLoading ? 'loading' : 'plus'}/>
@@ -929,35 +1017,50 @@ const ItemEditForm = Form.create()(
             </div>
         );
 
+        
+        // 已上传图片列表
+        const photoExist = [];
+        if (picList.length) {
+            console.log(picList)
+            picList.forEach((item, index) => {
+                photoExist.push(
+                    <div className="photoExist-item clearfix" key={index + 1}>
+                        <img src={item} alt=""/>
+                        <div className="remove">
+                            <Button type="dashed" shape="circle" icon="minus" onClick={() => setPicList(index)}/>
+                        </div>
+                    </div>
+                )
+            });
+        }
+        
+        //  生活照
         const picHandleChange03 = (info) => {
-            // 渲染的问题，加个定时器延迟半秒
-            setTimeout(()=>{
+            setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 picUpload03(info.file);
             }, 500);
         };
-
         const uploadButton03 = (
             <div>
                 <Icon type={photoLoading03 ? 'loading' : 'plus'}/>
                 <div className="ant-upload-text" style={{display: photoLoading03 ? "none" : "block"}}>选择图片</div>
             </div>
         );
+        
 
         // 视频上传 处理
-        const beforeUpload02 = (file) => {                 
-            reqwestUploadToken(file);
+        const beforeUpload02 = (file) => {           
+            reqwestUploadToken(file);            
         };
-
         const picHandleChange02 = (info) => {
-            setTimeout(() => { // 渲染的问题，加个定时器延迟半秒
+            setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 picUpload02(info.file);
             }, 500);
         };
-
         const uploadButton02 = (
             <div>
                 <Icon style={{fontSize: "50px"}} type={videoLoading ? 'loading' : 'video-camera'}/>
-                <div className="ant-upload-text" style={{display: videoLoading ? "none" : "block"}}>添加课时</div>
+                <div className="ant-upload-text" style={{display: videoLoading ? "none" : "block"}}>添加视频</div>
             </div>
         );
 
@@ -965,27 +1068,26 @@ const ItemEditForm = Form.create()(
         const tempVideoList = [];
         if (videoList.length) {
             console.log(videoList);
-            videoList.forEach((item, index) => {                
-                item.sort = videoList.length - index;
-                item.name = "测试" + index;
-                console.log(item.sort);
+            videoList.forEach((item, index) => {
                 tempVideoList.push(
                     <Col span={8} key={index+1}>
-                        <div className="chapter">第{item.sort}节</div>
-                        <div className="videoSize">{item.videoSize} M</div>
-                        <video src={item.video} controls="controls" width="100%"></video>
-                        <input className="videoCourseName" onChange={(e) => onChangeCourseName(e, index)} defaultValue={item.name} placeholder="请输入明星名称"/>                       
-                        <ul className="video-edit-ul-items">
-                            <li className="item-video" onClick={() => editVideo(index)}>
-                                <Icon type="edit" />编辑
-                            </li>
-                            <li className="item-video" onClick={() => editVideo(index)}>
-                                <input className="item-video" type="text" onChange={(e) => onChangeSort(e, index)} placeholder="双击排序"/>
-                            </li>                            
-                            <li className="item-video" onClick={() => deleteVideo(index)}>
-                                <Icon type="delete" />删除
-                            </li>
-                        </ul>                        
+                        <div className="videoCol">
+                            <div className="chapter">序号{item.sort || (videoList.length - index)}</div>
+                            <div className="videoSize">{item.videoSize} M</div>
+                            <video src={item.resource} id="video" controls="controls" preload="auto" width="100%"></video>
+                            <input className="videoCourseName" disabled={item.readOnly} onChange={(e) => onChangeCourseName(e.target.value, index)} defaultValue={item.name} placeholder="请输入作品名称"/>
+                            <ul className="video-edit-ul-items">
+                                <li className="item-video" onClick={() => editVideo(index)}>
+                                    <Icon type="edit" />编辑
+                                </li>
+                                <li className="item-video">
+                                    <input disabled={item.readOnly} type="text" onChange={(e) => onChangeSort(e.target.value, index)} placeholder="双击排序"/>
+                                </li>                            
+                                <li className="item-video" onClick={() => deleteVideo(index)}>
+                                    <Icon type="delete" />删除
+                                </li>
+                            </ul>
+                        </div>                        
                     </Col>)
             })
         }
@@ -1000,13 +1102,14 @@ const ItemEditForm = Form.create()(
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
+                maskClosable={false}
                 destroyOnClose={true}>
                 <div className="course-add course-form item-form quality-course-form star-manage-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
                         <Row gutter={24}>
                             <Col span={8}>
-                                <FormItem className="courseName"  label="姓名：">
+                                <FormItem className="name"  label="姓名：">
                                     {getFieldDecorator('name', {
                                         initialValue: data.name,                                      
                                         rules: [{
@@ -1048,7 +1151,7 @@ const ItemEditForm = Form.create()(
                                             message: '身高不能为空',
                                         }],
                                     })(
-                                        <InputNumber style={{width: "90%"}} precision={2} placeholder="请填写身高"/>
+                                        <InputNumber style={{width: "90%"}} step={1} precision={2} placeholder="请填写身高"/>
                                     )} CM
                                 </FormItem>
                             </Col>
@@ -1064,7 +1167,7 @@ const ItemEditForm = Form.create()(
                                             message: '体重不能为空',
                                         }],
                                     })(
-                                        <InputNumber style={{width: "90%"}} precision={3} placeholder="请填写体重"/>
+                                        <InputNumber style={{width: "90%"}} step={0.1} precision={3} placeholder="请填写体重"/>
                                     )} KG
                                 </FormItem>
                             </Col>
@@ -1082,15 +1185,68 @@ const ItemEditForm = Form.create()(
                                 </FormItem>
                             </Col>
                             <Col span={8}>
-                                <FormItem className="telephone"  label="联系方式：">
-                                    {getFieldDecorator('telephone', {
-                                        initialValue: data.telephone,                                      
+                                <FormItem className="phone"  label="联系方式：">
+                                    {getFieldDecorator('phone', {
+                                        initialValue: data.phone,                                      
                                         rules: [{
                                             required: true,
-                                            message: '联系方式不能为空',
+                                            validator: checkTel
                                         }],
                                     })(
-                                        <Input placeholder="请输入联系方式"/>
+                                        <Input onBlur={(e) => setChildren(e.target.value)} placeholder="请输入联系方式"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <FormItem className="childId"  label="孩子：">
+                                    {getFieldDecorator('childId', {
+                                        initialValue: data.childId || (childList.length === 0 ? 0 : undefined),
+                                        rules: [{
+                                            required: true,
+                                            message: "孩子不能为空"
+                                        }],
+                                    })(
+                                        <Select allowClear onChange={(value) => setRelationship(value)} placeholder="请选择孩子">
+                                            {optionsOfChild}
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="relationship"  label="用户与孩子关系：">
+                                    {getFieldDecorator('relationship', {
+                                        initialValue: data.relationship,
+                                        rules: [{
+                                            required: true,
+                                            message: "用户与孩子关系不能为空"
+                                        }],
+                                    })(
+                                        <Select allowClear placeholder="请选择用户与孩子关系">
+                                            <Option value={0}>妈妈</Option>
+                                            <Option value={1}>爸爸</Option>
+                                            <Option value={2}>爷爷</Option>
+                                            <Option value={3}>奶奶</Option>
+                                            <Option value={4}>外公</Option>
+                                            <Option value={5}>外婆</Option>
+                                            <Option value={6}>其他</Option>
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="birthday"  label="生日：">
+                                    {getFieldDecorator('birthday', {
+                                        // initialValue: data.birthday,
+                                        initialValue: moment(data.birthday || new Date(), "YYYY-MM-DD"),
+                                        rules: [{
+                                            required: true,
+                                            message: "生日不能为空"
+                                        }],
+                                    })(
+                                        <DatePicker style={{width: "100%"}} placeholder="请选择生日"/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -1124,7 +1280,7 @@ const ItemEditForm = Form.create()(
                         <h4 className="add-form-title-h4">明星详情</h4>
                         <FormItem className="personalProfile" label="明星简介：">
                             {getFieldDecorator('personalProfile', {
-                                initialValue: data.personalProfile,
+                                initialValue: data.description,
                                 rules: [{
                                     required: true,
                                     message: '简介不能为空',
@@ -1145,18 +1301,24 @@ const ItemEditForm = Form.create()(
                                     required: false,
                                     message: '明星图片不能为空',
                                 }],
-                            })(
-                                <Upload
-                                    name="file"
-                                    listType="picture-card"                                    
-                                    accept="image/*"
-                                    showUploadList={false}
-                                    beforeUpload={beforeUpload}
-                                    customRequest={picHandleChange03}>
-                                    {viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}
-                                </Upload>                                        
+                            })( 
+                                <div className="itemBox">
+                                    {photoExist}
+                                    <Upload
+                                        name="file"
+                                        multiple                                        
+                                        listType="picture-card"
+                                        accept="image/*"
+                                        showUploadList={false}
+                                        beforeUpload={beforeUpload}
+                                        customRequest={picHandleChange03}>
+                                        {uploadButton03}
+                                        {/*{viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}*/}
+                                        {/*<p className="hint">（可上传1-5张图片）</p>*/}
+                                    </Upload>
+                                </div>                       
                             )}
-                        </FormItem> 
+                        </FormItem>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">视频作品</h4>
                         <Row gutter={24}>
@@ -1199,12 +1361,14 @@ class ItemEdit extends Component {
         this.state = {
             visible: false,
             // 明星基本信息
-            data: {},         
+            data: {},
+            childList: [],         
             // 明星图片相关变量            
             uploadToken: "",// 获取上传图片token
             viewPic: "",
             photoLoading: false,
             viewPic03: "",
+            picList: [],
             photoLoading03: false,
             // 视频上传
             viewVideo: "",
@@ -1213,22 +1377,20 @@ class ItemEdit extends Component {
             // 提交按钮状态变量
             loading: false,                  
         };
-        this.editor = ""
     }
 
     // 获取明星基本信息
     getData = () => {
-        getStarDetail({id: this.props.id}).then((json) => {
+        starDetail({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
-                // 已有所属分类写入                    
-                json.data.data.typeId = json.data.data.excellentCourseType.typeId;                
-                // 富文本数据写入
-                this.editor.setData(json.data.data.characteristic);
-                // 信息写入
-                this.setState({
-                    data: json.data.data,
-                    viewPic: json.data.data.pic,
-                    videoList: json.data.data.lesson
+                this.setState({// 信息写入
+                    data: json.data.data, 
+                    viewPic: json.data.data.photo,
+                    viewPic03: json.data.data.picList.length ? json.data.data.picList[0] : '',
+                    picList: json.data.data.picList,
+                    videoList: json.data.data.videoList
+                }, () => {
+                    this.setChildren(json.data.data.phone);
                 });
             } else {
                 this.props.exceptHandle(json.data);
@@ -1243,6 +1405,19 @@ class ItemEdit extends Component {
     showModal = () => {
         this.getData();       
         this.setState({visible: true});
+    };
+
+    // 孩子列表
+    setChildren = (value) => {
+        childrenList({phone: value}).then((json) => {
+            if(json.data.result === 0) {
+                this.setState({
+                    childList: json.data.data           
+                })
+            } else {
+                this.exceptHandle(json.data);
+            }
+        }).catch((err) => this.errorHandle(err));
     };
 
     // 图片处理    
@@ -1306,7 +1481,10 @@ class ItemEdit extends Component {
             complete (res) {
                 console.log(res);
                 message.success("图片提交成功");
+                let {picList} = _this.state; // 此行不加只能添加一张
+                picList.push(configUrl.photoUrl + res.key);
                 _this.setState({
+                    picList: picList,
                     viewPic03: configUrl.photoUrl + res.key || "",           
                     photoLoading03: false,
                 })
@@ -1314,6 +1492,15 @@ class ItemEdit extends Component {
         }
         const observable = qiniu.upload(file, key, token, config);
         observable.subscribe(observer); // 上传开始        
+    };
+    
+    // 图片删除
+    setPicList = (index) => {
+        let data = this.state.picList;
+        data.splice(index, 1);
+        this.setState({
+            picList: data
+        });
     };
     
     // 视频上传
@@ -1410,18 +1597,18 @@ class ItemEdit extends Component {
         }, () => {
             this.setState({
                 data: {},
-                subjectList: [],
+                childList: [],
                 uploadToken: "",              
                 viewPic: "",                
                 photoLoading: false,
+                viewPic03: "",
+                picList: [],                
+                photoLoading03: false,
                 viewVideo: '',
                 videoList: [],
-                videoLoading: false,                
-                allAuthorList: [],
-                feeType: null,                                
+                videoLoading: false,                         
                 loading: false,
             });
-            this.editor = ""
             form.resetFields();
         });
     };
@@ -1430,53 +1617,68 @@ class ItemEdit extends Component {
     handleCreate = () => {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
-            if (err) {return;}
-            
-            // 明星图片校验与写入
-            if (this.state.viewPic) {
-                values.photo = this.state.viewPic.slice(global.config.photoUrl.length);
+            if (err) {return;}            
+            let { viewPic, viewPic03, picList, videoList } = this.state; // 模板字符串es6
+            // 头像校验与写入
+            if (viewPic) {
+                values.avatar = viewPic.slice(configUrl.photoUrl.length);
             } else {
-                message.error("图片未选择");
+                message.error("头像未选择");
                 return false;
             }
-
-            // 过滤作者
-            let tempAuther = this.state.allAuthorList.filter((para) => {return para.id = values.teacherId});            
-            
+            // 明星图片校验与写入
+            if (viewPic03) {
+                values.photo = viewPic03.slice(configUrl.photoUrl.length);
+            } else {
+                message.error("生活照未选择");
+                return false;
+            }            
+            // 生活照校验与写入
+            let tempPicList = [];
+            if (picList.length) {
+                picList.forEach((item, index) => {
+                    tempPicList.push(item.slice(configUrl.photoUrl.length));
+                });               
+            } else {
+                message.error("生活照未选择");
+                return false;
+            }
+            // 省市区名称
+            let currentAreaName = pCAName(this.props.provinceList, values.area[2]).currentAreaName;
             // 明星视频写入与校验
-            let lesson = this.state.videoList;
-            let tempVideoList = [];
-            if (lesson.length) {
-                lesson.forEach((item, index) => {                    
+            const tempVideoList = [];
+            console.log(videoList);
+            if (videoList.length) {
+                videoList.forEach((item, index) => {
                     tempVideoList.push({
                         name: item.name,
                         sort: item.sort,
                         duration: item.duration,
-                        video: item.video.slice(configUrl.photoUrl.length)
+                        resource: item.resource.slice(configUrl.photoUrl.length)
                     })
                 })
             }
             console.log(tempVideoList);
-            // 富文本内容处理
-            values.riches = this.editor.getData();
-            console.log(values.riches)
             const result = {
                 id: this.props.id,
-                name: values.courseName,
-                typeId: values.typeIds[1],
-                pic: values.photo,
-                teacherId: tempAuther[0].id,
-                teacherName: tempAuther[0].name,                   
-                originalPrice: values.originalPrice,
-                price: values.price,
-                fee: values.fee,
-                isFree: values.isFree,
-                chargeJointCount: values.chargeJointCount,
-                characteristic: values.riches,
-                tips: values.tips,
-                warmPrompt: values.warmPrompt,
-                official: values.official,
-                lesson: JSON.stringify(tempVideoList),
+                name: values.name,
+                gender: values.gender,
+                height: values.height,
+                weight: values.weight,
+                provinceId: values.area[0],
+                provinceName: currentAreaName[0],
+                cityId: values.area[1],
+                cityName: currentAreaName[1],
+                areaId: values.area[2],
+                areaName: currentAreaName[2],
+                phone: values.phone,
+                childId: values.childId,
+                relationship: values.relationship,
+                birthday: values.birthday.format('YYYY-MM-DD'),
+                photo: values.avatar,
+                description: values.personalProfile,
+                picList: tempPicList,
+                videoList: tempVideoList
             };
             this.setState({loading: true});
             updateStar(result).then((json) => {
@@ -1484,29 +1686,30 @@ class ItemEdit extends Component {
                     message.success("编辑明星成功");
                     this.handleCancel();
                     this.props.recapture();                            
-                } else {
-                    message.error(json.message);                        
-                    this.setState({loading: false});
+                } else {                     
+                    this.exceptHandle(json.data);
                 }
-            }).catch((err) => {
-                message.error("获取失败");
-                this.setState({loading: false});
-            });
+            }).catch((err) => this.errorHandle(err));
         });
     };
 
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");                        
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");                        
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else {
-    //         message.error(json.message);
-    //         this.setState({loading: false})
-    //     }
-    // };
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false})
+        }
+    };
+
+    errorHandle = (err) => {
+        message.error("获取失败");
+        this.setState({loading: false});
+    };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1522,24 +1725,27 @@ class ItemEdit extends Component {
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}                                   
                     data={this.state.data}
+                    setChildren={this.setChildren}
+                    childList={this.state.childList}
                     provinceList={this.props.provinceList}
                     reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
                     picUpload={this.picUpload}
                     photoLoading={this.state.photoLoading}
                     viewPic03={this.state.viewPic03}
+                    picList={this.state.picList}
                     picUpload03={this.picUpload03}
+                    setPicList={this.setPicList}
                     photoLoading03={this.state.photoLoading03}
                     picUpload02={this.picUpload02}
                     viewVideo={this.state.viewVideo}                  
-                    videoList={this.state.videoList}                    
+                    videoList={this.state.videoList}                  
                     videoLoading={this.state.videoLoading}
                     editVideo={this.editVideo}
                     deleteVideo={this.deleteVideo}
                     onChangeCourseName={this.onChangeCourseName}
                     onChangeSort={this.onChangeSort}                                       
-                    confirmLoading={this.state.loading}
-                />                
+                    confirmLoading={this.state.loading} />                
             </a>
         );
     }
@@ -1548,8 +1754,43 @@ class ItemEdit extends Component {
 // 明星详情表单
 const ItemDetailsForm = Form.create()(
     (props) => {
-        const {visible, onCancel, form, data, videoList, confirmLoading} = props;
-        const {getFieldDecorator} = form;
+        const {visible, onCancel, form, data, setChildren, childList, picList, videoList, confirmLoading} = props;
+        const {getFieldDecorator, setFieldsValue} = form;
+
+        const optionsOfChild = [];
+        if (childList.length) {
+            childList.forEach((item) => {
+                optionsOfChild.push(<Option key={item.id} value={item.id}>{item.name}</Option>)
+            })
+        }
+
+        const setRelationship = (value) => {
+            if (value === 0) {
+                setFieldsValue({"relationship": 0});
+            } else {
+                const fnFilter = (para) => {
+                    return para.id === value;
+                };
+                if (childList.length) {
+                    let tempChildList = childList.filter(fnFilter);
+                    setFieldsValue({
+                        "relationship": tempChildList[0].relationship, 
+                        "birthday": moment(tempChildList[0].birthday)
+                    });
+                }                
+            }
+        }; 
+
+        const tempPicList = [];
+        if (picList.length) {
+            picList.forEach((item, index) => {
+                tempPicList.push(
+                    <Col span={6} key={index+1}>
+                        <img src={item} style={{width: "100%"}} alt=""/>
+                    </Col>
+                )
+            })
+        }
 
         const tempVideoList = [];
         if (videoList.length) {
@@ -1561,7 +1802,7 @@ const ItemDetailsForm = Form.create()(
                             <div className="videoSource">                                
                                 <div className="videoSrc">
                                     <video controls="controls" width="100%">
-                                        <source src={item.video} type="video/mp4" />                                                
+                                        <source src={item.resource} type="video/mp4" />                                                
                                     </video>
                                 </div>
                             </div>
@@ -1578,6 +1819,7 @@ const ItemDetailsForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 footer={null}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form">
@@ -1645,20 +1887,20 @@ const ItemDetailsForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="area"  label="所在地区：">
                                     {getFieldDecorator('area', {
-                                        // initialValue: data.areaId === 0 ? ["0"] : currentArea,
+                                        initialValue: data.provinceName+ '/' + data.cityName + '/' + data.areaName,
                                         rules: [{
                                             required: true,
                                             message: '所在地区不能为空',
                                         }],
                                     })(
-                                        <Cascader disabled  placeholder="请选择所在地区"/>
+                                        <Input disabled placeholder="请选择所在地区"/>
                                     )}
                                 </FormItem>
                             </Col>
                             <Col span={8}>
                                 <FormItem className="telephone"  label="联系方式：">
                                     {getFieldDecorator('telephone', {
-                                        initialValue: data.telephone,                                      
+                                        initialValue: data.phone,                                      
                                         rules: [{
                                             required: true,
                                             message: '联系方式不能为空',
@@ -1671,16 +1913,70 @@ const ItemDetailsForm = Form.create()(
                         </Row>
                         <div className="ant-line"></div>
                         <Row gutter={24}>
-                            <Col span={24}>
+                            <Col span={8}>
+                                <FormItem className="childId"  label="孩子：">
+                                    {getFieldDecorator('childId', {
+                                        // initialValue: data.childId || (childList.length === 0 ? 0 : undefined),
+                                        rules: [{
+                                            required: true,
+                                            message: "孩子不能为空"
+                                        }],
+                                    })(
+                                    <div></div>
+                                        /*<Select  disabled allowClear onChange={(value) => setRelationship(value)} placeholder="请选择孩子">
+                                            {optionsOfChild}
+                                        </Select>*/
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="relationship"  label="用户与孩子关系：">
+                                    {getFieldDecorator('relationship', {
+                                        // initialValue: data.relationship,
+                                        rules: [{
+                                            required: true,
+                                            message: "用户与孩子关系不能为空"
+                                        }],
+                                    })(
+                                        <Select  disabled allowClear placeholder="请选择用户与孩子关系">
+                                            <Option value={0}>妈妈</Option>
+                                            <Option value={1}>爸爸</Option>
+                                            <Option value={2}>爷爷</Option>
+                                            <Option value={3}>奶奶</Option>
+                                            <Option value={4}>外公</Option>
+                                            <Option value={5}>外婆</Option>
+                                            <Option value={6}>其他</Option>
+                                        </Select>
+                                    )}
+                                </FormItem>
+                            </Col>
+                            <Col span={8}>
+                                <FormItem className="birthday"  label="生日：">
+                                    {getFieldDecorator('birthday', {
+                                        // initialValue: data.birthday,
+                                        initialValue: moment(data.birthday || new Date(), "YYYY-MM-DD"),
+                                        rules: [{
+                                            required: true,
+                                            message: "生日不能为空"
+                                        }],
+                                    })(
+                                        <DatePicker disabled style={{width: "100%"}} placeholder="请选择生日"/>
+                                    )}
+                                </FormItem>
+                            </Col>
+                        </Row>
+                        <div className="ant-line"></div>
+                        <Row gutter={24}>
+                            <Col span={6}>
                                 <FormItem className="avatar"  label="头像：">
                                     {getFieldDecorator('avatar', {
-                                        initialValue: data.pic,
+                                        initialValue: data.photo,
                                         rules: [{
                                             required: true,
                                             message: '头像不能为空',
                                         }],
                                     })(
-                                        <img src="" alt=""/>
+                                        <img src={data.photo} style={{width: "80%"}} alt=""/>
                                     )}
                                 </FormItem>
                             </Col>
@@ -1689,7 +1985,7 @@ const ItemDetailsForm = Form.create()(
                         <h4 className="add-form-title-h4">明星详情</h4>
                         <FormItem className="personalProfile" label="明星简介：">
                             {getFieldDecorator('personalProfile', {
-                                initialValue: data.personalProfile,
+                                initialValue: data.description,
                                 rules: [{
                                     required: true,
                                     message: '简介不能为空',
@@ -1704,17 +2000,9 @@ const ItemDetailsForm = Form.create()(
                         </FormItem>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">生活照</h4>
-                        <FormItem className="photo"  label="">
-                            {getFieldDecorator('photo', {
-                                initialValue: data.pic,
-                                rules: [{
-                                    required: false,
-                                    message: '明星图片不能为空',
-                                }],
-                            })(
-                                <img src="" alt=""/>
-                            )}
-                        </FormItem> 
+                        <Row gutter={24}>
+                            {tempPicList}                           
+                        </Row>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">视频作品</h4>
                         <Row gutter={24}>
@@ -1731,7 +2019,9 @@ const ItemDetailsForm = Form.create()(
 class ItemDetails extends Component {
     state = {
         visible: false,
-        loading: true,        
+        loading: true,
+        childList: [],
+        picList: [],      
         // 明星课时列表
         videoList: [],
         // 明星基本信息
@@ -1740,23 +2030,20 @@ class ItemDetails extends Component {
 
     // 获取明星基本信息
     getData = () => {
-        getStarDetail({id: this.props.id}).then((json) => {
-             if (json.data.result === 0) {
-                // 已有所属分类写入
-                json.data.typeIds = json.data.excellentCourseType.parentTypeName + '/' + json.data.excellentCourseType.typeName;
+        starDetail({id: this.props.id}).then((json) => {
+             if (json.data.result === 0) {                
                 this.setState({
                     loading: false,
-                    data: json.data,
-                    videoList: json.data.lesson,
+                    data: json.data.data,
+                    picList: json.data.data.picList,
+                    videoList: json.data.data.videoList,
+                }, () => {
+                    this.setChildren(json.data.data.phone);
                 });
             } else {
-                this.props.exceptHandle(json.data);
-                this.setState({loading: false});            
+                this.exceptHandle(json.data);                          
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     showModal = () => {        
@@ -1764,13 +2051,49 @@ class ItemDetails extends Component {
         this.setState({visible: true});
     };
 
+    setChildren = (value) => {
+        childrenList({phone: value}).then((json) => {
+            if(json.data.result === 0) {
+                this.setState({
+                    childList: json.data.data           
+                })
+            } else {
+                this.exceptHandle(json.data);
+            }
+        }).catch((err) => this.errorHandle(err));
+    };
+
     handleCancel = () => {
         this.setState({
             visible: false,
             loading: true,
-            videoList: [],            
             data: "",
+            childList: [],
+            picList: [],
+            videoList: []
         });
+    };
+
+    exceptHandle = (json) => {
+        if (json.code === 901) {
+            message.error("请先登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 902) {
+            message.error("登录信息已过期，请重新登录");                        
+            this.props.toLoginPage();// 返回登陆页
+        } else {
+            message.error(json.message);
+            this.setState({loading: false})
+        }
+    };
+
+    errorHandle = (err) => {
+        message.error("保存失败");
+        this.setState({loading: false});
+    };
+
+    saveFormRef = (form) => {
+        this.form = form;
     };
 
     render() {
@@ -1780,7 +2103,9 @@ class ItemDetails extends Component {
                 <ItemDetailsForm 
                     ref={this.saveFormRef}
                     visible={this.state.visible}                                       
-                    data={this.state.data}                    
+                    data={this.state.data}
+                    childList={this.state.childList}
+                    picList={this.state.picList}                    
                     videoList={this.state.videoList}
                     onCancel={this.handleCancel}/>
             </a>
@@ -1886,7 +2211,7 @@ class DataTable extends Component {
                                 okType="danger"
                                 okText="确认"
                                 cancelText="取消">
-                                <a style={{display: this.props.opObj.putAway ? "inline" : "none"}}>{record.status === "上架" ? "下架" : "上架"}</a>
+                                <a style={{display: this.props.opObj.sell ? "inline" : "none"}}>{record.status === "上架" ? "下架" : "上架"}</a>
                             </Popconfirm>
                         </div>
                     );
@@ -1933,7 +2258,7 @@ class DataTable extends Component {
                     if (item.gender === 0) {
                         tempGender = "女";
                     }
-                    if (item.source  === 1) {
+                    if (item.gender === 1) {
                         tempGender = "男";
                     }                     
                     // 明星状态
@@ -1953,6 +2278,7 @@ class DataTable extends Component {
                         nickname: item.nickname,
                         genderCode: item.gender,
                         gender: tempGender,
+                        createUser: item.creatorName,
                         createTime: item.createTime,
                         statusCode: item.status,
                         status: tempStatus,
@@ -2097,19 +2423,13 @@ class StarManage extends Component {
         super(props);
         this.state = {
             // 明星权限
-            opObj: {
-                add: true,
-                copy: true,
-                select: true,
-                modify: true,
-                putAway: true,
-            },
+            opObj: {},
             // 获取明星列表所需关键词
             keyword: {
                 courseName: '',
                 startTime: "",
                 endTime: "",
-                gender: 0,
+                gender: '',
             },
             startValue: null,
             endValue: null,
@@ -2118,7 +2438,7 @@ class StarManage extends Component {
             provinceList: [],// 省市列表
         };
         this.optionsGender = [
-            <Option key="全部" value="全部">{"全部"}</Option>,
+            <Option key="" value="">{"全部"}</Option>,
             <Option key="0" value="0">女</Option>,
             <Option key="1" value="1">男</Option>,
         ];              
@@ -2155,50 +2475,18 @@ class StarManage extends Component {
         })
     };
 
-    // 城市选项生成
-    // cityList = () => {
-    //     if (this.state.provinceList.length) {
-    //         this.state.provinceList.forEach((item) => {
-    //             let children = [];
-    //             if (item.districtList) {
-    //                 item.districtList.forEach((subItem) => {
-    //                     children.push({value: subItem.adcode, label: subItem.name});                    
-    //                 });
-    //             }
-    //             this.optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-    //         });
-    //     }        
-    // };
-
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {                
-                subItem.children.forEach((thirdItem) => {
-                    if (thirdItem.url === this.props.location.pathname) {
-                        let data = {};
-                        thirdItem.children.forEach((fourthItem) => {
-                            data[fourthItem.url] = true;
-                        });
-                        this.setState({
-                            opObj: data
-                        })
-                    }
-                })
-            })
-        })
+        this.setState({opObj: getPower(this)});        
     };
 
     // 搜索及明星名称，姓名，昵称设置
-    search = (type, value) => {
+    search = (value) => {
         this.setState({
             keyword: {
                 courseName: value,
+                gender:this.state.keyword.gender,
+                cityCode: this.state.keyword.cityCode,
                 startTime: this.state.keyword.startTime,
                 endTime: this.state.keyword.endTime,
             }
@@ -2209,9 +2497,9 @@ class StarManage extends Component {
     setGender = (value) => {
         this.setState({
             keyword: {
+                courseName: this.state.keyword.courseName,
                 gender: value,
-                cityCode: this.state.keyword.cityCode,
-                educationName: this.state.keyword.educationName,
+                cityCode: this.state.keyword.cityCode,                
                 startTime: this.state.keyword.startTime,
                 endTime: this.state.keyword.endTime,
             }
@@ -2224,6 +2512,8 @@ class StarManage extends Component {
             startValue: date,
             keyword: {
                 courseName: this.state.keyword.courseName,
+                gender: this.state.keyword.gender,
+                cityCode: this.state.keyword.cityCode,
                 startTime: dateString,
                 endTime: this.state.keyword.endTime,
             }
@@ -2236,6 +2526,8 @@ class StarManage extends Component {
             endValue: date,
             keyword: {
                 courseName: this.state.keyword.courseName,
+                gender: this.state.keyword.gender,
+                cityCode: this.state.keyword.cityCode,                
                 startTime: this.state.keyword.startTime,
                 endTime: dateString,
             }
@@ -2325,9 +2617,10 @@ class StarManage extends Component {
                                 {/*明星名筛选*/}
                                 <Search 
                                     className="star-search"
-                                    placeholder="请输入明星名称、姓名、昵称"
+                                    placeholder="请输入明星姓名、昵称"
                                     onSearch={(value) => this.search(value)}
-                                    enterButton/>
+                                    enterButton
+                                    allowClear/>
                                 {/*性别筛选*/}
                                 <Select                                    
                                     className="star-select"
@@ -2354,7 +2647,7 @@ class StarManage extends Component {
                                     <ItemAdd
                                         opStatus={this.state.opObj.add}
                                         provinceList={this.state.provinceList}
-                                        recapture={this.getData}                                        
+                                        recapture={this.setFlag}                                        
                                         exceptHandle={this.exceptHandle}
                                         toLoginPage={this.toLoginPage}/>
                                 </div>

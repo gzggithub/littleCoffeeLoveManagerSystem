@@ -12,7 +12,6 @@ import SignList from './SignList';
 import StarCheck from './StarCheck';
 import CoffeeCircle from './CoffeeCircle';
 import CommentManage from './CommentManage';
-import CrowdFunding from './CrowdFunding';
 
 import {Layout, Menu} from 'antd';
 
@@ -111,12 +110,7 @@ class AppHome extends Component {
                                 onClick={this.setHighlight}>
                                 {/*二级菜单栏*/}                                
                                 <SubMenu key="sub1" title={<span>小咖爱</span>}>
-                                    {this.state.menuList}
-                                    {/*<Menu.Item key={2} style={{textAlign: "center"}}>
-                                        <Link to="/index/app-home/crowd-funding">
-                                            测试管理
-                                        </Link>
-                                    </Menu.Item>*/}
+                                    {this.state.menuList}                                    
                                     {/*<Menu.Item key={1} style={{textAlign: "center"}}>
                                         <Link to="/index/app-home/category">
                                             分类管理
@@ -165,8 +159,7 @@ class AppHome extends Component {
                                 <Route path="/index/app-home/sign-list/:id/:name" component={SignList}/>
                                 <Route path="/index/app-home/star-check" component={StarCheck}/>
                                 <Route path="/index/app-home/coffee-circle" component={CoffeeCircle}/>
-                                <Route path="/index/app-home/comment-manage" component={CommentManage}/>                               
-                                <Route path="/index/app-home/crowd-funding" component={CrowdFunding}/>                               
+                                <Route path="/index/app-home/comment-manage" component={CommentManage}/>
                             </Content>
                         </Layout>
                     </Layout>

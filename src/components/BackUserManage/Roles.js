@@ -286,151 +286,99 @@ class ItemAddMember extends Component {
     showModal = () => {
         // 获取部门列表
         this.getDepartmentList();
-        this.generateList(this.state.gData);
+        // this.generateList(this.state.gData);
         // 获取初始详情信息
         this.setState({visible: true});
     };
     
     // 部门列表数据树型结构处理
-    handleTree = (data) => {
-        const tempResult = [];
-        const result = [];
-        
-        let data01 = data.list;
-        
-        data01.forEach((item) => {
-            const temp = {
-                title: item.sysDepartment.name,
-                key: item.sysDepartment.id, 
-                id: item.sysDepartment.id,
-                children: item.children,        
-            };
-            tempResult.push(temp)
-        });
-        console.log(tempResult)
-        // let cityLists = tempResult.children;
-        tempResult.forEach((item) => {
-            // const fnFilter02 = (para) => {
-            //     return para.parentId === item.id
-            // };
-            // let data02 = cityLists.filter(fnFilter02);
+    dataHandle = (data) => {
+        let result = [];
+        data.forEach((item) => {
+            let subData = [];
             if (item.children) {
                 item.children.forEach((subItem) => {
-                    const temp = {
-                        key: subItem.id,
+                    let thirdData = [];
+                    if (subItem.children) {
+                        subItem.children.forEach((thirdItem) => {
+                            let fourthData = [];
+                            if (thirdItem.children) {                                       
+                                thirdItem.children.forEach((fourthItem) => {
+                                    fourthData.push({
+                                        title: fourthItem.name,                                                
+                                        key: fourthItem.name + ',' + fourthItem.id,
+                                    })
+                                })
+                            } else {                                       
+                                if (thirdItem.userList) {                                            
+                                    thirdItem.userList.forEach((fifthItem) =>{
+                                        fourthData.push({
+                                            title: fifthItem.userName,                                                    
+                                            key: fifthItem.userName + ',' + fifthItem.id
+                                        })
+                                    })
+                                }                                          
+                            }                            
+                            thirdData.push({
+                                title: thirdItem.name,                                       
+                                key: thirdItem.name + ',' + thirdItem.id,
+                                children: fourthData,
+                            })
+                        })
+                    } else {
+                        if (subItem.userList) {
+                            subItem.userList.forEach((thirdCopyItem) => {
+                                thirdData.push({
+                                    title: thirdCopyItem.userName,                                    
+                                    key: thirdCopyItem.userName + ',' + thirdCopyItem.id,
+                                })                                            
+                            })
+                        }
+                    }
+                    console.log(subItem.userList)
+                    subData.push({
                         title: subItem.name,
-                        id: subItem.id,
-                    };
-                    item.children = [];
-                    item.children.push(temp)                
-                });
-                result.push(item)
-            }
+                        key: subItem.name + ',' + subItem.id,                               
+                        children: thirdData
+                    })
+                })
+            } else {
+                if (item.userList) {
+                    item.userList.forEach((subCopyItem) => {
+                        subData.push({
+                            title: subCopyItem.userName,                            
+                            key: subCopyItem.userName + ',' + subCopyItem.id
+                        })
+                    })
+                }
+            }                      
+            result.push({
+                title: item.name,
+                key: item.name + ',' + item.id,
+                children: subData
+            })
         });
-        console.log(result);
         return result;
     };
     
     // 获取部门列表
     getDepartmentList = (departmentName) => {
-        // const params = {
-        //     name: departmentName,
-        //     orgId: this.props.orgId,
-        //     pageNum: 1,
-        //     pageSize: 20,
-        // };
-        roleUserList().then((json) => {
+        const params = {
+            pageNum: 1,
+            pageSize: 20
+        };
+        departmentList(params).then((json) => {
             if (json.data.result === 0) {
-                const data = [];
-                json.data.data.forEach((item) => {
-                    let subData = [];
-                    console.log(item.userList)
-                    if (item.children) {
-                        item.children.forEach((subItem) => {
-                            let thirdData = [];                            
-                            if (subItem.children) {                                
-                                subItem.children.forEach((thirdItem) => {
-                                    let fourthData = [];
-                                    if (thirdItem.children) {                                       
-                                        thirdItem.children.forEach((fourthItem) => {
-                                            fourthData.push({
-                                                title: fourthItem.sysDepartment.name,
-                                                key: fourthItem.sysDepartment.id,
-                                                // key: fourthItem.sysDepartment.name + ',' + fourthItem.sysDepartment.id,
-                                            })
-                                        })
-                                    } else {
-                                        // console.log(232323)
-                                        if (thirdItem.userList) {
-                                            // console.log(56676767)
-                                            thirdItem.userList.forEach((fifthItem) =>{
-                                                fourthData.push({
-                                                    title: fifthItem.userName,
-                                                    // key: fifthItem.id,
-                                                    key: fifthItem.userName + ',' + fifthItem.id
-                                                })
-                                            })
-                                        }                                          
-                                    }
-                                    
-                                    thirdData.push({
-                                        title: thirdItem.sysDepartment.name,
-                                        key: thirdItem.sysDepartment.id,
-                                        // key: thirdItem.sysDepartment.name + ',' + thirdItem.sysDepartment.id,
-                                        children: fourthData,
-                                    })
-                                })
-                            } else {
-                                if (subItem.userList) {
-                                    subItem.userList.forEach((thirdCopyItem) => {
-                                        thirdData.push({
-                                            title: thirdCopyItem.userName,
-                                            // key: thirdCopyItem.id,
-                                            key: thirdCopyItem.userName + ',' + thirdCopyItem.id,
-                                        })                                            
-                                    })
-                                }
-                            }
-                            console.log(subItem.userList)
-                            subData.push({
-                                title: subItem.sysDepartment.name,
-                                key: subItem.sysDepartment.id,
-                                // key: subItem.sysDepartment.name + ',' + subItem.sysDepartment.id,
-                                // value: subItem.name+ '/' + subItem.parentId + ',' + subItem.id,
-                                children: thirdData
-                            })
-                        })
-                    } else {
-                        if (item.userList) {
-                            item.userList.forEach((subCopyItem) => {
-                                subData.push({
-                                    title: subCopyItem.userName,
-                                    // key: subCopyItem.id
-                                    key: subCopyItem.userName + ',' + subCopyItem.id
-                                })
-                            })
-                        }
-                    }                      
-                    data.push({
-                        title: item.sysDepartment.name,
-                        key: item.sysDepartment.id,
-                        // key: item.sysDepartment.name + ',' + item.sysDepartment.id,
-                        children: subData
-                    })
-                });
-                console.log(data);
-                this.setState({
-                    // treeData: this.handleTree(json.data),
-                    // gData: this.handleTree(json.data),
-                    gData: data,
-                });
-                console.log(this.state.treeData)
+                this.setState({                    
+                    gData: this.dataHandle(json.data.data.list)
+                });                
             } else {
                 this.exceptHandle(json.data);
             }
         }).catch((err) => {this.errorHandle(err);});
     };
     
+    // 暂时不用
     generateList = (data) => {
         for (let i = 0; i < data.length; i++) {
             const node = data[i];
@@ -442,7 +390,7 @@ class ItemAddMember extends Component {
         }
     };    
     
-    // 获取父级Key
+    // 获取父级Key （暂时不用无删）
     getParentKey = (key, tree) => {
         let parentKey;
         for (let i = 0; i < tree.length; i++) {
@@ -458,7 +406,7 @@ class ItemAddMember extends Component {
         return parentKey;
     };
     
-    // 展开指定的父节点key
+    // 展开指定的父节点key（暂时不用无删）
     onExpand = (expandedKeys) => {
         this.setState({
           expandedKeys,
@@ -466,7 +414,7 @@ class ItemAddMember extends Component {
         });
     };
     
-    // 搜索查询
+    // 搜索查询 （暂时不用无删）
     onChange = (e) => {
         const value = e.target.value;
         // 按姓名模糊搜索部门
@@ -487,6 +435,7 @@ class ItemAddMember extends Component {
 
     // 多选点击复选框的时候执行
     onCheck = (checkedKeys) => {
+        console.log(checkedKeys)
         // 所选人员userName
         const userNamesTemp = [];
         //  所选人员userId
@@ -614,30 +563,14 @@ class ItemAddMember extends Component {
         return option.description.indexOf(inputValue) > -1
     };    
     
+    //（暂时不用无删）
     handleChange = (targetKeys) => {
         this.setState({ targetKeys });
     };
-
+    
+    //（暂时不用无删）
     handleSearch = (dir, value) => {
         console.log('search:', dir, value);
-    };
-
-    // 信息比对函数
-    dataContrast = (values) => {
-        const initValues = this.state.data;
-        const itemList = ["roleName"];
-        const result = {};
-        itemList.forEach((item) => {
-            if (values[item] !== initValues[item]) {
-                result[item] = values[item];
-            }
-        });
-        if (JSON.stringify(result) === "{}") {
-            return false;
-        } else {
-            result.id = this.props.id;
-            return result;
-        }
     };
     
     // 取消
@@ -670,14 +603,12 @@ class ItemAddMember extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
+            if (err) {return;}
             this.setState({loading: true});
             console.log(this.state.memberListId);
             const data = {
                 roleId: this.props.id,             
-                userId: this.state.memberListId// 添加人员所有id                
+                userIds: this.state.memberListId// 添加人员所有id                
             };
             addMember(data).then((json) => {
                 if (json.data.result === 0) {
@@ -1961,7 +1892,7 @@ class DataTable extends Component {
                         id: item.id,
                         index: index + 1,
                         name: item.roleName,
-                        roleNums: item.userNum,
+                        roleNums: item.num,
                         remark: item.remark,
                         updateTime: item.createTime,
                     })
@@ -1986,7 +1917,7 @@ class DataTable extends Component {
         this.setState({loading: true});
         deleteRole({id: para}).then((json) => {
             if (json.data.result === 0) {
-                    message.success("角色删除成功");
+                    message.success("删除成功");
                     this.getData();
                 } else {
                     this.exceptHandle(json.data);

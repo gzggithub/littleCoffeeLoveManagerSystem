@@ -132,7 +132,7 @@ const ItemEditForm = Form.create()(
             picList.forEach((item, index) => {
                 photoExist.push(
                     <div className="photoExist-item clearfix" key={index + 1}>
-                        <img src={item} alt=""/>
+                        <img src={item.resource} alt=""/>
                         <div className="remove">
                             <Button type="dashed" shape="circle" icon="minus" onClick={() => setPicList(index)}/>
                         </div>
@@ -178,6 +178,7 @@ const ItemEditForm = Form.create()(
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
+                maskClosable={false}
                 destroyOnClose={true}>
                 <div className="course-add course-form item-form quality-course-form star-manage-form coffee-form">
                     <Form layout="vertical">
@@ -310,7 +311,7 @@ class ItemEdit extends Component {
                 console.log(res);
                 message.success("图片提交成功");
                 let {picList} = _this.state; // 此行不加只能添加一张
-                picList.push(configUrl.photoUrl + res.key);
+                picList.push({resource: configUrl.photoUrl + res.key, type: 0});
                 _this.setState({
                     picList: picList,
                     viewPic: configUrl.photoUrl + res.key || "",           
@@ -360,7 +361,7 @@ class ItemEdit extends Component {
             if (picList.length) {
                 picList.forEach((item, index) => {
                     tempPicList.push({
-                        resource: item.slice(configUrl.photoUrl.length)
+                        resource: item.resource.slice(configUrl.photoUrl.length)
                     });
                 });               
             } else {
@@ -443,7 +444,7 @@ const ItemDetailsForm = Form.create()(
             resourceList.forEach((item, index) => {
                 imgList.push(
                     <Col span={6} key={index + 1}>
-                        <img src={item.resource} alt=""/>
+                        <img src={item.resource} style={{width: "100%"}} alt=""/>
                         {/*<div className="photoExist-item clearfix" key={index + 1}>
                             <img src={item} alt=""/>                            
                         </div>*/}
@@ -459,6 +460,7 @@ const ItemDetailsForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 footer={null}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form">
@@ -482,7 +484,9 @@ const ItemDetailsForm = Form.create()(
                         <h4 className="add-form-title-h4">图片</h4>
                         <Row gutter={24}>
                             {imgList}
-                        </Row>                                        
+                        </Row>
+                        <div className="ant-line"></div>
+                        <div className="ant-line"></div>
                     </Form>
                 </div>
             </Modal>

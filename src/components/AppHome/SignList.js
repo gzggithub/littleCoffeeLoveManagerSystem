@@ -221,6 +221,7 @@ class ItemDownload extends Component {
                         <Button key="submit" type="primary" loading={this.state.confirmLoading} onClick={this.handleCreate}>复制链接</Button>,
                         <Button key="back" onClick={this.handleCancel} disabled={this.state.confirmLoading}>取消</Button>                        
                     ]}
+                    maskClosable={false}
                     destroyOnClose={true}>
                     <div className="sign-link-address">
                         <div>http：//www.taoerxue.com/tonggao1</div>
@@ -265,6 +266,7 @@ const ItemDetailsForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 footer={null}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form">

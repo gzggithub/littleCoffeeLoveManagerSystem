@@ -156,6 +156,7 @@ const ItemAddForm = Form.create()(
                 width={600}
                 onCancel={onCancel}
                 onOk={onCreate}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="category-add category-form">
@@ -373,6 +374,7 @@ const ItemEditForm = Form.create()(
                 width={600}
                 onCancel={onCancel}
                 onOk={onCreate}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 {

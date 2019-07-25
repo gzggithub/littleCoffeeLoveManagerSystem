@@ -321,6 +321,7 @@ class ItemAdd extends Component {
                 // this.editor.setData(json.data.data.characteristic);
                 // 信息写入
                 this.setState({
+                    visible: true,
                     data: json.data.data,
                     viewPic: json.data.data.pic,
                     videoList: json.data.data.lesson
@@ -335,33 +336,33 @@ class ItemAdd extends Component {
     showModal = (props, event) => {
         if (props === 1) {// 复制通告            
             this.getData();
-        } else if (props === 2) {                       
-            this.setState({data: {}});
-        }        
-        this.setState({visible: true}, () => {
-            setTimeout(() => {
-                this.setState({
-                    mapObj: new window.AMap.Map('add-notice-container', {
-                        resizeEnable: true,
-                        zoom: 16,
-                        center: [120.00485, 30.292234]
-                    })
-                }, () => {
-                    window.AMap.service('AMap.Geocoder', () => {
-                        const geocoder = new window.AMap.Geocoder({});
-                        this.state.mapObj.on('click', (e) => {
-                            this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
-                            geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
-                                if (status === 'complete' && result.info === 'OK') {
-                                    this.setFormattedAddress(result.regeocode.formattedAddress);
-                                    this.setAddressComponent(result.regeocode.addressComponent);
-                                }
+        } else if (props === 2) {
+            this.setState({visible: true,data: {}}, () => {
+                setTimeout(() => {
+                    this.setState({
+                        mapObj: new window.AMap.Map('add-notice-container', {
+                            resizeEnable: true,
+                            zoom: 16,
+                            center: [120.00485, 30.292234]
+                        })
+                    }, () => {
+                        window.AMap.service('AMap.Geocoder', () => {
+                            const geocoder = new window.AMap.Geocoder({});
+                            this.state.mapObj.on('click', (e) => {
+                                this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
+                                geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
+                                    if (status === 'complete' && result.info === 'OK') {
+                                        this.setFormattedAddress(result.regeocode.formattedAddress);
+                                        this.setAddressComponent(result.regeocode.addressComponent);
+                                    }
+                                });
                             });
-                        });
+                        })
                     })
-                })
-            }, 500)
-        });
+                }, 500)
+            });
+        }        
+        
     };
 
     setXY = (para) => {
@@ -485,6 +486,8 @@ class ItemAdd extends Component {
         } else if (json.code === 902) {
             message.error("登录信息已过期，请重新登录");            
             this.props.toLoginPage();// 返回登陆页
+        } else if (json.code === 1206) {// 判断没有添加数据时，提示信息                    
+            this.countDown();
         } else {
             message.error(json.message);
             this.setState({loading: false});
@@ -545,6 +548,7 @@ const ItemEditForm = Form.create()(
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
+                maskClosable={false}
                 destroyOnClose={true}>
                 <div className="course-add course-form item-form quality-course-form">
                     
@@ -790,8 +794,8 @@ const ItemPassReviewForm = Form.create()(
                     <Button key="back" onClick={onCancel} disabled={confirmLoading}>取消</Button>,
                     <Button key="submit" type="primary" loading={confirmLoading} onClick={() => onCreate(2)}>确定</Button>
                 ]}
-                destroyOnClose={true}
-            >
+                maskClosable={false}
+                destroyOnClose={true}>
                 <div className="course-add course-form item-form quality-course-form">
                     <Form layout="vertical">
                         <h4 className="add-form-title-h4">基础信息</h4>
@@ -1539,6 +1543,7 @@ const ItemDetailsForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 footer={null}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form">

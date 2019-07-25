@@ -63,6 +63,7 @@ const ItemCheckForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 onOk={onCreate}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 <div className="institutionCheck-form quality-course-check-form">
@@ -429,6 +430,7 @@ class ItemOpinion extends Component {
                     visible={this.state.visible}
                     footer={null}
                     onCancel={this.handleCancel}
+                    maskClosable={false}
                     destroyOnClose={true}>                        
                     <div className="item-opinion" style={{minHeight: "200px"}}>
                         <p>{this.state.data || "暂无"}</p>

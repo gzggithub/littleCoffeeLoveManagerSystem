@@ -157,6 +157,7 @@ const ItemAddForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 onOk={onCreate}
+                maskClosable={false}
                 confirmLoading={confirmLoading}>
                 <div className="institution-add institution-form item-form">
                     <Form layout="vertical">
@@ -474,6 +475,7 @@ const ItemEditForm = Form.create()(
                 width={1000}
                 onCancel={onCancel}
                 onOk={onCreate}
+                maskClosable={false}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}>
                 {

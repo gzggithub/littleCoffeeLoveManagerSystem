@@ -56,7 +56,7 @@ export  default {
     // 编辑
     updateStar: `${base}/cs/star/update`,
     // 详情
-    getStarDetail: `${base}/cs/star/getById`,
+    starDetail: `${base}/cs/star/getById`,
     // 复制
     NewestStar: `${base}/cs/star/getNewest`,
     // 排序
@@ -65,8 +65,9 @@ export  default {
     putAwayStar: `${base}/cs/star/putAway`,
     // 所属分类列表
     starTypeList: `${base}/cs/star/list`,
-    // 列表项
-    getStarList: `${base}/cs/star/list`,
+    // 孩子列表
+    childrenList: `${base}/cs/star/ordinaryChildList`,
+    // 
     /*-------------------------------通告管理-------------------------------*/
     // 列表
     noticeList: `${base}/cs/annunciate/list`,
