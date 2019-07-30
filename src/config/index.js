@@ -240,9 +240,15 @@ export const noticeOver = data => {
 }
 
 // 往期回顾
-export const pastReview = params => {
+export const pastReviewDetail = params => {
     setAuthorization();
-    return axios.get(api.pastReview, {params: params});
+    return axios.get(api.pastReviewDetail, {params: params});
+}
+
+// 往期回顾
+export const saveOrUpdatePastReview = data => {
+    setAuthorization();
+    return axios.post(api.saveOrUpdatePastReview, data);
 }
 
 /*-------------------------------报名名单-------------------------------*/

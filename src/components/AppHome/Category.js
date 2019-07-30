@@ -14,12 +14,12 @@ import {
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import { configUrl, getToken, typeList, addType, deleteType, updateType, typeDetail,  sortType } from '../../config';
-import { getPower } from '../../config/common';
+import { getPower, toLoginPage, exceptHandle, errorHandle } from '../../config/common';
 
 message.config({
-  top: 50,
-  duration: 2,
-  maxCount: 3,
+    top: 50,
+    duration: 2,
+    maxCount: 3,
 });
 
 const FormItem = Form.Item;
@@ -79,48 +79,47 @@ class EditableCell extends Component {
         const { editing } = this.state;
         const { editable, dataIndex, title, record, index, handleSort, ...restProps } = this.props;
         return (
-        <td {...restProps}>
-            {editable ? (
-            <EditableContext.Consumer>
-                {(form) => {
-                    this.form = form;
-                    return (
-                        editing ? (
-                        <FormItem style={{ margin: 0 }}>
-                            {form.getFieldDecorator(dataIndex, {
-                                rules: [{
-                                    required: false,                                   
-                                    message: "只能输入数字",                                    
-                                }],                               
-                                initialValue: record[dataIndex],
-                                })(
-                                <Input style={{textAlign: "center"}}
-                                    // allowClear
-                                    ref={node => (this.input = node)}
-                                    onPressEnter={this.sort.bind(this, record[dataIndex])}
-                                    onBlur={this.sort.bind(this, record[dataIndex])}
-                                    placeholder="双击设置排序"
-                                />
-                            )}
-                        </FormItem>
-                        ) : (
-                        <div
-                            className="editable-cell-value-wrap "
-                            onClick={this.toggleEdit}
-                        >
-                            <Input style={{textAlign: "center"}}
-                                // allowClear
-                                ref= {node => (this.input = node)}
-                                value={record[dataIndex]}
-                                placeholder="双击设置排序"
-                            />
-                        </div>
-                        )
-                    );
-                }}
-            </EditableContext.Consumer>
-            ) : restProps.children}
-        </td>
+            <td {...restProps}>
+                {
+                    editable ? 
+                        (<EditableContext.Consumer>
+                            {(form) => {
+                                this.form = form;
+                                return (
+                                    editing ? 
+                                        (
+                                        <FormItem style={{ margin: 0 }}>
+                                            {form.getFieldDecorator(dataIndex, {
+                                                rules: [{
+                                                    required: false,                                   
+                                                    message: "只能输入数字",                                    
+                                                }],                               
+                                                initialValue: record[dataIndex],
+                                                })(
+                                                <Input style={{textAlign: "center"}}
+                                                    // allowClear
+                                                    ref={node => (this.input = node)}
+                                                    onPressEnter={this.sort.bind(this, record[dataIndex])}
+                                                    onBlur={this.sort.bind(this, record[dataIndex])}
+                                                    placeholder="双击设置排序"/>
+                                            )}
+                                        </FormItem>
+                                        )
+                                        :
+                                        (<div onClick={this.toggleEdit} className="editable-cell-value-wrap">
+                                            <Input style={{textAlign: "center"}}
+                                                // allowClear
+                                                ref= {node => (this.input = node)}
+                                                value={record[dataIndex]}
+                                                placeholder="双击设置排序"/>
+                                        </div>)
+                                );
+                            }}
+                        </EditableContext.Consumer>)
+                        : 
+                        restProps.children
+                }
+            </td>
         );
     }
 }
@@ -132,7 +131,6 @@ const ItemAddForm = Form.create()(
         const {getFieldDecorator} = form;
 
         const beforeUpload = (file) => {
-            console.log("file--1212121")
             const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
             if (!isIMG) {
                 message.error('文件类型错误');
@@ -180,6 +178,7 @@ const ItemAddForm = Form.create()(
                         </FormItem>
                         <FormItem className="background" {...formItemLayout_12} label="背景色：">
                             {getFieldDecorator('background', {
+                                initialValue: "#000000",
                                 rules: [{
                                     required: true,
                                     message: '颜色不能为空',
@@ -226,7 +225,7 @@ class ItemAdd extends Component {
     }
 
     showModal = () => {
-        this.setState({visible: true});       
+        this.setState({visible: true});
     };
 
     // 请求上传凭证，需要后端提供接口
@@ -237,9 +236,9 @@ class ItemAdd extends Component {
                         uploadToken: json.data.data,
                     })
                 } else {
-                    this.exceptHandle(json.data);
+                    exceptHandle(this, json.data);
                 }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => errorHandle(this, err));
     };
 
     picUpload01 = (para) => {
@@ -294,28 +293,10 @@ class ItemAdd extends Component {
                     this.handleCancel();
                     this.props.setFlag();
                 } else {
-                    this.exceptHandle(json.data);
+                    exceptHandle(this, json.data);
                 }
-            }).catch((err) => this.errorHandle(err));
+            }).catch((err) => errorHandle(this, err));
         });
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");
-            this.props.toLoginPage();
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            this.props.toLoginPage();
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-
-    errorHandle = (err) => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -402,7 +383,7 @@ const ItemEditForm = Form.create()(
                                 </FormItem>
                                 <FormItem className="color" {...formItemLayout_12} label="背景色：">
                                     {getFieldDecorator('background', {
-                                        initialValue: data.backgroundColor,
+                                        initialValue: data.backgroundColor|| "#00000",
                                         rules: [{
                                             required: true,
                                             message: '颜色不能为空',
@@ -476,11 +457,9 @@ class ItemEdit extends Component {
                     uploadToken: json.data.data,
                 });
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
+        }).catch((err) => errorHandle(this, err));
     };
     
     picUpload01 = (para) => {
@@ -548,27 +527,11 @@ class ItemEdit extends Component {
                     this.handleCancel();
                     this.props.recapture()
                 } else {
-                   this.exceptHandle(json.data);
+                   exceptHandle(this, json.data);
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            });
+            }).catch((err) => errorHandle(this, err));
         });
     };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");
-            this.props.toLoginPage();
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            this.props.toLoginPage();
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    }
 
     saveFormRef = (form) => {
         this.form = form;
@@ -709,9 +672,9 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.expectHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => errorHandle(this, err));
     };
 
     // 排序
@@ -725,9 +688,9 @@ class DataTable extends Component {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
-                this.expectHandle(json.data);                
+                exceptHandle(this, json.data);                
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => errorHandle(this, err));
     };
 
     // 删除
@@ -738,28 +701,9 @@ class DataTable extends Component {
                 message.success("删除成功");
                 this.getData();
             } else {
-                this.expectHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
-    };
-
-    // 异常处理
-    expectHandle = (data) => {
-        if (data.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (data.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(data.message);
-            this.setState({loading: false});
-        }
-    };
-
-    errorHandle = () => {
-        message.error("获取失败");
-        this.setState({loading: false});
+        }).catch((err) => errorHandle(this, err));
     };
 
     //表格参数变化处理
@@ -827,20 +771,13 @@ class Category extends Component {
             flag_add: false
         }
     };
-
     // 获取当前登录人对此菜单的操作权限 
     setPower = () => {
-        this.setState({opObj: getPower(this)});     
+        this.setState({opObj: getPower(this).data});     
     };
 
     setFlag = () => {
         this.setState({flag_add: !this.state.flag_add});
-    };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
     };
 
     componentWillMount() {
@@ -868,7 +805,7 @@ class Category extends Component {
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add} 
                                         setFlag={this.setFlag}
-                                        toLoginPage={this.toLoginPage}/>
+                                        toLoginPage={() => toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*类型列表*/}
@@ -876,7 +813,7 @@ class Category extends Component {
                                 <DataTable 
                                     opObj={this.state.opObj} 
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => toLoginPage(this)}/>
                             </div>
                         </div>
                         :

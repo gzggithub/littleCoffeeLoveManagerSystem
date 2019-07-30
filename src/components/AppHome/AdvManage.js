@@ -16,9 +16,11 @@ import {
     Spin,
     Cascader,
 } from 'antd';
-import { configUrl, getToken, advList, saveAdv, updateAdv, deleteAdv, sortAdv, putAwayAdv } from '../../config';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
+import { configUrl, getToken, advList, saveAdv, updateAdv, deleteAdv, sortAdv, putAwayAdv } from '../../config';
+import { getPower, pCAName, bannerOptions } from '../../config/common';
+
 
 const Search = Input.Search;
 const {Option} = Select;
@@ -185,10 +187,7 @@ const ItemAddForm = Form.create()(
                                             }
                                         ],
                                     })(
-                                        <Select style={{width: '100%'}} placeholder="请选择广告位置">                                           
-                                            <Option key={1} value={1}>明星banner</Option>
-                                            <Option key={2} value={2}>通告banner</Option>
-                                        </Select>                                       
+                                        <Select style={{width: '100%'}} placeholder="请选择广告位置">{bannerOptions}</Select>                                       
                                     )}
                                 </FormItem>
                             </Col>          
@@ -355,10 +354,15 @@ class ItemAdd extends Component {
                 message.error("请选择广告展示城市");
                 return
             }
+
+            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+
             this.setState({loading: true});
             const data = {
                 provinceId: values.cityId[0],
-                cityId: values.cityId[1] || values.cityId[0],                    
+                provinceName: values.cityId[0] === "0" ? "全国" : currentCityName[0],
+                cityId: values.cityId[1] || values.cityId[0],
+                cityName: values.cityId[0] === "0" ? "全国" : currentCityName[1],                  
                 type: values.type,
                 photo: values.photo,
                 title: values.title,
@@ -509,10 +513,7 @@ const ItemEditForm = Form.create()(
                                                     }
                                                 ],
                                             })(
-                                                <Select style={{width: '100%'}} placeholder="请选择广告位置">
-                                                    <Option key={1} value={1}>明星banner</Option>
-                                                    <Option key={2} value={2}>通告banner</Option>
-                                                </Select>
+                                                <Select style={{width: '100%'}} placeholder="请选择广告位置">{bannerOptions}</Select>
                                             )}
                                         </FormItem>
                                     </Col>                                   
@@ -645,7 +646,7 @@ class ItemEdit extends Component {
                 console.log(res);
                 message.success("图片提交成功");
                 _this.setState({
-                    viewPic: global.config.photoUrl + res.key || "",                            
+                    viewPic: configUrl.photoUrl + res.key || "",                            
                     photoLoading: false,
                 });
             }
@@ -689,12 +690,17 @@ class ItemEdit extends Component {
             if (!values.cityId) {
                 message.error("请选择展示城市");
                 return
-            }          
-            this.setState({loading: true});           
+            }
+
+            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+
+            this.setState({loading: true});
             const data = {
                 id: this.props.id,
                 provinceId: values.cityId[0],
+                provinceName: values.cityId[0] === "0" ? "全国" : currentCityName[0],
                 cityId: values.cityId[1] || values.cityId[0],
+                cityName: values.cityId[0] === "0" ? "全国" : currentCityName[1],
                 type: values.type,
                 photo: this.state.viewPic.slice(configUrl.photoUrl.length),
                 title: values.title,
@@ -774,13 +780,13 @@ class DataTable extends Component {
             {
                 title: '序号',
                 dataIndex: 'index',
-                width: 20,
+                width: 70,
                 render: (text, record) => this.renderColumns(text, record, 'index'),
             },
             {
                 title: '排序',
                 dataIndex: 'sort',
-                width: 100,
+                width: 130,
                 editable: true,
             },
             {
@@ -827,7 +833,6 @@ class DataTable extends Component {
             {
                 title: '操作',
                 dataIndex: '操作',
-                width: 100,
                 className: 'operating',
                 render: (text, record) => {
                     return (
@@ -1111,9 +1116,9 @@ class AdvManage extends Component {
             provinceList: [],// 省市列表
         };
         this.optionsType = [
-            <Option key={this.state.keyword.type} value={this.state.keyword.type}>{"全部广告位置"}</Option>,
-            <Option key={3} value={3}>育儿资讯轮播 </Option>,
-            <Option key={4} value={4}>首页轮播</Option>,
+            <Option key={this.state.keyword.type} value={this.state.keyword.type}>{"全部banner位置"}</Option>,
+            <Option key={1} value={1}>明星banner </Option>,
+            <Option key={2} value={2}>通告banner</Option>,
         ];
         this.optionsOfCity = [{value: "0", label: "全国"}];       
     }
@@ -1168,28 +1173,7 @@ class AdvManage extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {                
-                subItem.children.forEach((thirdItem) => {
-                    // console.log(thirdItem.ur);
-                    // console.log(this.props.location.pathname);
-                    if (thirdItem.url === this.props.location.pathname) {
-                        let data = {};
-                        thirdItem.children.forEach((fourthItem) => {
-                            data[fourthItem.url] = true;
-                        });
-                        this.setState({
-                            opObj: data
-                        })
-                    }
-                })
-            })
-        })
+       this.setState({opObj: getPower(this).data});
     };
 
     //广告位置设置
@@ -1281,9 +1265,7 @@ class AdvManage extends Component {
     };
 
     setFlag = () => { // 刷新table 
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add})
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -1322,7 +1304,7 @@ class AdvManage extends Component {
                                         marginRight: "20px"
                                     }}
                                     onChange={this.setType}
-                                    placeholder="请选择广告位置"
+                                    placeholder="请选择banner位置"
                                     allowClear>
                                     {this.optionsType}
                                 </Select>

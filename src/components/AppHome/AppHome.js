@@ -156,7 +156,7 @@ class AppHome extends Component {
                                 <Route path="/index/app-home/adv-manage" component={AdvManage}/>
                                 <Route path="/index/app-home/star-manage" component={StarManage}/>
                                 <Route path="/index/app-home/notice-manage" component={NoticeManage}/>
-                                <Route path="/index/app-home/sign-list/:id/:name" component={SignList}/>
+                                <Route path="/index/app-home/sign-list/:id/:opObj" component={SignList}/>
                                 <Route path="/index/app-home/star-check" component={StarCheck}/>
                                 <Route path="/index/app-home/coffee-circle" component={CoffeeCircle}/>
                                 <Route path="/index/app-home/comment-manage" component={CommentManage}/>

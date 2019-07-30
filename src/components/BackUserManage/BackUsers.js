@@ -12,7 +12,7 @@ import {
     TreeSelect,
 } from 'antd';
 import { accountList, addAccount, deleteAccount, updateAccount, accountDetail, ban, resetPwd, departmentList, roleList } from '../../config';
-import { checkPhone, checkPassword } from '../../config/common';
+import { getPower, checkPhone, checkPassword } from '../../config/common';
 
 const Search = Input.Search;
 const {Option} = Select;
@@ -634,12 +634,12 @@ class DataTable extends Component {
                 width: '12%',
                 render: (text, record) => this.renderColumns(text, record, 'phone'),
             },
-            {
-                title: '状态',
-                dataIndex: 'status',
-                width: '8%',
-                render: (text, record) => this.renderColumns(text, record, 'status'),
-            },
+            // {
+            //     title: '状态',
+            //     dataIndex: 'status',
+            //     width: '8%',
+            //     render: (text, record) => this.renderColumns(text, record, 'status'),
+            // },
             {
                 title: '操作',
                 dataIndex: '操作',
@@ -875,12 +875,12 @@ class BackUsers extends Component {
         super(props);
         this.state = {
             opObj: {
-                select: true,
-                add: true,
-                modify: true,
-                delete: true,
-                resetPassword: true,
-                ban: true,
+                // select: true,
+                // add: true,
+                // modify: true,
+                // delete: true,
+                // resetPassword: true,
+                // ban: true,
             },
             // 获取信息列表所需关键词
             keyword: {
@@ -892,40 +892,19 @@ class BackUsers extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {
-                if (subItem.url === this.props.location.pathname) {
-                    let data = {};
-                    subItem.children.forEach((thirdItem) => {
-                        data[thirdItem.url] = true;
-                    });
-                    this.setState({
-                        opObj: data
-                    })
-                }
-            })
-        });
+        this.setState({opObj: getPower(this).data});
     };
 
     // 关键词写入
     setKeyword = (value) => {
         console.log(value)
         this.setState({
-            keyword: {                
-                phoneAndName: value,
-            }
-        })
+            keyword: { phoneAndName: value}
+        });
     };
 
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add});
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -949,6 +928,7 @@ class BackUsers extends Component {
     }
 
     render() {
+        console.log(this.state.opObj);
         return (
             <div className="backUsers">
                 {

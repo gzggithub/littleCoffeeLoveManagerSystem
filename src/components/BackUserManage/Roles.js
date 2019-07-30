@@ -15,6 +15,7 @@ import {
     Icon,
 } from 'antd';
 import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
+import { getPower, exceptHandle, errorHandle } from '../../config/common';
 
 const Search = Input.Search;
 const {TextArea} = Input;
@@ -1617,7 +1618,7 @@ const NumDetailForm = Form.create()(
         return (
             <Modal
                 visible={visible}
-                title="部门成员"
+                title="成员"
                 width={600}
                 onCancel={onCancel}
                 destroyOnClose={true}
@@ -1643,7 +1644,7 @@ class NumDetail extends Component {
         data: [],
         pagination: {
             current: 1,
-            pageSize: 10,
+            pageSize: 15,
             pageSizeOptions: ["5", "10", "15", "20"],
             showQuickJumper: true,
             showSizeChanger: true
@@ -1682,12 +1683,43 @@ class NumDetail extends Component {
         this.getDataMemberList();
     };
 
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,
+                username: item.username,
+                phone: item.phone,
+                departmentName: item.departmentName
+            });
+        });
+        return result;
+    };
+
     getDataMemberList = () => {
         this.setState({loading: true});        
-        memberList({roleId: this.props.id}).then((json) => {
-            if (json.data.result === 0) {                    
+        memberList({
+            id: this.props.id,
+            pageNum: this.state.pagination.current,
+            pageSize: this.state.pagination.pageSize
+        }).then((json) => {
+            if (json.data.result === 0) {
+                const data = [];
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
+                    this.setState({
+                        pagination: {
+                            current: 1,
+                            pageSize: this.state.pagination.pageSize
+                        }
+                    }, () => {
+                        this.getDataMemberList();
+                    });
+                    return
+                }
                 this.setState({
-                    data: json.data.data.list,
+                    data: this.dataHandle(json.data.data.list),
                     loading: false,
                     pagination: {
                         total: json.data.data.total,
@@ -1695,11 +1727,10 @@ class NumDetail extends Component {
                         pageSize: this.state.pagination.pageSize
                     }
                 })
-
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => errorHandle(this, err));
     };
 
     handleCancel = () => {
@@ -1733,6 +1764,19 @@ class NumDetail extends Component {
         this.setState({loading: false});
     };
 
+    //页码变化处理
+    handleTableChange = (pagination) => {
+        const pager = {...this.state.pagination};
+        pager.current = pagination.current;
+        localStorage.roleSize = pagination.pageSize;
+        pager.pageSize = Number(localStorage.roleSize);
+        this.setState({
+            pagination: pager
+        }, () => {
+            this.getData();
+        })
+    };
+
     saveFormRef = (form) => {
         this.form = form;
     };
@@ -1749,7 +1793,7 @@ class NumDetail extends Component {
                     data={this.state.data}
                     columns={this.columns}
                     pagination={this.pagination}
-                />
+                    onChange={this.handleTableChange}/>
             </a>
         );
     }
@@ -1986,16 +2030,8 @@ class Roles extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                select: true,
-                add: true,
-                modify: true,
-                delete: true,
-                bindUserRole: true,
-                updateJurisdiction: true,                
-            },
-            // 获取信息列表所需关键词
-            keyword: {                
+            opObj: {},            
+            keyword: { // 获取信息列表所需关键词            
                 roleName: ''// 角色名称
             },
             flag_add: false
@@ -2004,41 +2040,16 @@ class Roles extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {
-                if (subItem.url === this.props.location.pathname) {
-                    let data = {};
-                    subItem.children.forEach((thirdItem) => {
-                        data[thirdItem.url] = true;
-                    })
-                    this.setState({
-                        opObj: data
-                    })
-                }
-            })
-        })
+       this.setState({opObj: getPower(this).data});
     };
 
     // 关键词写入
-    setKeyword = (type, value) => {
-        if (value !== this.state.keyword.roleName) {
-            this.setState({
-                keyword: {
-                    roleName: value,
-                }
-            })
-        }
+    setKeyword = (value) => {
+        this.setState({keyword: {roleName: value}});
     };
 
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add});
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -2062,6 +2073,7 @@ class Roles extends Component {
     }
 
     render() {
+        console.log(this.state.opObj);
         return (
             <div className="roles">
                 {

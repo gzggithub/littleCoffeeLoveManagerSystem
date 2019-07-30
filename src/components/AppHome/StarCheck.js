@@ -12,17 +12,15 @@ import {
     DatePicker,
     InputNumber,
     Select,
-    Cascader,
 } from 'antd';
-import { checkList, checkDetail, check, checkOpinion } from '../../config';
-import common from '../../config/config';
+import { checkList, checkDetail, check} from '../../config';
+import { getPower, genderOptions } from '../../config/common';
 
 const TabPane = Tabs.TabPane;
 const Search = Input.Search;
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 const {TextArea} = Input;
-const {Option} = Select;
 
 // 单元格
 const Cell = ({value}) => (
@@ -32,29 +30,8 @@ const Cell = ({value}) => (
 // 明星审核表单
 const ItemCheckForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, setFeeType, feeType, setFeeType01, feeType01, videoList, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, data, setFeeType, feeType, confirmLoading} = props;
         const {getFieldDecorator} = form;
-
-        const tempVideoList = [];
-        if (videoList.length) {
-            videoList.forEach((item, index) => {
-                tempVideoList.push(
-                    <Col span={8} key={index+1}>
-                        <div className="video">
-                            <div className="chapter">第{item.sort}节</div>
-                            <div className="videoSource">
-                                {/*<div className="videoSize">{item.videoSize}M</div>*/}
-                                <div className="videoSrc">
-                                    <video controls="controls">
-                                        <source src={item.video} type="video/mp4" />                                                
-                                    </video>
-                                </div>
-                            </div>
-                            <h3 className="videoCourseName">{item.name}</h3>
-                        </div>
-                    </Col>)
-            })
-        }
 
         return (
             <Modal
@@ -73,7 +50,7 @@ const ItemCheckForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="courseName"  label="姓名：">
                                     {getFieldDecorator('courseName', {
-                                        initialValue: data.name,                                      
+                                        initialValue: data.name || '暂无',                                      
                                         rules: [{
                                             required: true,
                                             message: '姓名不能为空',
@@ -86,23 +63,20 @@ const ItemCheckForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="gender"  label="性别：">
                                     {getFieldDecorator('gender', {
-                                        initialValue: data.gender,                                      
+                                        initialValue: data.gender || 0,                                      
                                         rules: [{
                                             required: true,
                                             message: '性别不能为空',
                                         }],
                                     })(
-                                        <Select disabled placeholder="请选择性别">
-                                            <Option value={0}>女</Option>
-                                            <Option value={1}>男</Option>
-                                        </Select>
+                                        <Select disabled placeholder="请选择性别">{genderOptions}</Select>
                                     )}
                                 </FormItem>
                             </Col>
                             <Col span={8}>
                                 <FormItem className="height"  label="身高：">
                                     {getFieldDecorator('height', {
-                                        initialValue: data.height,
+                                        initialValue: data.height || '暂无',
                                         rules: [{
                                             required: true,
                                             message: '身高不能为空',
@@ -118,7 +92,7 @@ const ItemCheckForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="weight"  label="体重：">
                                     {getFieldDecorator('weight', {
-                                        initialValue: data.weight,                                      
+                                        initialValue: data.weight || '暂无',                                      
                                         rules: [{
                                             required: true,
                                             message: '体重不能为空',
@@ -131,20 +105,20 @@ const ItemCheckForm = Form.create()(
                             <Col span={8}>
                                 <FormItem className="area"  label="所在地区：">
                                     {getFieldDecorator('area', {
-                                        // initialValue: data.areaId === 0 ? ["0"] : currentArea,
+                                        initialValue: data.areaId === 0 ? "全国" : (data.provinceName + '/'+ data.cityName+'/'+data.areaName),
                                         rules: [{
                                             required: true,
                                             message: '所在地区不能为空',
                                         }],
                                     })(
-                                        <Cascader disabled  placeholder="请选择所在地区"/>
+                                        <Input disabled  placeholder="请选择所在地区"/>
                                     )}
                                 </FormItem>
                             </Col>
                             <Col span={8}>
                                 <FormItem className="telephone"  label="联系方式：">
-                                    {getFieldDecorator('telephone', {
-                                        initialValue: data.telephone,                                      
+                                    {getFieldDecorator('phone', {
+                                        initialValue: data.phone || '暂无',                                      
                                         rules: [{
                                             required: true,
                                             message: '联系方式不能为空',
@@ -160,23 +134,27 @@ const ItemCheckForm = Form.create()(
                             <Col span={24}>
                                 <FormItem className="avatar"  label="头像：">
                                     {getFieldDecorator('avatar', {
-                                        initialValue: data.pic,
+                                        initialValue: data.photo || '暂无',
                                         rules: [{
                                             required: true,
                                             message: '头像不能为空',
                                         }],
-                                    })(
-                                        <div className="professionCertification">                                            
-                                            <img src={data.pic} alt=""/>
-                                        </div>
+                                    })(                                        
+                                        <Row gutter={24}>
+                                            <Col span={6}>
+                                                <div className="professionCertification">                                            
+                                                    <img src={data.photo} alt=""/>
+                                                </div>
+                                            </Col>
+                                        </Row>
                                     )}
                                 </FormItem>                                
                             </Col>
                         </Row>                        
                         <div className="ant-line"></div>
-                        {/*<FormItem className="personalProfile" label="明星简介：">
+                        <FormItem className="personalProfile" label="明星简介：">
                             {getFieldDecorator('personalProfile', {
-                                initialValue: data.personalProfile,
+                                initialValue: data.description || '暂无',
                                 rules: [{
                                     required: true,
                                     message: '简介不能为空',
@@ -188,31 +166,9 @@ const ItemCheckForm = Form.create()(
                                     placeholder="请填写明星简介"
                                     autosize={{minRows: 5, maxRows: 30}}/>                                
                             )}
-                        </FormItem>*/}
-                        <div className="ant-line"></div>
-                        <Row gutter={24}>
-                            <Col span={8}>
-                                <FormItem className="characteristic" label="个人简介：">
-                                    {getFieldDecorator('characteristic', {
-                                        initialValue: data.characteristic,
-                                        rules: [{
-                                            required: true,
-                                            message: '个人简介不能为空',
-                                        }],
-                                    })(
-                                        <div style={{bordr: "1px solid #e5e4e3"}} className="courseDescription" dangerouslySetInnerHTML={{__html: data.characteristic}}></div>
-                                    )}
-                                </FormItem>
-                            </Col>
-                        </Row>
-                        
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">课时安排</h4>
-                        <Row gutter={24}>
-                            {tempVideoList}                           
-                        </Row>
-                        <h4 className="add-form-title-h4">审核结果</h4>
-                        
+                        </FormItem>
+                        <div className="ant-line"></div>                      
+                        <h4 className="add-form-title-h4">审核结果</h4>                        
                         <Row gutter={24}>
                             <Col span={8}>
                                 <FormItem className="checkStatus">
@@ -224,8 +180,8 @@ const ItemCheckForm = Form.create()(
                                         }],
                                     })(
                                         <RadioGroup buttonStyle="solid" onChange={(e) => setFeeType(e.target.value)}>
-                                            <Radio.Button value={4} style={{marginRight: "20px", borderRadius: "4px"}}>通过</Radio.Button>
                                             <Radio.Button value={3} style={{marginRight: "20px", borderRadius: "4px"}}>驳回</Radio.Button>
+                                            <Radio.Button value={4} style={{marginRight: "20px", borderRadius: "4px"}}>通过</Radio.Button>                                            
                                             <Radio.Button value={5} style={{marginRight: "20px", borderRadius: "4px"}}>不通过</Radio.Button>
                                         </RadioGroup>
                                     )}
@@ -236,6 +192,7 @@ const ItemCheckForm = Form.create()(
                         <FormItem className="opinion" label="不通过/驳回原因：">
                             {getFieldDecorator('opinion', {
                                 rules: [{
+                                    // required: feeType === 4 ? false : true,
                                     required: feeType !== 4,
                                     message: '审核意见不能为空',
                                 }],
@@ -257,10 +214,8 @@ const ItemCheckForm = Form.create()(
 // 明星审核组件
 class ItemCheck extends Component {
     state = {
-        data: {},
-        videoList: [],        
-        feeType: 4,
-        feeType01: 2,
+        data: {},     
+        feeType: 4,        
         visible: false,       
         loading: false, 
     };
@@ -273,30 +228,16 @@ class ItemCheck extends Component {
     // 获取本页信息
     getData = () => {
         checkDetail({id: this.props.id}).then((json) => {
-            if (json.data.result === 0) {
-                json.data.data.characteristic = common.removeTag(json.data.data.characteristic)
-                this.setState({
-                    data: json.data.data,
-                    videoList: json.data.data.lesson,
-                });
+            if (json.data.result === 0) {                
+                this.setState({data: json.data.data});
             } else {
                 this.props.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-        });
+        }).catch((err) => { message.error("获取失败");});
     };
 
     setFeeType = (value) => {
-        this.setState({
-            feeType: Number(value)
-        })
-    };
-
-    setFeeType01 = (value) => {
-        this.setState({
-            feeType01: Number(value)
-        })
+        this.setState({feeType: Number(value)});
     };
 
     handleCancel = () => {
@@ -306,9 +247,7 @@ class ItemCheck extends Component {
         }, () => {
             this.setState({
                 data: {},
-                videoList: [],
                 feetype: 4,
-                feetype01: 2,
                 loading: false
             });
             form.resetFields();
@@ -318,20 +257,17 @@ class ItemCheck extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
-            if (values.state === 3 && !values.opinion) {
-                message.error("驳回意见不能为空");
-                return
-            }
-            this.setState({loading: true});            
-            const data = {
+            if (err) { return;}
+            // if (values.checkStatus !== 4 && !values.opinion) {
+            //     message.error("驳回/不通过意见不能为空");
+            //     return;
+            // }
+            this.setState({loading: true});
+            check({
                 id: this.props.id,               
                 checkStatus: values.checkStatus,
                 checkOpinion: values.opinion
-            };
-            check(data).then((json) => {
+            }).then((json) => {
                 if (json.data.result === 0) {
                     message.success("审核成功");
                     this.handleCancel();
@@ -389,36 +325,16 @@ class ItemCheck extends Component {
     }
 }
 
-// 驳回意见
+// 驳回意见/原因
 class ItemOpinion extends Component {
-    state = {
-        visible: false,
-        data: ""
-    };
-
-    getData = () => {
-        checkOpinion({id: this.props.id}).then((json) => {
-            if (json.data.result === 0) {
-                this.setState({
-                    data: json.data.data,
-                });
-            } else {
-                this.props.exceptHandle(json.data);                
-            }
-        }).catch((err) => {
-            message.error("获取失败");
-        });
-    };
+    state = {visible: false};
 
     showModal = () => {
-        this.getData();
-        this.setState({
-            visible: true,
-        })
+        this.setState({visible: true});
     };
 
     handleCancel = () => {
-        this.setState({visible: false,data: ''});
+        this.setState({visible: false});
     };
 
     render() {
@@ -433,7 +349,7 @@ class ItemOpinion extends Component {
                     maskClosable={false}
                     destroyOnClose={true}>                        
                     <div className="item-opinion" style={{minHeight: "200px"}}>
-                        <p>{this.state.data || "暂无"}</p>
+                        <p>{this.props.record.checkOpinion || "暂无"}</p>
                     </div>
                 </Modal>
             </a>
@@ -462,35 +378,29 @@ class DataTable extends Component {
                 dataIndex: 'index',
                 width: 70,
                 render: (text, record) => this.renderColumns(text, record, 'index'),
-            },
-            {
-                title: '课程名称',
-                dataIndex: 'courseName',
-                width: '10%',
-                render: (text, record) => this.renderColumns(text, record, 'courseName'),
-            },
+            },            
             {
                 title: '姓名',
-                dataIndex: 'teacherName',
+                dataIndex: 'name',
                 width: '10%',
-                render: (text, record) => this.renderColumns(text, record, 'teacherName'),
+                render: (text, record) => this.renderColumns(text, record, 'name'),
             },
             {
-                title: '昵称',
-                dataIndex: 'nickName',
+                title: '手机号',
+                dataIndex: 'phone',
                 width: '10%',
-                render: (text, record) => this.renderColumns(text, record, 'nickName'),
-            },
+                render: (text, record) => this.renderColumns(text, record, 'phone'),
+            },            
             {
-                title: '科目',
-                dataIndex: 'typeName',
+                title: '所在地区',
+                dataIndex: 'cityName',
                 width: '10%',
-                render: (text, record) => this.renderColumns(text, record, 'typeName'),
+                render: (text, record) => this.renderColumns(text, record, 'cityName'),
             },
             {
                 title: '申请时间',
                 dataIndex: 'createTime',
-                width: '12%',
+                width: '15%',
                 render: (text, record) => this.renderColumns(text, record, 'createTime'),
             },
             {
@@ -506,19 +416,19 @@ class DataTable extends Component {
                 render: (text, record) => {
                     return (
                         <div className="editable-row-operations">
-                            {/*驳回意见（副表状态为审核驳回的机构展示此项）*/}
+                            {/*驳回意见（副表状态为审核驳回的展示此项）*/}
                             <ItemOpinion
-                                id={record.id}
+                                record={record}
                                 exceptHandle={this.exceptHandle}
-                                toLoginPage={this.props.toLoginPage}                                
-                                status={this.props.type === 1 && this.props.opObjDeny.checkOpinion}/>                            
-                            {/*审核（副表状态为待审核，当前登录人为超级管理员或运营人员时展示此项）*/}
+                                toLoginPage={this.props.toLoginPage}
+                                status={this.props.type === 2 && this.props.opObjDeny.select}/>
+                            {/*审核（副表状态为待审核）*/}
                             <ItemCheck 
-                                id={record.id}                                
+                                id={record.id}
                                 recapture={this.getData}
                                 exceptHandle={this.exceptHandle}
-                                toLoginPage={this.props.toLoginPage}                                
-                                status={this.props.type === 0 && this.props.opObjReady.checkExcellectCourse}/>                            
+                                toLoginPage={this.props.toLoginPage}
+                                status={this.props.type === 1 && this.props.opObjReady.check}/>
                         </div>
                     )
                 }
@@ -537,9 +447,9 @@ class DataTable extends Component {
     getData = (type, keyword) => {
         this.setState({loading: true});
         const params = {
-            status: type === undefined ? this.props.type : type,
-            name: keyword === undefined ? this.props.keyword.courseName : keyword.courseName,
-            startTime: keyword === undefined ? this.props.keyword.startTime : keyword.startTime,
+            checkStatus: type === undefined ? this.props.type : type,
+            name: keyword === undefined ? this.props.keyword.name : keyword.name,
+            beginTime: keyword === undefined ? this.props.keyword.startTime : keyword.startTime,
             endTime: keyword === undefined ? this.props.keyword.endTime : keyword.endTime,
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
@@ -567,23 +477,22 @@ class DataTable extends Component {
                     } else if (item.checkStatus === 3) {
                         tempStatus = "已驳回";
                     } else if (item.checkStatus === 4) {
-                        tempStatus = "不通过";
+                        tempStatus = "通过";
                     } else if (item.checkStatus === 5) {
-                        tempStatus = '通过'
+                        tempStatus = '不通过'
                     }
                     data.push({
                         key: index.toString(),
                         id: item.id,                           
                         index: index + 1,                           
-                        courseName: item.name,
-                        teacherName: item.teacherName,
-                        nickName: item.nickname,
-                        telephone: item.appUserPhone,                                                     
-                        typeName: item.typeNameStr,                          
+                        name: item.name,
+                        phone: item.phone,                                                     
+                        cityName: item.cityName,
                         createTime: item.createTime,
-                        photo: item.pic,                           
+                        photo: item.photo,                           
                         statusCode: item.checkStatus,
                         status: tempStatus,
+                        checkOpinion: item.checkOpinion
                     });
                 });
                 this.setState({
@@ -615,7 +524,7 @@ class DataTable extends Component {
             message.error(json.message);
             this.setState({loading: false});
         }
-    }
+    };
 
     //页码变化处理
     handleTableChange = (pagination) => {
@@ -656,39 +565,32 @@ class StarCheck extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            type: "0",
+            type: "1",
             keyword: {
-                courseName: '',
+                name: '',
                 startTime: null,
                 endTime: null,
             },
             flag_add: false,
-            // 权限            
-            opObjCheck: {},
-            // 待审核权限
-            opObjReady: {},
-            //已驳回 
-            opObjDeny: {},
-            // 日期禁选控制
-            startValue: null,
+            opObjReady: {}, // 待审核权限
+            opObjDeny: {}, // 已驳回
+            startValue: null, // 日期禁选控制
             endValue: null,
         };        
     }
 
     //tab状态设置
     setType = (value) => {
-        this.setState({
-            type: value,
-        })
+        this.setState({type: value});
     };
     
     // 名字搜索
     search = (value) => {
         this.setState({
             keyword: {
-                courseName: value,
+                name: value,
                 startTime: this.state.keyword.startTime,
-                endTime: this.state.keyword.endTime,
+                endTime: this.state.keyword.endTime
             }
         })
     };
@@ -698,9 +600,9 @@ class StarCheck extends Component {
         this.setState({
             startValue: date,
             keyword: {
-                courseName: this.state.keyword.courseName,
+                name: this.state.keyword.name,
                 startTime: dateString,
-                endTime: this.state.keyword.endTime,
+                endTime: this.state.keyword.endTime
             }
         })
     };    
@@ -710,9 +612,9 @@ class StarCheck extends Component {
         this.setState({
             endValue: date,
             keyword: {
-                courseName: this.state.keyword.courseName,
+                name: this.state.keyword.name,
                 startTime: this.state.keyword.startTime,
-                endTime: dateString,
+                endTime: dateString
             }
         })
     };
@@ -735,67 +637,17 @@ class StarCheck extends Component {
         return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
     };
     
-    // 刷新数据
+    // 刷新table数据
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add});
     };
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {
-                if (subItem.url === this.props.location.pathname) {
-                    let data = {};
-                    subItem.children.forEach((thirdItem) => {
-                        data[thirdItem.url] = true;
-                    });
-                    this.setState({
-                        opObjCheck: data
-                    })
-                }
-            })
+        this.setState({           
+            opObjReady: getPower(this, "/index/app-home/star-check/ready").dataTabs, // 待审核权限
+            opObjDeny: getPower(this, "/index/app-home/star-check/deny").dataTabs // 已驳回权限
         });
-
-        // 待审核权限
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {                
-                subItem.children.forEach((fourthItem) => {
-                    if (fourthItem.url === "/index/check-manage/quality-course-check/ready") {
-                        let data = {};
-                        fourthItem.children.forEach((fifthItem) => {
-                            data[fifthItem.url] = true;
-                        })
-                        this.setState({
-                            opObjReady: data
-                        })
-                    }                    
-                })
-            })
-        })
-
-        // 已驳回权限
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {                
-                subItem.children.forEach((fourthItem) => {
-                    if (fourthItem.url === "/index/check-manage/quality-course-check/deny") {
-                        let data = {};
-                        fourthItem.children.forEach((fifthItem) => {
-                            data[fifthItem.url] = true;
-                        })
-                        this.setState({
-                            opObjDeny: data
-                        })
-                    }                    
-                })
-            })
-        })
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -818,7 +670,7 @@ class StarCheck extends Component {
         }
     }
 
-    render() {
+    render() {       
         return (
             <div className="institution-check">
                 <div className="keyWord clearfix">
@@ -847,8 +699,8 @@ class StarCheck extends Component {
                 </div>
                 <header className="clearfix">
                     <Tabs defaultActiveKey={this.state.type} onChange={this.setType}>
-                        <TabPane tab="待审核" key="0"/>
-                        <TabPane tab="已驳回" key="1"/>
+                        <TabPane tab="待审核" key="1"/>
+                        <TabPane tab="已驳回" key="2"/>
                     </Tabs>
                 </header>                
                 <div className="table-box">

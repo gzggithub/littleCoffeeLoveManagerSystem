@@ -340,13 +340,8 @@ class Home extends Component {
 
     componentWillReceiveProps(nextProps) {
         // url一级菜单部分有变化，则重新设置高亮项
-        // console.log(nextProps);
-        // console.log(this.getSuperiorPath(nextProps.location.pathname));
-        // console.log(this.getSuperiorPath(this.getSuperiorPath(this.props.location.pathname)));
         if (this.getSuperiorPath(nextProps.location.pathname) !== this.getSuperiorPath(this.props.location.pathname)) {
             JSON.parse(sessionStorage.menuListOne).forEach((item, index) => {
-                // console.log(item.url);
-                // console.log(this.getSuperiorPath(nextProps.location.pathname))
                 if (item.url === this.getSuperiorPath(nextProps.location.pathname)) {
                     this.setState({
                         highlight: (index + 1).toString()
@@ -394,7 +389,7 @@ class Home extends Component {
                                 {/*当前登录人信息*/}
                                 <span className="username">{sessionStorage.name ? (sessionStorage.name + "(" + sessionStorage.phone + ")") : "未登录"}</span>                                
                                 {/*重置密码*/}
-                                <ResetPassword signOut={this.signOut}/> 
+                                {/*<ResetPassword signOut={this.signOut}/>*/} 
                                 {/*退出登录*/}
                                 <Popconfirm 
                                     title="确认退出?"

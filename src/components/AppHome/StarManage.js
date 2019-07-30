@@ -642,7 +642,7 @@ class ItemAdd extends Component {
                 console.log(res);
                 message.success("图片提交成功");
                 _this.setState({
-                    viewPic: global.config.photoUrl + res.key || "",           
+                    viewPic: configUrl.photoUrl + res.key || "",           
                     photoLoading: false,
                 })
             }
@@ -862,12 +862,18 @@ class ItemAdd extends Component {
                 gender: values.gender,
                 height: values.height,
                 weight: values.weight,
+                // provinceId: values.area[0],
+                // provinceName: currentAreaName[0],
+                // cityId: values.area[1],
+                // cityName: currentAreaName[1],
+                // areaId: values.area[2],
+                // areaName: currentAreaName[2],
                 provinceId: values.area[0],
-                provinceName: currentAreaName[0],
-                cityId: values.area[1],
-                cityName: currentAreaName[1],
-                areaId: values.area[2],
-                areaName: currentAreaName[2],
+                provinceName: values.area[0] === "0" ? '全国' : currentAreaName[0],
+                cityId: values.area[1] || values.area[0],               
+                cityName: values.area[0] === "0" ? '全国' : currentAreaName[1],
+                areaId: values.area[2] || values.area[1] || values.area[0],
+                areaName: values.area[0] === "0" ? '全国' : currentAreaName[2],
                 phone: values.phone,
                 childId: values.childId,
                 relationship: values.relationship,
@@ -1523,7 +1529,7 @@ class ItemEdit extends Component {
                     message.success("视频提交成功");
                     let videoList = _this.state.videoList;
                     videoList.unshift({
-                        duration: 10,
+                        duration: 0,
                         name: "",
                         sort: 0,
                         video: configUrl.photoUrl + res.key,
@@ -1661,11 +1667,11 @@ class ItemEdit extends Component {
                 height: values.height,
                 weight: values.weight,
                 provinceId: values.area[0],
-                provinceName: currentAreaName[0],
-                cityId: values.area[1],
-                cityName: currentAreaName[1],
-                areaId: values.area[2],
-                areaName: currentAreaName[2],
+                provinceName: values.area[0] === "0" ? '全国' : currentAreaName[0],
+                cityId: values.area[1] || values.area[0],               
+                cityName: values.area[0] === "0" ? '全国' : currentAreaName[1],
+                areaId: values.area[2] || values.area[1] || values.area[0],
+                areaName: values.area[0] === "0" ? '全国' : currentAreaName[2],
                 phone: values.phone,
                 childId: values.childId,
                 relationship: values.relationship,
@@ -2461,7 +2467,7 @@ class StarManage extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        this.setState({opObj: getPower(this)});        
+        this.setState({opObj: getPower(this).data});        
     };
 
     // 搜索及明星姓名，昵称设置

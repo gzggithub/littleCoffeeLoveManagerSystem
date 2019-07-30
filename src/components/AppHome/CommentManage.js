@@ -7,6 +7,7 @@ import {
     message
 } from 'antd';
 import { commentList, deleteComment } from '../../config';
+import { getPower, pagination } from '../../config/common';
 
 const Search = Input.Search;
 
@@ -15,21 +16,14 @@ const Cell = ({value}) => (
     <div>{value}</div>
 );
 
-
-//评价列表
+//评论列表
 class DataTable extends Component {
     constructor(props) {
         super(props);
         this.state = {
             loading: true,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: pagination
         };
         this.columns = [
             {
@@ -39,19 +33,19 @@ class DataTable extends Component {
                 render: (text, record) => this.renderColumns(text, record, 'index'),
             },
             {
-                title: '评价人',
+                title: '评论人',
                 dataIndex: 'nickname',
                 width: '12%',
                 render: (text, record) => this.renderColumns(text, record, 'nickname'),
             },            
             {
-                title: '评价内容',
+                title: '评论内容',
                 dataIndex: 'content',
                 className: 'operating',
                 render: (text, record) => this.renderColumns(text, record, 'content'),
             },                 
             {
-                title: '评价时间',
+                title: '评论时间',
                 dataIndex: 'createTime',
                 width: '15%',
                 render: (text, record) => this.renderColumns(text, record, 'createTime'),
@@ -64,7 +58,7 @@ class DataTable extends Component {
                 render: (text, record) => {
                     return (
                         <div className="editable-row-operations">                                                    
-                            {/*评价删除*/}
+                            {/*评论删除*/}
                             <Popconfirm 
                                 title="确认删除?"
                                 placement="topRight"
@@ -87,20 +81,35 @@ class DataTable extends Component {
         return (
             <Cell value={text}/>
         );
+    };
+
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {                    
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,                        
+                nickname: item.nickname,
+                content: item.content.length > 20 ? item.content.slice(0, 20) + '...' : item.content,
+                content_detail: item.content,
+                createTime: item.createTime                      
+            });
+        });
+        return result;
     };    
 
     //获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
         const params = {            
-            context: keyword ? keyword.content : this.props.keyword.content,// 评价内容
+            content: keyword ? keyword.content : this.props.keyword.content,// 评论内容
             beginTime: keyword ? keyword.startTime : this.props.keyword.startTime,
             endTime: keyword ? keyword.endTime : this.props.keyword.endTime,
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
         commentList(params).then((json) => {
-            const data = [];
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -112,21 +121,10 @@ class DataTable extends Component {
                         this.getData();
                     });
                     return
-                }
-                json.data.data.list.forEach((item, index) => {                    
-                    data.push({
-                        key: index.toString(),
-                        id: item.id,
-                        index: index + 1,                        
-                        nickname: item.nickname,                       
-                        content: item.context.length > 18 ? item.context.slice(0, 18) + '...' : item.context,
-                        content_detail: item.context,
-                        createTime: item.createTime                      
-                    });
-                });
+                }                
                 this.setState({
                     loading: false,
-                    data: data,
+                    data: this.dataHandle(json.data.data.list),
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,
@@ -136,26 +134,20 @@ class DataTable extends Component {
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
-    //评价删除
+    //评论删除
     itemDelete = (id) => {
         this.setState({loading: true});
         deleteComment({id: id}).then((json) => {
             if (json.data.result === 0) {
-                message.success("评价删除成功");
+                message.success("删除成功");
                 this.getData(this.props.keyword);
             } else {
                 this.exceptHandle(json.data);
             }
-        }).catch((err) => {
-            message.error("删除失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => this.errorHandle(err));
     };
 
     exceptHandle = (json) => {
@@ -170,6 +162,11 @@ class DataTable extends Component {
             this.setState({loading: false});
         }
     };
+
+    errorHandle = (err) => {
+        message.error(err.message);
+        this.setState({loading: false});
+    }
 
     //表格参数变化处理
     handleTableChange = (pagination, filters) => {
@@ -213,45 +210,21 @@ class EvaluationManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
-            // 获取评价列表所需关键词
-            keyword: {
-                content: "",
-                // 初始化开始日期和结束日期
-                startTime: null,
+            opObj: {},            
+            keyword: {// 获取评论列表所需关键词
+                content: "",                
+                startTime: null,// 初始化开始日期和结束日期
                 endTime: null,
             },
-            flag_add: false,
-            // 日期禁选控制
-            startValue: null,
+            flag_add: false,            
+            startValue: null,// 日期禁选控制
             endValue: null,
         };        
     }
 
-    getData = () => {
-        this.refs.getDataCopy.getData();
-    };
-
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {
-                if (subItem.url === this.props.location.pathname) {
-                    let data = {};
-                    subItem.children.forEach((thirdItem) => {
-                        data[thirdItem.url] = true;
-                    });
-                    this.setState({
-                        opObj: data
-                    })
-                }
-            })
-        })
+        this.setState({opObj: getPower(this).data})
     };
 
     // 名称关键词设置
@@ -337,19 +310,20 @@ class EvaluationManage extends Component {
     }
 
     render() {
+        console.log(this.state.opObj)
         return (
             <div className="institutions comment">
                 {
                     this.state.opObj.select ?
                         <div>
                             <header className="clearfix" style={{height: "50px", lineHeight: "50px", background: "#FFF"}}>                               
-                                {/*评价名称筛选*/}
+                                {/*筛选*/}
                                 <Search
-                                    placeholder="请输入评价内容"
+                                    placeholder="请输入评论内容"
                                     onSearch={this.setName}
                                     enterButton
                                     style={{width: "240px", float: "left", margin: "10px 20px 0 0"}}/>
-                                {/*评价创建日期筛选*/}
+                                {/*日期筛选*/}
                                 <span>日期筛选： </span>
                                 <DatePicker 
                                     placeholder="请选择开始日期"
@@ -363,10 +337,9 @@ class EvaluationManage extends Component {
                                     disabledDate={this.disabledEndDate}
                                     onChange={this.setEndTime}/>                               
                             </header>
-                            {/*评价列表*/}
+                            {/*列表*/}
                             <div className="table-box" style={{background: "#FFF"}}>
                                 <DataTable 
-                                    ref="getDataCopy"
                                     opObj={this.state.opObj} 
                                     keyword={this.state.keyword}
                                     flag_add={this.state.flag_add}

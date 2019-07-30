@@ -10,6 +10,7 @@ import {
     Spin,
 } from 'antd';
 import { departmentList, addDepartment, deleteDepartment, updateDepartment, departmentDetail, departmentUserList } from '../../config';
+import { getPower } from '../../config/common';
 
 const FormItem = Form.Item;
 const {TextArea} = Input;
@@ -708,14 +709,8 @@ class DataTable extends Component {
     }
 
     // 部门列表处理函数
-    dataHandle = (data) => {
-        console.log(data)
-        // 获取一级菜单列表（parentId为0的项）；
-        const result = [];
-        // const fnFilter = (para) => {
-        //     return para.parentId === 0
-        // };
-        // data.filter(fnFilter).forEach((item, index) => {
+    dataHandle = (data) => { // 获取一级菜单列表（parentId为0的项）
+        const result = [];        
         data.forEach((item, index) => {
             const temp = {
                 key: item.id,
@@ -740,7 +735,6 @@ class DataTable extends Component {
                 });
             }            
         });
-        console.log(result)
         return result;
     };
 
@@ -853,42 +847,18 @@ class DepartmentManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                select: true,
-                add: true,
-                modify: true,
-                delete: true
-            },
+            opObj: {},
             flag_add: false
         }
     };
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {
-                if (subItem.url === this.props.location.pathname) {
-                    let data = {};
-                    subItem.children.forEach((thirdItem) => {
-                        data[thirdItem.url] = true;
-                    });
-                    this.setState({
-                        opObj: data
-                    })
-                }
-            })
-        })
+       this.setState({opObj: getPower(this).data});
     };
 
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add});
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -911,7 +881,7 @@ class DepartmentManage extends Component {
         }
     }
 
-    render() {
+    render() {        
         return (
             <div className="menus">
                 {

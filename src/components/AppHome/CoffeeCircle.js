@@ -16,6 +16,7 @@ import {
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import { configUrl, getToken, coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
+import { getPower, pagination } from '../../config/common';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -355,9 +356,8 @@ class ItemEdit extends Component {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             if (err) {return;}
-            let { picList } = this.state;            
-            // 生活照校验与写入
-            let tempPicList = [];
+            let { picList } = this.state;
+            let tempPicList = [];// 生活照校验与写入
             if (picList.length) {
                 picList.forEach((item, index) => {
                     tempPicList.push({
@@ -402,7 +402,7 @@ class ItemEdit extends Component {
     
     // 错误处理
     errorHandle = (err) => {
-        message.error("保存失败");
+        message.error(err.message);
         this.setState({loading: false});
     };
 
@@ -426,8 +426,7 @@ class ItemEdit extends Component {
                     picUpload={this.picUpload}
                     setPicList={this.setPicList}
                     photoLoading={this.state.photoLoading}                    
-                    confirmLoading={this.state.loading}
-                />                
+                    confirmLoading={this.state.loading}/>                
             </a>
         );
     }
@@ -515,7 +514,7 @@ class ItemDetails extends Component {
             } else {
                 this.exceptHandle(json.data);                         
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => this.errorHandle(err));
     };
 
     showModal = () => {        
@@ -548,7 +547,7 @@ class ItemDetails extends Component {
     
     // 错误处理
     errorHandle = (err) => {
-        message.error("保存失败");
+        message.error(err.message);
         this.setState({loading: false});
     };
 
@@ -574,13 +573,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: pagination
         };
         this.columns = [
             {
@@ -669,6 +662,24 @@ class DataTable extends Component {
         );
     };
 
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {                   
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,
+                sort: item.sort ? item.sort : '',
+                nickname: item.appUserId,
+                content: item.content ? (item.content.length > 20 ? item.content.slice(0, 20) + '...' : item.content) : '',
+                viewNum: item.visitorNum,
+                operateNum: item.fakeVisitorNum ? item.fakeVisitorNum : '',
+                createTime: item.createTime                        
+            });
+        });
+        return result;
+    };
+
     //获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
@@ -680,10 +691,10 @@ class DataTable extends Component {
             pageSize: this.state.pagination.pageSize,
         };
         coffeeList(params).then((json) => {
-            const data = [];
             if (json.data.result === 0) {
                 console.log(555);
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
+                    console.log(6666);
                     this.setState({
                         pagination: {
                             current: 1,
@@ -693,23 +704,10 @@ class DataTable extends Component {
                         this.getData();
                     });
                     return
-                }
-                json.data.data.list.forEach((item, index) => {                   
-                    data.push({
-                        key: index.toString(),
-                        id: item.id,
-                        index: index + 1,
-                        sort: item.sort ? item.sort : '',
-                        nickname: item.appUserId,
-                        content: item.context.length > 18 ? item.context.slice(0, 18) + '...' : item.context,
-                        viewNum: item.visitorNum,
-                        operateNum: item.fakeVisitorNum ? item.fakeVisitorNum : '',
-                        createTime: item.createTime                        
-                    });
-                });
+                }                
                 this.setState({
                     loading: false,
-                    data: data,
+                    data: this.dataHandle(json.data.data.list),
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,
@@ -754,12 +752,12 @@ class DataTable extends Component {
         }).catch((err) => {this.errorHandle(err);});
     };
 
-    //评价删除
+    //删除
     itemDelete = (id) => {
         this.setState({loading: true});
         deleteCoffee({id: id}).then((json) => {
             if (json.data.result === 0) {
-                message.success("评价删除成功");
+                message.success("删除成功");
                 this.getData(this.props.keyword);
             } else {
                 this.exceptHandle(json.data);
@@ -781,9 +779,9 @@ class DataTable extends Component {
     };
 
     errorHandle = (err) => {
-        message.error("获取失败");
+        message.error(err.message);
         this.setState({loading: false});
-    }
+    };
 
     //表格参数变化处理
     handleTableChange = (pagination, filters) => {
@@ -814,24 +812,24 @@ class DataTable extends Component {
     render() {
         const components = {
             body: {
-              row: EditableFormRow,
-              cell: EditableCell,
-            },
+                row: EditableFormRow,
+                cell: EditableCell
+            }
         };
         const columns = this.columns.map((col) => {
             if (!col.editable) {
-              return col;
+                return col;
             }
             return {
-              ...col,
-              onCell: record => ({
-                record,
-                editable: col.editable,
-                dataIndex: col.dataIndex,
-                title: col.title,
-                handleSort: this.handleSort,
-                setViewNum: this.setViewNum
-              }),
+                ...col,
+                onCell: record => ({
+                    record,
+                    editable: col.editable,
+                    dataIndex: col.dataIndex,
+                    title: col.title,
+                    handleSort: this.handleSort,
+                    setViewNum: this.setViewNum
+                })
             };
         });
         return <Table 
@@ -839,7 +837,6 @@ class DataTable extends Component {
                     loading={this.state.loading}
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
-                    // columns={this.columns}
                     components={components}
                     columns={columns}
                     scroll={{ x: 1500 }}
@@ -851,59 +848,32 @@ class CoffeeCircle extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {},
-            // 获取评价列表所需关键词
-            keyword: {
-                content: "",
-                // 初始化开始日期和结束日期
-                startTime: null,
+            opObj: {},            
+            keyword: {// 获取评价列表所需关键词
+                content: "",                
+                startTime: null,// 初始化开始日期和结束日期
                 endTime: null,
             },
-            flag_add: false,
-            // 日期禁选控制
-            startValue: null,
+            flag_add: false,            
+            startValue: null,// 日期禁选控制
             endValue: null,
         };        
     }
 
-    getData = () => {
-        this.refs.getDataCopy.getData();
-    };
-
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        // 菜单信息为空则直接返回登陆页
-        if (!sessionStorage.menuListOne) {
-            this.toLoginPage();
-            return
-        }
-        JSON.parse(sessionStorage.menuListOne).forEach((item) => {
-            item.children.forEach((subItem) => {
-                if (subItem.url === this.props.location.pathname) {
-                    let data = {};
-                    subItem.children.forEach((thirdItem) => {
-                        data[thirdItem.url] = true;
-                    });
-                    this.setState({
-                        opObj: data
-                    })
-                }
-            })
-        })
+        this.setState({opObj: getPower(this).data});
     };
 
     // 名称关键词设置
     setName = (value) => {
-        console.log(value);
-        if (value !== this.state.keyword.content) {
-            this.setState({
-                keyword: {
-                    content: value,
-                    startTime: this.state.keyword.startTime,
-                    endTime: this.state.keyword.endTime,
-                }
-            })
-        }
+        this.setState({
+            keyword: {
+                content: value,
+                startTime: this.state.keyword.startTime,
+                endTime: this.state.keyword.endTime,
+            }
+        })
     };
     
     // 开始日期设置
@@ -949,9 +919,7 @@ class CoffeeCircle extends Component {
     };
 
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
+        this.setState({flag_add: !this.state.flag_add});
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
@@ -975,38 +943,38 @@ class CoffeeCircle extends Component {
     }
 
     render() {
+        console.log(this.state.opObj)
         return (
             <div className="institutions coffee-circle">
                 {
                     this.state.opObj.select ?
                         <div>
                             <header className="clearfix" style={{height: "50px", lineHeight: "50px", background: "#FFF"}}>                               
-                                {/*评价名称筛选*/}
+                                {/*筛选*/}
                                 <Search
-                                    placeholder="请输入评价内容"
+                                    placeholder="请输入内容"
                                     onSearch={this.setName}
                                     enterButton
                                     style={{width: "240px", float: "left", margin: "10px 20px 0 0"}}/>
-                                {/*评价创建日期筛选*/}
+                                {/*日期筛选*/}
                                 <span>日期筛选： </span>
                                 <DatePicker 
-                                    placeholder="请选择开始日期"
-                                    style={{width: "150px"}}
+                                    onChange={this.setStartTime}
                                     disabledDate={this.disabledStartDate}
-                                    onChange={this.setStartTime}/>
+                                    style={{width: "150px"}}
+                                    placeholder="请选择开始日期"/>
                                 <span style={{margin: "0 10px"}}>至</span>
                                 <DatePicker 
-                                    placeholder="请选择结束日期"
-                                    style={{width: "150px"}}
-                                    disabledDate={this.disabledEndDate}
-                                    onChange={this.setEndTime}/>                               
+                                    onChange={this.setEndTime}
+                                    disabledDate={this.disabledEndDate}                                    
+                                    style={{width: "150px"}}                                    
+                                    placeholder="请选择结束日期"/>                               
                             </header>
-                            {/*评价列表*/}
+                            {/*列表*/}
                             <div className="table-box" style={{background: "#FFF"}}>
-                                <DataTable 
-                                    ref="getDataCopy"
-                                    opObj={this.state.opObj} 
+                                <DataTable
                                     keyword={this.state.keyword}
+                                    opObj={this.state.opObj}                                   
                                     flag_add={this.state.flag_add}
                                     toLoginPage={this.toLoginPage}/>
                             </div>                               

@@ -1,7 +1,7 @@
 // 测试代理地址
-// let base = ''
+// let base = 'https://www.taoerxue.com.cn/childStarManager'
 // 正式代理地址
-let base = ''
+let base = '/childStarManager'
 
 export  default {
     /*-------------------------------公共接口-------------------------------*/
@@ -11,7 +11,7 @@ export  default {
     getImgCode: `${base}/code`,
     // 获取文件上传token
     getToken: `${base}/cs/upload/getToken`,
-    /*---------------------------------登录---------------------------------*/
+    /*-------------------------------登录接口-------------------------------*/
     // 登录
     login: `${base}/user/login`,
     // 退出
@@ -67,7 +67,6 @@ export  default {
     starTypeList: `${base}/cs/star/list`,
     // 孩子列表
     childrenList: `${base}/cs/star/ordinaryChildList`,
-    // 
     /*-------------------------------通告管理-------------------------------*/
     // 列表
     noticeList: `${base}/cs/annunciate/list`,
@@ -81,8 +80,10 @@ export  default {
     NewestNotice: `${base}/cs/annunciate/getNewest`,   
     // 结束
     noticeOver: `${base}/cs/annunciate/finish`,
-    // 往期回顾
-    pastReview: `${base}/cs/annunciate/finish`,
+    // 往期回顾详情
+    pastReviewDetail: `${base}/cs/annunciateSummarize/getByAnnunciateId`,
+    // 往期回顾添加或编辑
+    saveOrUpdatePastReview: `${base}/cs/annunciateSummarize/saveOrUpdate`,
     /*-------------------------------报名名单-------------------------------*/
     // 列表
     signList: `${base}/cs/annunciateApply/list`,
@@ -161,7 +162,7 @@ export  default {
     // 详情
     roleDetail: `${base}/cs/role/getById`,
     // 成员列表
-    memberList: `${base}/cs/role/getRolePage`,
+    memberList: `${base}/cs/role/getUserByRole`,
     // 添加人员可分配的角色列表
     roleUserList: `${base}/cs/role/getRoleListByUserId`,
     // 添加人员

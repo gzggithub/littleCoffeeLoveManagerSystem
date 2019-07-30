@@ -2,7 +2,7 @@
   "name": "project",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://192.168.166.161:8080",
+  "proxy": "https://www.taoerxue.com.cn",
   "homepage": ".",
   "dependencies": {
     "antd": "^3.16.1",

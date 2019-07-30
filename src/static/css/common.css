@@ -1,5 +1,18 @@
-/* 图片放大 */
+/* 图片删除样式 */
+.photoExist-item {
+    margin-bottom: 10px;
+}
+.photoExist-item img {
+    width: 80%;
+}
+.photoExist-item img,.remove {
+    float: left;
+}
+.photoExist-item .remove {
+    margin-left: 10px;
+}
 
+/* 图片放大 */
 .hove-photo-scale img {
     transition: all 0.6s !important;
 }
@@ -8,12 +21,8 @@
     transform: scale(1.4) !important;
 }
 
-.professionCertification {
-    padding-left: 100px;
-}
-
 .professionCertification img {
-    width: 20%;
+    width: 80%;
 }
 
 .professionCertification img {
@@ -21,7 +30,10 @@
 }
 
 .professionCertification img:hover {
+    position: relative;
+    margin-left: 200px;
     transform: scale(2.0) !important;
+    z-index: 9999999999999999 !important;
 }
 
 .coursePhoto img {

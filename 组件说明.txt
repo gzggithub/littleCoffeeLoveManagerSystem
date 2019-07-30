@@ -9,6 +9,8 @@
     明星管理：StarManage
     通告管理：NoticeManage
     明星审核：StarCheck
+    小咖圈管理；Coffeecircle
+    评论管理：CommentManage
 
 2.账号管理：BackUserManage
     部门管理：Department

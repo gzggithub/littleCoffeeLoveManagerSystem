@@ -2,7 +2,8 @@
 http://op.taoerxue.cn/
 
 测试管理后台地址
-https://www.taoerxue.com.cn/
+https://www.taoerxue.com.cn/childStarManager
+https://childstar.taoerxue.com.cn
 
 登陆图片验证码链接：
 正式：https://marapi.taoerxue.cn/code
