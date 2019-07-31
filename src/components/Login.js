@@ -292,8 +292,11 @@ class NormalLoginForm extends Component {
                         sessionStorage.token = json.data.data.token;
                         sessionStorage.name = json.data.data.userInfo.username;
                         sessionStorage.phone = json.data.data.userInfo.phone;
-                        const menuListOne = dataHandle(json.data.data.menuList);//菜单分级处理
-                        sessionStorage.menuListOne = JSON.stringify(menuListOne);
+                        if (json.data.data.menuList.length) {
+                            const menuListOne = dataHandle(json.data.data.menuList);//菜单分级处理
+                            sessionStorage.menuListOne = JSON.stringify(menuListOne);
+                        }
+                        
                         // 账号密码缓存
                         let loginMsg = {};
                         if (values.remember) {

@@ -20,7 +20,7 @@ import {
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import moment from 'moment';
-import { checkTel, pCAName, getPower } from '../../config/common';
+import { checkTel, pCAName, getPower, childrenOptions, genderOptions, exceptHandle, errorHandle } from '../../config/common';
 import { configUrl, getToken, starList, saveStar, starDetail, updateStar, NewestStar, sortStar, putAwayStar, childrenList } from '../../config';
 
 const Search = Input.Search;
@@ -283,9 +283,7 @@ const ItemAddForm = Form.create()(
                                     )}
                                 </FormItem>
                                 <div className="tip-help">
-                                    <Tooltip title="请输入真实姓名">
-                                        <Icon type="alert" /> 填写帮助
-                                    </Tooltip>
+                                    <Tooltip title="请输入真实姓名"><Icon type="alert" /> 填写帮助</Tooltip>
                                 </div>
                             </Col>
                             <Col span={8}>
@@ -298,8 +296,7 @@ const ItemAddForm = Form.create()(
                                         }],
                                     })(
                                         <Select placeholder="请选择性别">
-                                            <Option value={0}>女</Option>
-                                            <Option value={1}>男</Option>
+                                            {genderOptions}
                                         </Select>
                                     )}
                                 </FormItem>
@@ -387,13 +384,7 @@ const ItemAddForm = Form.create()(
                                         }],
                                     })(
                                         <Select allowClear placeholder="请选择用户与孩子关系">
-                                            <Option value={0}>妈妈</Option>
-                                            <Option value={1}>爸爸</Option>
-                                            <Option value={2}>爷爷</Option>
-                                            <Option value={3}>奶奶</Option>
-                                            <Option value={4}>外公</Option>
-                                            <Option value={5}>外婆</Option>
-                                            <Option value={6}>其他</Option>
+                                            {childrenOptions}                                            
                                         </Select>
                                     )}
                                 </FormItem>
@@ -475,7 +466,7 @@ const ItemAddForm = Form.create()(
                                         customRequest={picHandleChange03}>
                                         {uploadButton03}
                                         {/*{viewPic03 ? <img src={viewPic03} alt=""/> : uploadButton03}*/}
-                                        {/*<p className="hint">（可上传1-5张图片）</p>*/}
+                                        <p className="hint">（按住Ctrl可以选择多张图片上传）</p>
                                     </Upload>
                                 </div>                       
                             )}
@@ -1799,12 +1790,10 @@ const ItemDetailsForm = Form.create()(
                 tempVideoList.push(
                     <Col span={8} key={index+1}>
                         <div className="video">
-                            <div className="chapter">序号{item.sort}</div>
-                            <div className="videoSource">                                
+                            <div className="chapter">序号{item.sort || (videoList.length - index)}</div>
+                            <div className="videoSource">
                                 <div className="videoSrc">
-                                    <video controls="controls" width="100%">
-                                        <source src={item.resource} type="video/mp4" />                                                
-                                    </video>
+                                    <video src={item.resource} controls="controls" width="100%"></video>
                                 </div>
                             </div>
                             <h3 className="videoCourseName">{item.name}</h3>

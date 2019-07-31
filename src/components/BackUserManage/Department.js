@@ -10,7 +10,7 @@ import {
     Spin,
 } from 'antd';
 import { departmentList, addDepartment, deleteDepartment, updateDepartment, departmentDetail, departmentUserList } from '../../config';
-import { getPower } from '../../config/common';
+import { getPower, exceptHandle, errorHandle} from '../../config/common';
 
 const FormItem = Form.Item;
 const {TextArea} = Input;

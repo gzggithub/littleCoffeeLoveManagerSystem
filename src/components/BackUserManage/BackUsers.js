@@ -12,7 +12,7 @@ import {
     TreeSelect,
 } from 'antd';
 import { accountList, addAccount, deleteAccount, updateAccount, accountDetail, ban, resetPwd, departmentList, roleList } from '../../config';
-import { getPower, checkPhone, checkPassword } from '../../config/common';
+import { getPower, checkPhone, checkPassword, exceptHandle, errorHandle } from '../../config/common';
 
 const Search = Input.Search;
 const {Option} = Select;
@@ -937,7 +937,7 @@ class BackUsers extends Component {
                             <header className="clearfix">
                                 <Search                                     
                                     onSearch={(value) => this.setKeyword(value)}
-                                    enterButton
+                                    enterButton allowClear
                                     style={{width: "320px",float: "left"}}
                                     placeholder="请输入姓名或手机号"/>
                                 <div className="add-button" style={{float: "right"}}>

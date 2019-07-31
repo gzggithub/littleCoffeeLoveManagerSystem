@@ -163,8 +163,8 @@ export  default {
     roleDetail: `${base}/cs/role/getById`,
     // 成员列表
     memberList: `${base}/cs/role/getUserByRole`,
-    // 添加人员可分配的角色列表
-    roleUserList: `${base}/cs/role/getRoleListByUserId`,
+    // 添加人员可分配的人员列表
+    roleUserList: `${base}/cs/role/getRoleListByUserId`,    
     // 添加人员
     addMember: `${base}/cs/role/bindUserRole`,    
     // 获取权限项    

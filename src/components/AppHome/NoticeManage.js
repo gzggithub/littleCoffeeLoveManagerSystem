@@ -1229,12 +1229,12 @@ const ItemPassReviewForm = Form.create()(
                 starExist.push(
                     <Col span={6} key={index + 1}>
                         <div className="photoExist-item clearfix" key={index + 1}>
-                            <img src={configUrl.photoUrl+item.photo} alt=""/>
-                            <div style={{textAlign: "center"}}>{item.name}</div>
+                            <img src={item.modelCard} alt=""/>                            
                             <div className="remove">
                                 <Button type="dashed" shape="circle" icon="minus" onClick={() => setPicList(index)}/>
                             </div>
                         </div>
+                        <div style={{textAlign: "center"}}>{item.name}</div>
                     </Col> 
                 )
             });
@@ -1383,10 +1383,10 @@ class ItemPassReview extends Component {
             },
             {
                 title: '图片',
-                dataIndex: 'photo',
+                dataIndex: 'modelCard',
                 render: (text, record) => (
                     <div className="hove-photo-scale">
-                        <img src={configUrl.photoUrl + record["photo"]} style={{width: '45px', height: "25px"}} alt=""/>
+                        <img src={configUrl.photoUrl + record["modelCard"]} style={{width: '45px', height: "25px"}} alt=""/>
                     </div>
                 )
             },            
@@ -1400,8 +1400,7 @@ class ItemPassReview extends Component {
                 this.editor.setData(json.data.data.wonderfulReview);// 富文本数据写入
                 this.setState({// 信息写入
                     data: json.data.data,
-                    // picList: json.data.data.invitedApplyVOList,
-                    // viewPic: json.data.data.invitedApplyVOList.length ? json.data.data.invitedApplyVOList[0] : '',
+                    selectedRows: json.data.data.invitedApplyVOList || []                    
                 });
             } else {
                 exceptHandle(this, json.data);
@@ -1425,7 +1424,7 @@ class ItemPassReview extends Component {
                 id: item.id,
                 index: index + 1,
                 name: item.name,
-                photo: item.modelCard                
+                modelCard: item.modelCard                
             });
         });
         return result;
@@ -1560,13 +1559,14 @@ class ItemPassReview extends Component {
                 backgroundDesc: values.backgroundDesc,
                 description: values.description,
                 wonderfulReview: this.editor.getData(),
-                applyId: tempApplyId,
+                applyIds: tempApplyId,
             };
             this.setState({loading: true});            
             saveOrUpdatePastReview(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("往期回顾添加或编辑成功");
                     this.handleCancel();
+                    this.handleSubCancel();
                     this.props.recapture();                            
                 } else {
                     exceptHandle(this, json.data);

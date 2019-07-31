@@ -52,6 +52,16 @@ export const noticeStatus = (status) => {// 通告状态
     }
     return tempStatus;
 }
+
+export const childrenOptions = [
+    <Option value={0}>妈妈</Option>,
+    <Option value={1}>爸爸</Option>,
+    <Option value={2}>爷爷</Option>,
+    <Option value={3}>奶奶</Option>,
+    <Option value={4}>外公</Option>,
+    <Option value={5}>外婆</Option>,
+    <Option value={6}>其他</Option>,
+]
 /* ............................................公共的方法............................................. */
 // 手机号和座机号正则验证
 export function checkTel (rule, value, callback) {

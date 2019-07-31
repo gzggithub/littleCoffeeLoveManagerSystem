@@ -14,7 +14,7 @@ import {
     Tree,
     Icon,
 } from 'antd';
-import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, addMember, getPermissionList, getPermission, setPermission } from '../../config';
+import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, subordinateMember, addMember, getPermissionList, getPermission, setPermission } from '../../config';
 import { getPower, exceptHandle, errorHandle } from '../../config/common';
 
 const Search = Input.Search;
@@ -295,43 +295,48 @@ class ItemAddMember extends Component {
     // 部门列表数据树型结构处理
     dataHandle = (data) => {
         let result = [];
+        console.log(data)
         data.forEach((item) => {
             let subData = [];
-            if (item.children) {
+            console.log(item.children.length)
+            if (item.children.length) {
+                console.log(123)
                 item.children.forEach((subItem) => {
                     let thirdData = [];
-                    if (subItem.children) {
+                    if (subItem.children) {// 此处不能使用length判断是否存在
                         subItem.children.forEach((thirdItem) => {
                             let fourthData = [];
-                            if (thirdItem.children) {                                       
+                            if (thirdItem.children) {
                                 thirdItem.children.forEach((fourthItem) => {
                                     fourthData.push({
                                         title: fourthItem.name,                                                
-                                        key: fourthItem.name + ',' + fourthItem.id,
+                                        // key: fourthItem.name + ',' + fourthItem.id,
+                                        key: fourthItem.id,
                                     })
                                 })
                             } else {                                       
-                                if (thirdItem.userList) {                                            
+                                if (thirdItem.userList.length) {                                            
                                     thirdItem.userList.forEach((fifthItem) =>{
                                         fourthData.push({
                                             title: fifthItem.userName,                                                    
-                                            key: fifthItem.userName + ',' + fifthItem.id
+                                            key: fifthItem.userName + ',' + fifthItem.userId
                                         })
                                     })
                                 }                                          
                             }                            
                             thirdData.push({
                                 title: thirdItem.name,                                       
-                                key: thirdItem.name + ',' + thirdItem.id,
+                                // key: thirdItem.name + ',' + thirdItem.id,
+                                key: thirdItem.id,
                                 children: fourthData,
                             })
                         })
                     } else {
-                        if (subItem.userList) {
+                        if (subItem.userList.length) {
                             subItem.userList.forEach((thirdCopyItem) => {
                                 thirdData.push({
                                     title: thirdCopyItem.userName,                                    
-                                    key: thirdCopyItem.userName + ',' + thirdCopyItem.id,
+                                    key: thirdCopyItem.userName + ',' + thirdCopyItem.userId,
                                 })                                            
                             })
                         }
@@ -339,44 +344,47 @@ class ItemAddMember extends Component {
                     console.log(subItem.userList)
                     subData.push({
                         title: subItem.name,
-                        key: subItem.name + ',' + subItem.id,                               
+                        // key: subItem.name + ',' + subItem.id,                             
+                        key: subItem.id,                             
                         children: thirdData
                     })
                 })
             } else {
-                if (item.userList) {
+                console.log(23)
+                if (item.userList.length) {
                     item.userList.forEach((subCopyItem) => {
                         subData.push({
                             title: subCopyItem.userName,                            
-                            key: subCopyItem.userName + ',' + subCopyItem.id
+                            key: subCopyItem.userName + ',' + subCopyItem.userId
                         })
                     })
-                }
-            }                      
+                }                
+            }
+            
+            console.log(444)                     
             result.push({
                 title: item.name,
-                key: item.name + ',' + item.id,
+                // key: item.name + ',' + item.id,
+                key: item.id,
                 children: subData
             })
         });
+        console.log(result)
         return result;
     };
     
     // 获取部门列表
     getDepartmentList = (departmentName) => {
-        const params = {
-            pageNum: 1,
-            pageSize: 20
-        };
-        departmentList(params).then((json) => {
+        subordinateMember().then((json) => {
             if (json.data.result === 0) {
+                console.log(json.data.data)
                 this.setState({                    
-                    gData: this.dataHandle(json.data.data.list)
+                    gData: this.dataHandle(json.data.data)
                 });                
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => errorHandle(this, err));
     };
     
     // 暂时不用
@@ -617,9 +625,9 @@ class ItemAddMember extends Component {
                     this.handleCancel();                        
                     this.props.recapture();// 编辑成功，重新获取列表
                 } else {
-                    this.exceptHandle(json.data);
+                    exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+            }).catch((err) => errorHandle(this, err));
         });
     };
 

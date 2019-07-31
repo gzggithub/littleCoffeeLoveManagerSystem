@@ -10,6 +10,7 @@ CKEDITOR.editorConfig = function( config ) {
 	var sss = "123456789";
 	config.height = 180;
 	config.filebrowserUploadUrl = '/file/ckeditorUpload?token='+sss;
+    // config.filebrowserUploadUrl="file/uploadImage";
 	// editorIndicates whether the contents to be edited are being input as a full HTML page.
     // A full page includes the <html>, <head>, and <body> elements. 
     // The final output will also reflect this setting, including the <body> contents only if this setting is disabled.

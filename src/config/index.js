@@ -470,6 +470,11 @@ export const roleUserList = params => {
     return axios.get(api.roleUserList, {params: params});
 }
 
+export const subordinateMember = params => {
+    setAuthorization();
+    return axios.get(api.subordinateMember, {params: params});
+}
+
 // 添加人员
 export const addMember = data => {
     setAuthorization();
