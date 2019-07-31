@@ -15,7 +15,7 @@ import {
     Icon,
 } from 'antd';
 import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, subordinateMember, addMember, getPermissionList, getPermission, setPermission } from '../../config';
-import { getPower, exceptHandle, errorHandle } from '../../config/common';
+import { getPower, handleTableChange, exceptHandle, errorHandle, toLoginPage } from '../../config/common';
 
 const Search = Input.Search;
 const {TextArea} = Input;
@@ -1621,7 +1621,7 @@ class ItemEdit extends Component {
 //成员名单表单
 const NumDetailForm = Form.create()(
     (props) => {
-        const {visible, onCancel, confirmLoading, loading, data, columns, pagination} = props;
+        const {visible, onCancel, _this, loading, data, columns, pagination, confirmLoading} = props;
 
         return (
             <Modal
@@ -1633,11 +1633,13 @@ const NumDetailForm = Form.create()(
                 confirmLoading={confirmLoading}
                 footer={null}>
                 <div className="table-box">                    
-                    <Table bordered
-                      loading={loading}
-                      dataSource={data}
-                      pagination={pagination}
-                      columns={columns}/>
+                    <Table 
+                        bordered
+                        loading={loading}
+                        dataSource={data}
+                        pagination={pagination}
+                        columns={columns}
+                        onChange={(pagination) => handleTableChange(this, pagination)}/>
                 </div>
             </Modal>
         );
@@ -1714,7 +1716,6 @@ class NumDetail extends Component {
             pageSize: this.state.pagination.pageSize
         }).then((json) => {
             if (json.data.result === 0) {
-                const data = [];
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
                         pagination: {
@@ -1753,37 +1754,37 @@ class NumDetail extends Component {
     };
 
     // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else {
+    //         message.error(json.message);
+    //         this.setState({loading: false});
+    //     }
+    // };
     
     // 错误处理
-    errorHandle = (err) => {
-        message.error("获取失败");
-        this.setState({loading: false});
-    };
+    // errorHandle = (err) => {
+    //     message.error("获取失败");
+    //     this.setState({loading: false});
+    // };
 
     //页码变化处理
-    handleTableChange = (pagination) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.roleSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.roleSize);
-        this.setState({
-            pagination: pager
-        }, () => {
-            this.getData();
-        })
-    };
+    // handleTableChange = (pagination) => {
+    //     const pager = {...this.state.pagination};
+    //     pager.current = pagination.current;
+    //     localStorage.roleSize = pagination.pageSize;
+    //     pager.pageSize = Number(localStorage.roleSize);
+    //     this.setState({
+    //         pagination: pager
+    //     }, () => {
+    //         this.getData();
+    //     })
+    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1801,7 +1802,7 @@ class NumDetail extends Component {
                     data={this.state.data}
                     columns={this.columns}
                     pagination={this.pagination}
-                    onChange={this.handleTableChange}/>
+                    _this={this}/>
             </a>
         );
     }
@@ -1916,6 +1917,22 @@ class DataTable extends Component {
         )
     };
 
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,
+                name: item.roleName,
+                roleNums: item.num,
+                remark: item.remark,
+                updateTime: item.createTime,
+            })
+        })
+        return result;
+    };
+
     //获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
@@ -1937,21 +1954,10 @@ class DataTable extends Component {
                         this.getData();
                     });
                     return
-                }
-                json.data.data.list.forEach((item, index) => {
-                    data.push({
-                        key: index.toString(),
-                        id: item.id,
-                        index: index + 1,
-                        name: item.roleName,
-                        roleNums: item.num,
-                        remark: item.remark,
-                        updateTime: item.createTime,
-                    })
-                })
+                }                
                 this.setState({
                     loading: false,
-                    data: data,
+                    data: this.dataHandle(json.data.data.list),
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,
@@ -1959,9 +1965,9 @@ class DataTable extends Component {
                     }
                 })
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => errorHandle(this, err));
     };
 
     //角色删除
@@ -1972,43 +1978,43 @@ class DataTable extends Component {
                     message.success("删除成功");
                     this.getData();
                 } else {
-                    this.exceptHandle(json.data);
+                    exceptHandle(this, json.data);
                 }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => errorHandle(this, err));
     };
 
     // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else {
+    //         message.error(json.message);
+    //         this.setState({loading: false});
+    //     }
+    // };
     
     // 错误处理
-    errorHandle = (err) => {
-        message.error("获取失败");
-        this.setState({loading: false});
-    };
+    // errorHandle = (err) => {
+    //     message.error("获取失败");
+    //     this.setState({loading: false});
+    // };
 
     //页码变化处理
-    handleTableChange = (pagination) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.roleSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.roleSize);
-        this.setState({
-            pagination: pager
-        }, () => {
-            this.getData();
-        })
-    };
+    // handleTableChange = (pagination) => {
+    //     const pager = {...this.state.pagination};
+    //     pager.current = pagination.current;
+    //     localStorage.roleSize = pagination.pageSize;
+    //     pager.pageSize = Number(localStorage.roleSize);
+    //     this.setState({
+    //         pagination: pager
+    //     }, () => {
+    //         this.getData();
+    //     })
+    // };
 
     componentWillMount() {
         this.getData();
@@ -2030,7 +2036,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -2061,10 +2067,10 @@ class Roles extends Component {
     };
 
     // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
-    };
+    // toLoginPage = () => {
+    //     sessionStorage.clear();
+    //     this.props.history.push('/')
+    // };
 
     componentWillMount() {
         this.setPower();
@@ -2107,7 +2113,7 @@ class Roles extends Component {
                                     opObj={this.state.opObj} 
                                     keyword={this.state.keyword}
                                     flag_add={this.state.flag_add} 
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => toLoginPage(this)}/>
                             </div>
                         </div>
                         :

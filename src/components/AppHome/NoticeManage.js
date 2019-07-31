@@ -23,7 +23,7 @@ import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import moment from 'moment';
 import { configUrl, getToken, noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReviewDetail, saveOrUpdatePastReview, signList, typeList } from '../../config';
-import { toLoginPage, noticeOptions, noticeStatus, pCAName, getPower, countdown, picUpload, removeTag, checkRiches, exceptHandle, errorHandle} from '../../config/common';
+import { toLoginPage, noticeOptions, noticeStatus, pCAName, getPower, countdown, picUpload, removeTag, checkRiches, handleTableChange, exceptHandle, errorHandle} from '../../config/common';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -32,7 +32,7 @@ const {Option} = Select;
 const RadioGroup = Radio.Group;
 
 const dateFormat = "YYYY-MM-DD HH:mm:ss";
-const riches = '';
+// const riches = '';
 
 //单元格
 const Cell = ({value}) => (
@@ -42,7 +42,7 @@ const Cell = ({value}) => (
 // 新增、复制通告表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, formattedAddress, setXY, setAddressComponent, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
+        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, setXY, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
@@ -69,9 +69,11 @@ const ItemAddForm = Form.create()(
                 geocoder.getLocation(para, (status, result) => {
                     if (status === 'complete' && result.info === 'OK') {
                         result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;                       
-                        setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
+                        setXY({lng: result.geocodes[0].location.lng, lat: result.geocodes[0].location.lat});
+                        console.log(result.geocodes[0].location.lng)
+                        console.log(result.geocodes[0].location.lat)
                         setFieldsValue({"address": result.geocodes[0].formattedAddress});
-                        setAddressComponent(result.geocodes[0].addressComponent);
+                        // setAddressComponent(result.geocodes[0].addressComponent);
                         marker.setPosition(result.geocodes[0].location);
                         mapObj.setCenter(marker.getPosition())
                     } else {
@@ -159,7 +161,7 @@ const ItemAddForm = Form.create()(
                             <Col span={16}>
                                 <FormItem className="time"  label="有效时间：">
                                     {getFieldDecorator('time', {
-                                        initialValue: data.beginDate,
+                                        initialValue: data.beginDate || null,
                                         rules: [{
                                             required: true,
                                             message: '开始时间不能为空',                                            
@@ -218,9 +220,7 @@ const ItemAddForm = Form.create()(
                                         <Input onBlur={(event) => toXY(event.target.value)} allowClear placeholder="请填写地点" />
                                     )}
                                 </FormItem>
-                            </Col>
-                            {/*<p onClick={location}
-                               style={{width: "120px", marginLeft: "100px", cursor: "pointer"}}>点击获取当前坐标</p>*/}
+                            </Col>                            
                             <div id="add-notice-container" name="container" tabIndex="0"/>
                         </Row>
                         <div className="ant-line"></div>
@@ -285,9 +285,9 @@ class ItemAdd extends Component {
             startTime: null,
             endTime: null,
             mapObj: {},
-            formattedAddress: "",
+            // formattedAddress: "",
             xy: {},
-            addressComponent: {},                  
+            // addressComponent: {},
             uploadToken: '',// 上传Token
             viewPic: "",
             photoLoading: false,
@@ -298,13 +298,10 @@ class ItemAdd extends Component {
 
     // 设置开始时间
     setStartTime = (date, dateString) => {
-        // console.log(date)
-        // console.log(dateString)
         this.setState({
             startValue: date,
             startTime: dateString
         });
-        return dateString;
     };
     
     // 设置结束时间
@@ -344,9 +341,9 @@ class ItemAdd extends Component {
                     allTypeList: json.data.data.list                   
                 });
             } else {
-                this.expectHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => errorHandle(this, err));
     };
 
     // 获取通告基本信息
@@ -366,9 +363,9 @@ class ItemAdd extends Component {
                     this.map();
                 });
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => errorHandle(this, err));
     };
 
     showModal = (props, event) => {
@@ -411,23 +408,26 @@ class ItemAdd extends Component {
     };
 
     setXY = (para) => {
-        this.setState({xy: para});
-    };
-
-    setFormattedAddress = (para) => {
-        this.setState({formattedAddress: para});
-    };
-
-    setAddressComponent = (para) => {
-        this.setState({
-            addressComponent: {
-                provinceName: para.province,
-                cityName: para.city,
-                areaName: para.district,
-                areaId: para.adcode
-            }
+        console.log(para)
+        this.setState({xy: para}, () => {
+            console.log(this.state.xy)
         });
     };
+
+    // setFormattedAddress = (para) => {
+    //     this.setState({formattedAddress: para});
+    // };
+
+    // setAddressComponent = (para) => {
+    //     this.setState({
+    //         addressComponent: {
+    //             provinceName: para.province,
+    //             cityName: para.city,
+    //             areaName: para.district,
+    //             areaId: para.adcode
+    //         }
+    //     });
+    // };
 
     // 倒计时
     countDown = () => {
@@ -453,14 +453,12 @@ class ItemAdd extends Component {
         getToken().then((json) => {
             if (json.data.result === 0) {
                     this.setState({
-                        uploadToken: json.data.data,
+                        uploadToken: json.data.data
                     })
                 } else {
-                    this.exceptHandle(json.data);
+                    exceptHandle(this, json.data);
                 }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
+        }).catch((err) => errorHandle(this, err));
     };
 
     picUpload01 = (para) => {
@@ -508,7 +506,7 @@ class ItemAdd extends Component {
                 mapObj: {},
                 formattedAddress: "",
                 xy: {},
-                addressComponent: {},
+                // addressComponent: {},
                 uploadToken: '',// 上传Token
                 viewPic: "",
                 photoLoading: false,
@@ -547,12 +545,12 @@ class ItemAdd extends Component {
                 endDate: this.state.endTime,
                 type: values.type,
                 address: values.address,
-                lat: this.state.xy.lat,
                 lng: this.state.xy.lng,
+                lat: this.state.xy.lat,
                 photo: values.photo,
                 description: values.claim,                
             })
-            form.resetFields();
+            form.resetFields(["courseName", "cityId","type", "photo", "address", "claim", []]);
             message.info('数据已暂存，请继续添加')
 
             this.setState({
@@ -563,52 +561,84 @@ class ItemAdd extends Component {
             }, () => {
                 console.log(this.state.keepData);
             });
-            console.log(999999999)
-            console.log(keepData)            
+            // console.log(999999999)
+            // console.log(keepData)
         });
-        console.log(keepData)
-        return keepData;
+        // console.log(keepData)
+        // return keepData;
     };
 
     // 确认处理
     handleCreate = () => {
-        const data = this.keepAddNotice();
-        console.log(data)
-        if (data.length) {
-            this.setState({loading: true});            
-            addNotice(data).then((json) => {
-                if (json.data.result === 0) {
-                    message.success("添加通告成功");
-                    this.handleCancel();
-                    this.props.recapture();
-                } else {
-                    this.exceptHandle(json.data);
-                }
-            }).catch((err) => {this.errorHandle(err);});
-        }        
+        const form = this.form;        
+        console.log(this.state.keepData);
+        const {keepData, viewPic} = this.state;
+        form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
+            if (err) {return;}
+            // 图片校验
+            values.photo = viewPic;
+            if (!values.photo) {
+                message.error("图片未提交");
+                return
+            }
+            if (values.photo && viewPic) {
+                values.photo = viewPic.slice(configUrl.photoUrl.length);
+            }          
+            // 省市区名称
+            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            console.log(currentCityName)
+            
+            keepData.push({
+                name: values.courseName,
+                provinceId: values.cityId[0],
+                provinceName: values.cityId[0] === "0" ? '全国' : currentCityName[0],
+                cityId: values.cityId[1] || values.cityId[0],
+                cityName: values.cityId[0] === "0" ? '全国'  : (currentCityName[1] || currentCityName[0]),
+                beginDate: values.time,
+                endDate: this.state.endTime,
+                type: values.type,
+                address: values.address,
+                lng: this.state.xy.lng,
+                lat: this.state.xy.lat,
+                photo: values.photo,
+                description: values.claim,                
+            })
+            if (keepData.length) {
+                this.setState({loading: true});
+                addNotice(keepData).then((json) => {
+                    if (json.data.result === 0) {
+                        message.success("添加通告成功");
+                        this.handleCancel();
+                        this.props.recapture();
+                    } else {
+                        exceptHandle(this, json.data);
+                    }
+                }).catch((err) => errorHandle(this, err));
+            }
+        });       
     };
 
     // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 1206) {// 判断没有添加数据时，提示信息                    
-            this.countDown();
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 1206) {// 判断没有添加数据时，提示信息                    
+    //         this.countDown();
+    //     } else {
+    //         message.error(json.message);
+    //         this.setState({loading: false});
+    //     }
+    // };
     
     // 错误处理
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
-    };
+    // errorHandle = (err) => {
+    //     message.error(err.message);
+    //     this.setState({loading: false});
+    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -634,9 +664,9 @@ class ItemAdd extends Component {
                     disabledStartDate={this.disabledStartDate}
                     disabledEndDate={this.disabledEndDate}
                     mapObj={this.state.mapObj}
-                    formattedAddress={this.state.formattedAddress}
+                    // formattedAddress={this.state.formattedAddress}
                     setXY={this.setXY}
-                    setAddressComponent={this.setAddressComponent}
+                    // setAddressComponent={this.setAddressComponent}
                     reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
                     picUpload01={this.picUpload01}
@@ -650,7 +680,7 @@ class ItemAdd extends Component {
 // 通告编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, provinceList, allTypeList, form, data, startTime, setEndTime, disabledStartDate, disabledEndDate, mapObj, formattedAddress, setXY, setAddressComponent, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
+        const {visible, onCancel, onCreate, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, setXY, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
@@ -677,9 +707,9 @@ const ItemEditForm = Form.create()(
                 geocoder.getLocation(para, (status, result) => {
                     if (status === 'complete' && result.info === 'OK') {
                         result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;                        
-                        setXY({x: result.geocodes[0].location.lng, y: result.geocodes[0].location.lat});
+                        setXY({lng: result.geocodes[0].location.lng, lat: result.geocodes[0].location.lat});
                         setFieldsValue({"address": result.geocodes[0].formattedAddress});
-                        setAddressComponent(result.geocodes[0].addressComponent);
+                        // setAddressComponent(result.geocodes[0].addressComponent);
                         marker.setPosition(result.geocodes[0].location);
                         mapObj.setCenter(marker.getPosition())
                     } else {
@@ -899,9 +929,9 @@ class ItemEdit extends Component {
             startTime: null,
             endTime: null,
             mapObj: {},
-            formattedAddress: "",
+            // formattedAddress: "",
             xy: {},
-            addressComponent: {},                  
+            // addressComponent: {},
             uploadToken: '',// 上传Token
             viewPic: "",
             photoLoading: false,
@@ -954,9 +984,9 @@ class ItemEdit extends Component {
                     allTypeList: json.data.data.list                   
                 });
             } else {
-                this.expectHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => errorHandle(this, err));
     };
 
     // 获取通告基本信息
@@ -969,8 +999,8 @@ class ItemEdit extends Component {
                     startTime: json.data.data.beginDate,
                     endTime: json.data.data.endDate,                    
                     xy: {
-                        x: json.data.data.lng,
-                        y: json.data.data.lat
+                        lng: json.data.data.lng,
+                        lat: json.data.data.lat
                     },
                     keepData: [json.data.data]
                 }, () => {
@@ -978,9 +1008,9 @@ class ItemEdit extends Component {
                 });
 
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => errorHandle(this, err));
     };
 
     showModal = () => {
@@ -1003,7 +1033,7 @@ class ItemEdit extends Component {
                 window.AMap.service('AMap.Geocoder', () => {
                     const geocoder = new window.AMap.Geocoder({});
                     this.state.mapObj.on('click', (e) => {
-                        this.setXY({x: e.lnglat.lng, y: e.lnglat.lat});
+                        this.setXY({lng: e.lnglat.lng, lat: e.lnglat.lat});
                         geocoder.getAddress([e.lnglat.lng, e.lnglat.lat], (status, result) => {
                             if (status === 'complete' && result.info === 'OK') {
                                 this.setFormattedAddress(result.regeocode.formattedAddress);
@@ -1020,20 +1050,20 @@ class ItemEdit extends Component {
         this.setState({xy: para});
     };
 
-    setFormattedAddress = (para) => {
-        this.setState({formattedAddress: para});
-    };
+    // setFormattedAddress = (para) => {
+    //     this.setState({formattedAddress: para});
+    // };
 
-    setAddressComponent = (para) => {
-        this.setState({
-            addressComponent: {
-                provinceName: para.province,
-                cityName: para.city,
-                areaName: para.district,
-                areaId: para.adcode
-            }
-        });
-    };   
+    // setAddressComponent = (para) => {
+    //     this.setState({
+    //         addressComponent: {
+    //             provinceName: para.province,
+    //             cityName: para.city,
+    //             areaName: para.district,
+    //             areaId: para.adcode
+    //         }
+    //     });
+    // };
 
     reqwestUploadToken = () => {
         getToken().then((json) => {
@@ -1042,11 +1072,9 @@ class ItemEdit extends Component {
                         uploadToken: json.data.data,
                     })
                 } else {
-                    this.exceptHandle(json.data);
+                    exceptHandle(this, json.data);
                 }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
+        }).catch((err) => errorHandle(this, err));
     };
 
     picUpload01 = (para) => {
@@ -1092,9 +1120,9 @@ class ItemEdit extends Component {
                 startTime: null,
                 endTime: null,
                 mapObj: {},
-                formattedAddress: "",
+                // formattedAddress: "",
                 xy: {},
-                addressComponent: {},
+                // addressComponent: {},
                 uploadToken: '',// 上传Token
                 viewPic: "",
                 photoLoading: false,
@@ -1134,8 +1162,8 @@ class ItemEdit extends Component {
                 endDate: this.state.endTime,
                 type: values.type,
                 address: values.address,
-                lng: this.state.xy.x,
-                lat: this.state.xy.y,
+                lng: this.state.xy.lng,
+                lat: this.state.xy.lat,
                 photo: values.photo,              
                 description: values.description,
             };
@@ -1154,24 +1182,24 @@ class ItemEdit extends Component {
     };
 
     // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else {
+    //         message.error(json.message);
+    //         this.setState({loading: false});
+    //     }
+    // };
     
     // 错误处理
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
-    };
+    // errorHandle = (err) => {
+    //     message.error(err.message);
+    //     this.setState({loading: false});
+    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1188,15 +1216,14 @@ class ItemEdit extends Component {
                     onCreate={this.handleCreate}                    
                     provinceList={this.props.provinceList}
                     allTypeList={this.state.allTypeList}
-                    data={this.state.data}
-                    startTime={this.state.starTime}                    
+                    data={this.state.data}                                       
                     setEndTime={this.setEndTime}
                     disabledStartDate={this.disabledStartDate}
                     disabledEndDate={this.disabledEndDate}
                     mapObj={this.state.mapObj}
-                    formattedAddress={this.state.formattedAddress}
+                    // formattedAddress={this.state.formattedAddress}
                     setXY={this.setXY}
-                    setAddressComponent={this.setAddressComponent}
+                    // setAddressComponent={this.setAddressComponent}
                     reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
                     picUpload01={this.picUpload01}
@@ -1211,7 +1238,7 @@ class ItemEdit extends Component {
 const ItemPassReviewForm = Form.create()(
     (props) => {
         const {visible, onCancel, onCreate, form, data,  confirmLoading} = props;
-        const {subVisible, onSubCancel, onSubCreate, showSubModal, columns, subData, selectedRowKeys, selectedRows, setPicList, onSelectChange, pagination, handleTableChange, subConfirmLoading} = props;
+        const {_this, subVisible, onSubCancel, onSubCreate, showSubModal, columns, subData, selectedRowKeys, selectedRows, setPicList, onSelectChange, pagination, subConfirmLoading} = props;
         const {getFieldDecorator} = form;
 
         const rowSelection = {
@@ -1221,7 +1248,6 @@ const ItemPassReviewForm = Form.create()(
         };
 
         // 已选择童星列表
-        console.log(selectedRows)
         const starExist = [];
         if (selectedRows.length) {
             console.log(selectedRows)
@@ -1334,7 +1360,7 @@ const ItemPassReviewForm = Form.create()(
                                                     columns={columns} 
                                                     dataSource={subData} 
                                                     pagination={pagination}
-                                                    onChange={handleTableChange}/>
+                                                    onChange={(pagination) => handleTableChange(_this, pagination)}/>
                                             </Modal>
                                             <Row gutter={24}>
                                                 {starExist}                                                
@@ -1463,9 +1489,9 @@ class ItemPassReview extends Component {
                     }
                 })
             } else {
-                this.exceptHandle(json.data);
+                exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => errorHandle(this, err));
     };
 
     showSubModal = () => {
@@ -1576,45 +1602,45 @@ class ItemPassReview extends Component {
     };
 
     // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 1005) {
-            message.error("无数据，请添加");
-            this.setState({loading: false});                     
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
+    // exceptHandle = (json) => {
+    //     if (json.code === 901) {
+    //         message.error("请先登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 902) {
+    //         message.error("登录信息已过期，请重新登录");            
+    //         this.props.toLoginPage();// 返回登陆页
+    //     } else if (json.code === 1005) {
+    //         message.error("无数据，请添加");
+    //         this.setState({loading: false});                     
+    //     } else {
+    //         message.error(json.message);
+    //         this.setState({loading: false});
+    //     }
+    // };
     
     // 错误处理
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
-    };
+    // errorHandle = (err) => {
+    //     message.error(err.message);
+    //     this.setState({loading: false});
+    // };
 
     saveFormRef = (form) => {
         this.form = form;
     };
 
     // 表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.coursePageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.coursePageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getSubData();
-        });
-    };
+    // handleTableChange = (pagination, filters) => {
+    //     const pager = {...this.state.pagination};
+    //     pager.current = pagination.current;
+    //     localStorage.coursePageSize = pagination.pageSize;
+    //     pager.pageSize = Number(localStorage.coursePageSize);
+    //     this.setState({
+    //         type: filters.type ? filters.type[0] : null,
+    //         pagination: pager,
+    //     }, () => {
+    //         this.getSubData();
+    //     });
+    // };
 
     render() {
         return (
@@ -1635,7 +1661,7 @@ class ItemPassReview extends Component {
                     selectedRows={this.state.selectedRows}
                     onSelectChange={this.onSelectChange}
                     pagination={this.state.pagination}
-                    handleTableChange={this.handleTableChange}
+                    _this={this}
                     subConfirmLoading={this.state.subLoading}
                     data={this.state.data}
                     reqwestUploadToken={this.reqwestUploadToken}
@@ -2187,18 +2213,18 @@ class DataTable extends Component {
     };
 
     // 表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.coursePageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.coursePageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
-    };
+    // handleTableChange = (pagination, filters) => {
+    //     const pager = {...this.state.pagination};
+    //     pager.current = pagination.current;
+    //     localStorage.coursePageSize = pagination.pageSize;
+    //     pager.pageSize = Number(localStorage.coursePageSize);
+    //     this.setState({
+    //         type: filters.type ? filters.type[0] : null,
+    //         pagination: pager,
+    //     }, () => {
+    //         this.getData();
+    //     });
+    // };
 
     componentWillMount() {
         this.getData();
@@ -2219,7 +2245,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -2388,7 +2414,6 @@ class NotificationManage extends Component {
     }
 
     render() {
-        console.log(this.state.opObj);
         return (
             <div className="courses star">
                 {

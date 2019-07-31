@@ -54,13 +54,13 @@ export const noticeStatus = (status) => {// 通告状态
 }
 
 export const childrenOptions = [
-    <Option value={0}>妈妈</Option>,
-    <Option value={1}>爸爸</Option>,
-    <Option value={2}>爷爷</Option>,
-    <Option value={3}>奶奶</Option>,
-    <Option value={4}>外公</Option>,
-    <Option value={5}>外婆</Option>,
-    <Option value={6}>其他</Option>,
+    <Option key={0} value={0}>妈妈</Option>,
+    <Option key={1} value={1}>爸爸</Option>,
+    <Option key={2} value={2}>爷爷</Option>,
+    <Option key={3} value={3}>奶奶</Option>,
+    <Option key={4} value={4}>外公</Option>,
+    <Option key={5} value={5}>外婆</Option>,
+    <Option key={6} value={6}>其他</Option>,
 ]
 /* ............................................公共的方法............................................. */
 // 手机号和座机号正则验证
@@ -411,6 +411,20 @@ export const checkRiches = (rule, value, callback) => {
     callback();
     return true;
 }
+
+// 页码变化处理  (暂时不能用，传参问题)
+export const handleTableChange = (_this, pagination, filters) => {
+    const pager = {..._this.state.pagination};
+    pager.current = pagination.current;
+    localStorage.roleSize = pagination.pageSize;
+    pager.pageSize = Number(localStorage.roleSize);
+    _this.setState({
+        type: filters.type ? filters.type[0] : null,
+        pagination: pager
+    }, () => {
+        _this.getData();
+    });
+};
 
 // 日期处理函数
 export const timeHandle = (para)  => {

@@ -13,12 +13,11 @@ import {
     Spin
 } from 'antd';
 import { genderOptions, genderStatus, copyToClipboard } from '../../config/common';
-import { signList, signDetail} from '../../config';
+import { copyUrl, signList, signDetail, exceptHandle, errorHandle} from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
 
-const copyUrl = "http://www.taoerxue.com.cn/";
 //单元格
 const Cell = ({value}) => (
     <div>{value}</div>

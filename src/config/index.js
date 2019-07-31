@@ -11,6 +11,8 @@ export const configUrl = {
     // photoUrl: 'https://image.taoerxue.com/' // 正式服务器图片地址
     photoUrl: 'http://image.taoerxue.cn/'      // 测试服务器图片地址
 }
+// 下载地址
+export const copyUrl = "https://annunciation.taoerxue.com.cn?id=";
 
 /*创建Post x-www-form-urlencode请求参数, 参数转字符串*/
 function createPostParams(obj) {
