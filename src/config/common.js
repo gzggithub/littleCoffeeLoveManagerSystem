@@ -413,13 +413,12 @@ export const checkRiches = (rule, value, callback) => {
 }
 
 // 页码变化处理  (暂时不能用，传参问题)
-export const handleTableChange = (_this, pagination, filters) => {
+export const handleTableChange = (_this, pagination) => {
     const pager = {..._this.state.pagination};
     pager.current = pagination.current;
     localStorage.roleSize = pagination.pageSize;
     pager.pageSize = Number(localStorage.roleSize);
-    _this.setState({
-        type: filters.type ? filters.type[0] : null,
+    _this.setState({       
         pagination: pager
     }, () => {
         _this.getData();

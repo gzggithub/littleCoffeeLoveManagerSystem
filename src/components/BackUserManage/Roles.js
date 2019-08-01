@@ -1611,8 +1611,7 @@ class ItemEdit extends Component {
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
                     data={this.state.data}
-                    confirmLoading={this.state.loading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         )
     }
