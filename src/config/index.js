@@ -7,12 +7,13 @@ var qs = require('qs');
 /*设置请求头的token 开始加载一次(解决办法是写一个方法。调接口之前调下改方法)*/
 // axios.defaults.headers.common['Authorization'] = getAuthorization();
 
-export const configUrl = {   
-    // photoUrl: 'https://image.taoerxue.com/' // 正式服务器图片地址
-    photoUrl: 'http://image.taoerxue.cn/'      // 测试服务器图片地址
+export const configUrl = {
+    photoUrl: 'https://image.taoerxue.com/', // 正式服务器图片地址
+    copyUrl: "https://annunciation.taoerxue.cn?id=", // 正式下载地址
+    // photoUrl: 'http://image.taoerxue.cn/',   // 测试服务器图片地址
+    // copyUrl: "https://annunciation.taoerxue.com.cn?id=", // 测试下载地址
+    uploadTipContent: "（按住Ctrl可以选择多张图片上传）"
 }
-// 下载地址
-export const copyUrl = "https://annunciation.taoerxue.com.cn?id=";
 
 /*创建Post x-www-form-urlencode请求参数, 参数转字符串*/
 function createPostParams(obj) {

@@ -4,19 +4,19 @@ import {
     Input,
     Select,
     Button,
-    Radio,
     message,
     Modal,
     Popconfirm,
     Form,
     TreeSelect,
 } from 'antd';
-import { accountList, addAccount, deleteAccount, updateAccount, accountDetail, ban, resetPwd, departmentList, roleList } from '../../config';
-import { getPower, checkPhone, checkPassword, exceptHandle, errorHandle } from '../../config/common';
+// import { accountList, addAccount, deleteAccount, updateAccount, accountDetail, ban, resetPwd, departmentList, roleList } from '../../config';
+// import { getPower, toLoginPage, checkPhone, checkPassword, genderOptions, genderStatus, banStatus, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
 const {Option} = Select;
-const RadioGroup = Radio.Group;
 const FormItem = Form.Item;
 
 //栅格设置
@@ -37,7 +37,7 @@ const Cell = ({value}) => (
 //新增账号表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, onChangeDepartment, departmentList, roleList, confirmLoading} = props;
+        const {visible, onCancel, onCreate, form, departmentList, roleList, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
         // 角色选项生成
@@ -63,7 +63,7 @@ const ItemAddForm = Form.create()(
                             {getFieldDecorator('phone', {
                                 rules: [{
                                     required: true,
-                                    validator: checkPhone
+                                    validator: common.checkPhone
                                 }]
                             })(
                                 <Input placeholder="请填写手机号作为登录账号"/>
@@ -73,7 +73,7 @@ const ItemAddForm = Form.create()(
                             {getFieldDecorator('password', {
                                 rules: [{
                                     required: true,
-                                    validator: checkPassword
+                                    validator: common.checkPassword
                                 }]
                             })(
                                 <div style={{width: "100%"}}>
@@ -99,10 +99,7 @@ const ItemAddForm = Form.create()(
                                     message: '请选择性别',
                                 }],
                             })(
-                                <RadioGroup style={{marginTop: "5px"}}>
-                                    <Radio value={0}>女</Radio>
-                                    <Radio value={1}>男</Radio>                                    
-                                </RadioGroup>
+                                <Select style={{marginTop: "5px"}}>{common.genderOptions}</Select>
                             )}
                         </FormItem>                        
                         <FormItem className="departmentId" {...formItemLayout_14} label="所属部门：">
@@ -117,7 +114,6 @@ const ItemAddForm = Form.create()(
                                     dropdownStyle={{maxHeight: 400, overflow: "auto"}}
                                     allowClear
                                     treeData={departmentList}
-                                    onChange={onChangeDepartment}
                                     showCheckedStrategy={TreeSelect.SHOW_CHILD}/>
                             )}
                         </FormItem>                       
@@ -128,9 +124,7 @@ const ItemAddForm = Form.create()(
                                     message: '角色不能为空',
                                 }]
                             })(
-                                <Select                                   
-                                    style={{width: '100%'}}
-                                    placeholder="请选择角色">
+                                <Select style={{width: '100%'}} placeholder="请选择角色">
                                     {optionsOfRoleList}
                                 </Select>
                             )}
@@ -146,12 +140,8 @@ const ItemAddForm = Form.create()(
 class ItemAdd extends Component {
     state = {
         visible: false,
-        // 账号所属部门值
-        value: null,
-        // 账号所属部门列表
-        departmentList: [],
-        // 账号可选角色列表
-        roleList: [],
+        departmentList: [],// 账号所属部门列表        
+        roleList: [],// 账号可选角色列表
         loading: false
     };       
 
@@ -162,7 +152,7 @@ class ItemAdd extends Component {
             pageNum: 1,
             pageSize: 20
         };        
-        departmentList(params).then((json) => {
+        config.departmentList(params).then((json) => {
             if (json.data.result === 0) {
                 const data = [];
                 console.log(json.data.data.list)
@@ -188,14 +178,9 @@ class ItemAdd extends Component {
                     departmentList: data
                 });                    
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);})
-    };
-
-    // 所属部门选择处理
-    onChangeDepartment = (value) => {
-        console.log(value);             
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 当前角色列表roleList写入
@@ -205,19 +190,19 @@ class ItemAdd extends Component {
             pageNum: 1,
             pageSize: 10
         };
-        roleList(params).then((json) => {
+        config.roleList(params).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     roleList: json.data.data.list
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle();});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 弹框控制
-    showModal = () => {        
+    showModal = () => {
         this.getDepartmentList();// 获取账号可选所属部门列表        
         this.getRoleList();// 获取账号可选角色列表
         this.setState({visible: true})
@@ -253,37 +238,16 @@ class ItemAdd extends Component {
                 departmentId: values.departmentId,
                 roleId: values.roleId
             };
-            addAccount(data).then((json) => {
+            config.addAccount(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("账号添加成功");
                     this.handleCancel();
                     this.props.setFlag();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -297,11 +261,8 @@ class ItemAdd extends Component {
                 <ItemAddForm
                     ref={this.saveFormRef}
                     visible={this.state.visible}
-                    value={this.state.value}
-                    onChangeDepartment={this.onChangeDepartment}
                     onCancel={this.handleCancel}
-                    onCreate={this.handleCreate}
-                    // resetPassword={this.resetPassword}                   
+                    onCreate={this.handleCreate}                    
                     departmentList={this.state.departmentList}
                     roleList={this.state.roleList}
                     confirmLoading={this.state.loading}/>
@@ -338,7 +299,7 @@ const ItemEditForm = Form.create()(
                                 initialValue: data.phone,
                                 rules: [{
                                     required: true,
-                                    validator: checkPhone
+                                    validator: common.checkPhone
                                 }]
                             })(
                                 <Input placeholder="请填写手机号作为登录账号"/>
@@ -349,7 +310,7 @@ const ItemEditForm = Form.create()(
                                 initialValue: data.password,
                                 rules: [{
                                     required: true,
-                                    validator: checkPassword
+                                    validator: common.checkPassword
                                 }]
                             })(
                                 <Input placeholder="8-16位字母与数字组合"/>                                   
@@ -368,16 +329,13 @@ const ItemEditForm = Form.create()(
                         </FormItem>
                         <FormItem className="gender" {...formItemLayout_14} label="员工性别：">
                             {getFieldDecorator('gender', {
-                                initialValue: Number(data.gender) || 1,
+                                initialValue: data.gender,
                                 rules: [{
-                                    required: true,
+                                    required: false,
                                     message: '请选择性别',
                                 }],
                             })(
-                                <RadioGroup style={{marginTop: "5px"}}>
-                                    <Radio value={0}>女</Radio>
-                                    <Radio value={1}>男</Radio>                                    
-                                </RadioGroup>                                
+                                <Select style={{marginTop: "5px"}}>{common.genderOptions}</Select>                                
                             )}
                         </FormItem>
                         <FormItem className="departmentId" {...formItemLayout_14} label="所属部门：">
@@ -403,9 +361,7 @@ const ItemEditForm = Form.create()(
                                     message: '角色不能为空',
                                 }]
                             })(
-                                <Select placeholder="请选择角色">
-                                    {optionsOfRoleList}
-                                </Select>
+                                <Select placeholder="请选择角色">{optionsOfRoleList}</Select>
                             )}
                         </FormItem>
                     </Form>
@@ -427,13 +383,13 @@ class ItemEdit extends Component {
 
     // 账号当前角色列表写入
     getData = () => {
-        accountDetail({id: this.props.id}).then((json) => {
+        config.accountDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 this.setState({data: json.data.data});
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle();})
+        }).catch((err) => common.errorHandle(this, err));
     };  
 
     // 账号可选所属部门列表写入
@@ -443,7 +399,7 @@ class ItemEdit extends Component {
             pageNum: 1,
             pageSize: 10,
         };
-        departmentList(params).then((json) => {
+        config.departmentList(params).then((json) => {
             if (json.data.result === 0) {
                 const data = [];
                 json.data.data.list.forEach((item) => {
@@ -453,24 +409,22 @@ class ItemEdit extends Component {
                             subData.push({
                                 key: subItem.id,
                                 value: subItem.id,
-                                label: subItem.name
+                                title: subItem.name
                             })
                         })
                     }
                     data.push({
                         key: item.id,
                         value: item.id,
-                        label: item.name,
+                        title: item.name,
                         children: subData
                     })
                 });
-                this.setState({
-                    departmentList: data
-                });                     
+                this.setState({departmentList: data});                     
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle();});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 账号可选角色列表写入
@@ -480,15 +434,15 @@ class ItemEdit extends Component {
             pageNum: 1,
             pageSize: 15
         };       
-        roleList(params).then((json) => {
+        config.roleList(params).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     roleList: json.data.data.list
                 })
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle();});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -527,37 +481,16 @@ class ItemEdit extends Component {
                 roleId: values.roleId,
             };            
             this.setState({loading: true});
-            updateAccount(result).then((json) => {
+            config.updateAccount(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("账号设置成功");
                     this.handleCancel();
                     this.props.recapture();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle();});
+            }).catch((err) => common.errorHandle(this, err));
         })
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = () => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -589,13 +522,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -697,6 +624,24 @@ class DataTable extends Component {
         );
     };
 
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,
+                name: item.username,                                
+                gender: common.genderStatus(item.gender),
+                department: item.departmentName,
+                role: item.roleName,                           
+                phone: item.phone,
+                status: common.banStatus(item.status)
+            })
+        });
+        return result;
+    };
+
     //获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
@@ -705,52 +650,22 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
         };
-        accountList(params).then((json) => {
-            const data = [];                
+        config.accountList(params).then((json) => {             
             if (json.data.result === 0) {
-                if (json.data) {
-                    if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                        this.setState({
-                            pagination: {
-                                current: 1,
-                                pageSize: this.state.pagination.pageSize
-                            }
-                        }, () => {
-                            this.getData();
-                        });
-                        return
-                    }
-                    json.data.data.list.forEach((item, index) => {                           
-                        let tempGender = "";
-                        if (item.gender === 0) {
-                            tempGender = "女";
+                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
+                    this.setState({
+                        pagination: {
+                            current: 1,
+                            pageSize: this.state.pagination.pageSize
                         }
-                        if (item.gender === 1) {
-                            tempGender = "男";
-                        }                        
-                        let tempStatus = "";
-                        if (item.status === 0) {
-                            tempStatus = "禁用"
-                        }
-                        if (item.status === 1) {
-                            tempStatus = "启用"
-                        }                            
-                        data.push({
-                            key: index.toString(),
-                            id: item.id,
-                            index: index + 1,
-                            name: item.username,                                
-                            gender: tempGender,
-                            department: item.departmentName,
-                            role: item.roleName,                           
-                            phone: item.phone,
-                            status: tempStatus,
-                        })
-                    })
+                    }, () => {
+                        this.getData();
+                    });
+                    return
                 }
                 this.setState({
                     loading: false,
-                    data: data,
+                    data: this.dataHandle(json.data.data.list),
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,
@@ -758,17 +673,15 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            this.errorHandle();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     //账号封禁与启用
     itemStatus = (id, status) => {
         this.setState({loading: true});
-        ban({
+        config.ban({
             id: id,
             status: status === "启用" ? 0 : 1
         }).then((json) => {
@@ -776,75 +689,35 @@ class DataTable extends Component {
                 message.success(status === "启用" ? "账号封禁成功" : "账号启用成功");
                 this.getData();
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            this.errorHandle();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     //账号删除
     itemDelete = (para) => {
         this.setState({loading: true});
-        deleteAccount({id: para}).then((json) => {
+        config.deleteAccount({id: para}).then((json) => {
             if (json.data.result === 0) {
                 message.success("账号删除成功");
                 this.getData();
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            this.errorHandle();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 重置密码
     resetPassword = (phone) => {
-        resetPwd({phone: phone}).then((json) => {
+        config.resetPwd({phone: phone}).then((json) => {
             if (json.data.result === 0) {
                 message.success('密码重置成功');
                 this.getData();
             } else {
-               this.exceptHandle(json.data);
+               common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            this.errorHandle();
-        });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = () => {
-        message.error("获取失败");
-        this.setState({loading: false});
-    };
-
-    //页码变化处理
-    handleTableChange = (pagination) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.backUserSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.backUserSize);
-        this.setState({
-            pagination: pager
-        }, () => {
-            this.getData();
-        });
-    };
+        }).catch((err) => common.errorHandle(this, err));
+    };   
 
     componentWillMount() {
         this.getData();
@@ -866,7 +739,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={this.handleTableChange}/>
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>
     }
 }
 
@@ -874,14 +747,7 @@ class BackUsers extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                // select: true,
-                // add: true,
-                // modify: true,
-                // delete: true,
-                // resetPassword: true,
-                // ban: true,
-            },
+            opObj: {},
             // 获取信息列表所需关键词
             keyword: {
                 phoneAndName: '',// 姓名、手机号
@@ -892,25 +758,16 @@ class BackUsers extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        this.setState({opObj: getPower(this).data});
+        this.setState({opObj: common.getPower(this).data});
     };
 
     // 关键词写入
     setKeyword = (value) => {
-        console.log(value)
-        this.setState({
-            keyword: { phoneAndName: value}
-        });
+        this.setState({keyword: { phoneAndName: value}});
     };
 
     setFlag = () => {
         this.setState({flag_add: !this.state.flag_add});
-    };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
     };
 
     componentWillMount() {
@@ -944,7 +801,7 @@ class BackUsers extends Component {
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add} 
                                         setFlag={this.setFlag} 
-                                        toLoginPage={this.toLoginPage}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             <div className="table-box">
@@ -952,7 +809,7 @@ class BackUsers extends Component {
                                     opObj={this.state.opObj} 
                                     keyword={this.state.keyword}
                                     flag_add={this.state.flag_add} 
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>
                         </div>
                         :

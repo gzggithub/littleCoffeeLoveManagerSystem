@@ -11,19 +11,18 @@ import {
     Upload,
     Row,
     Col,
-    Icon,
     message,
     Spin,
     Cascader,
 } from 'antd';
-import * as qiniu from 'qiniu-js';
-import * as UUID from 'uuid-js';
-import { configUrl, getToken, advList, saveAdv, updateAdv, deleteAdv, sortAdv, putAwayAdv } from '../../config';
-import { getPower, pCAName, bannerOptions } from '../../config/common';
-
+// import * as qiniu from 'qiniu-js';
+// import * as UUID from 'uuid-js';
+// import { configUrl, getToken, advList, saveAdv, updateAdv, deleteAdv, sortAdv, putAwayAdv } from '../../config';
+// import { getPower, toLoginPage, pCAName, bannerOptions, bannerStatus, putAwayStatus, pagination, handleTableChange, exceptHandle, errorHandle} from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
-const {Option} = Select;
 const FormItem = Form.Item;
 
 // 单元格
@@ -124,33 +123,14 @@ class EditableCell extends Component {
 // 添加广告表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, optionsOfCity, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, form, optionsOfCity, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        // 广告图片相关
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }         
-            reqwestUploadToken(file);
-            return isIMG && isLt2M;
-        };
-        const picHandleChange = (info) => {
+        const customRequest = (info) => {
             setTimeout(()=>{
-                picUpload01(info.file);
+                common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);   
         };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );
 
         return (
             <Modal
@@ -187,7 +167,7 @@ const ItemAddForm = Form.create()(
                                             }
                                         ],
                                     })(
-                                        <Select style={{width: '100%'}} placeholder="请选择广告位置">{bannerOptions}</Select>                                       
+                                        <Select style={{width: '100%'}} placeholder="请选择广告位置">{common.bannerOptions}</Select>                                       
                                     )}
                                 </FormItem>
                             </Col>          
@@ -207,9 +187,9 @@ const ItemAddForm = Form.create()(
                                             listType="picture-card"
                                             className="avatar-uploader"
                                             showUploadList={false}
-                                            beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}>
-                                            {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
+                                            beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                            customRequest={customRequest}>
+                                            {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : common.uploadButton(1, photoLoading)}
                                         </Upload>
                                     )}
                                 </FormItem>                                
@@ -274,51 +254,6 @@ class ItemAdd extends Component {
     showModal = () => {
         this.setState({visible: true});
     };
-    
-    // 广告图片处理-----------------------------------
-    // 请求上传凭证，需要后端提供接口
-    reqwestUploadToken = () => {
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                    this.setState({
-                        uploadToken: json.data.data,
-                    })
-                } else {
-                    this.exceptHandle(json.data);
-                }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
-    };
-
-    picUpload01 = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true,});
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g,"");
-        const token = this.state.uploadToken;
-        const config = {
-            region: qiniu.region.z0
-        };
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");                
-                _this.setState({photoLoading: false});
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                _this.setState({
-                    viewPic: configUrl.photoUrl + res.key || "",                               
-                    photoLoading: false,
-                })
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始     
-    };
 
     handleCancel = () => {
         const form = this.form;
@@ -347,7 +282,7 @@ class ItemAdd extends Component {
             }
             
             if (values.photo && this.state.viewPic) {
-                values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
+                values.photo = this.state.viewPic.slice(config.configUrl.photoUrl.length);
             }
             // 广告展示城市校验
             if (!values.cityId.length) {
@@ -355,7 +290,7 @@ class ItemAdd extends Component {
                 return
             }
 
-            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
 
             this.setState({loading: true});
             const data = {
@@ -368,34 +303,17 @@ class ItemAdd extends Component {
                 title: values.title,
                 linkAddress: values.linkAddress,
             };
-            saveAdv(data).then((json) => {
+            config.saveAdv(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("广告添加成功");
                     this.handleCancel();
                     this.props.recapture();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            })
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
-
-    // 异常处理
-    exceptHandle = (data) => {
-        if (data.code === 901) {
-            message.error("请先登录");
-            this.props.toLoginPage();
-        } else if (data.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            this.props.toLoginPage();
-        } else {
-            message.error(data.message);
-            this.setState({loading: false});
-        }
-    }
 
     saveFormRef = (form) => {
         this.form = form;
@@ -407,12 +325,11 @@ class ItemAdd extends Component {
                 <Button type="primary" onClick={this.showModal}>添加广告</Button>
                 <ItemAddForm
                     ref={this.saveFormRef}
+                    _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
-                    picUpload01={this.picUpload01}
                     photoLoading={this.state.photoLoading}
                     optionsOfCity={this.props.optionsOfCity}                                     
                     confirmLoading={this.state.loading}/>
@@ -424,51 +341,14 @@ class ItemAdd extends Component {
 // 广告信息编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, reqwestUploadToken, viewPic,  picUpload01, photoLoading, provinceList, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, form, data, viewPic, photoLoading, provinceList, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        // 图片上传保持原比例
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }         
-            reqwestUploadToken(file);
-            return isIMG && isLt2M;
-        };
-        const picHandleChange = (info) => {
-            setTimeout(()=>{
-                picUpload01(info.file);
-            }, 500);   
-        };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );   
-        
-        // 城市选项生成
-        const optionsOfCity = [{value: "0", label: "全国"}];
-        let currentCity = []; 
-        if (provinceList.length) {
-            provinceList.forEach((item) => {
-                let children = [];
-                if (item.districtList) {
-                    item.districtList.forEach((subItem) => {
-                        children.push({value: subItem.adcode, label: subItem.name});
-                        if (Number(subItem.adcode) === data.cityId) {                            
-                            currentCity = [item.adcode, subItem.adcode];// 当前城市设为选中项
-                        }
-                    });
-                }
-                optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-            });
-        }
+        const customRequest = (info) => {
+            setTimeout(() => {
+                common.picUpload(_this, 1, info.file, _this.state.uploadToken);
+            }, 500);
+        };  
         
         return (
             <Modal
@@ -492,13 +372,13 @@ const ItemEditForm = Form.create()(
                                     <Col span={8}>
                                         <FormItem className="area longItem" label="展示城市：">
                                             {getFieldDecorator('cityId', {
-                                                initialValue: data.cityId === 0 ? ["0"] : currentCity,
+                                                initialValue: data.cityId === 0 ? ["0"] : common.pCAName(provinceList, data.cityId).currentCity,
                                                 rules: [{
                                                     required: true,
                                                     message: "展示城市未选择"
                                                 }],
                                             })(
-                                                <Cascader options={optionsOfCity} placeholder="请选择所属城市"/>
+                                                <Cascader options={common.pCAName(provinceList).optionsOfCity} placeholder="请选择所属城市"/>
                                             )}
                                         </FormItem>
                                     </Col>
@@ -513,7 +393,7 @@ const ItemEditForm = Form.create()(
                                                     }
                                                 ],
                                             })(
-                                                <Select style={{width: '100%'}} placeholder="请选择广告位置">{bannerOptions}</Select>
+                                                <Select style={{width: '100%'}} placeholder="请选择广告位置">{common.bannerOptions}</Select>
                                             )}
                                         </FormItem>
                                     </Col>                                   
@@ -534,9 +414,9 @@ const ItemEditForm = Form.create()(
                                                     listType="picture-card"
                                                     className="avatar-uploader"
                                                     showUploadList={false}
-                                                    beforeUpload={beforeUpload}
-                                                    customRequest={picHandleChange}>
-                                                    {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
+                                                    beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                                    customRequest={customRequest}>
+                                                    {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : common.uploadButton(photoLoading)}
                                                 </Upload>
                                             )}
                                         </FormItem>                                                                      
@@ -610,51 +490,7 @@ class ItemEdit extends Component {
             viewPic: this.props.record.photo
         });
     };
-
-    // 请求上传凭证，需要后端提供接口
-    reqwestUploadToken = () => {
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                    this.setState({
-                        uploadToken: json.data.data,
-                    })
-                } else {
-                    this.exceptHandle(json.data);
-                }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
-    };
     
-    picUpload01 = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true});       
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g,"");
-        const token = this.state.uploadToken;
-        const config = {
-            region: qiniu.region.z0
-        };
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");                
-                _this.setState({photoLoading: false});
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                _this.setState({
-                    viewPic: configUrl.photoUrl + res.key || "",                            
-                    photoLoading: false,
-                });
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始    
-    };
-
     // 取消操作
     handleCancel = () => {
         this.setState({
@@ -692,7 +528,7 @@ class ItemEdit extends Component {
                 return
             }
 
-            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
 
             this.setState({loading: true});
             const data = {
@@ -702,38 +538,21 @@ class ItemEdit extends Component {
                 cityId: values.cityId[1] || values.cityId[0],
                 cityName: values.cityId[0] === "0" ? "全国" : currentCityName[1],
                 type: values.type,
-                photo: this.state.viewPic.slice(configUrl.photoUrl.length),
+                photo: this.state.viewPic.slice(config.configUrl.photoUrl.length),
                 title: values.title,
                 linkAddress: values.linkAddress,
             }
-            updateAdv(data).then((json) => {
+            config.updateAdv(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("广告信息修改成功");
                     this.handleCancel();
                     this.props.recapture();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            })
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
-
-     // 异常处理
-    exceptHandle = (data) => {
-        if (data.code === 901) {
-            message.error("请先登录");
-            this.props.toLoginPage();
-        } else if (data.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            this.props.toLoginPage();
-        } else {
-            message.error(data.message);
-            this.setState({loading: false});
-        }
-    }
 
     saveFormRef = (form) => {
         this.form = form;
@@ -745,14 +564,13 @@ class ItemEdit extends Component {
                 <span onClick={this.showModal}>编辑</span>
                 <ItemEditForm
                     ref={this.saveFormRef}
+                    _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
                     id={this.props.id}
                     data={this.state.data}
-                    reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
-                    picUpload01={this.picUpload01}
                     photoLoading={this.state.photoLoading}
                     provinceList={this.props.provinceList}                    
                     confirmLoading={this.state.loading}/>
@@ -768,13 +586,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],     
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -882,6 +694,29 @@ class DataTable extends Component {
             <Cell value={text}/>
         );
     };
+
+    dateHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {
+            result.push({
+                key: index.toString(),
+                id: item.id,
+                index: index + 1,
+                sort: item.sort !== 0 ? item.sort : "",
+                name: item.title,
+                photo: item.photo,
+                type: item.type,
+                typeName: common.bannerStatus(item.type),
+                cityName: item.cityName,
+                cityId: item.cityId,
+                linkAddress: item.linkAddress,
+                createTime: item.createTime,
+                statusCode: item.status,
+                status: common.putAwayStatus(item.status)
+            });
+        });
+        return result;
+    };
     
     // 获取本页信息
     getData = (keyword) => {
@@ -895,8 +730,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
-        advList(params).then((json) => {
-            const data = [];
+        config.advList(params).then((json) => {
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -908,43 +742,10 @@ class DataTable extends Component {
                         this.getData();
                     });
                     return
-                }
-                json.data.data.list.forEach((item, index) => {                    
-                    let tempStatus = "";
-                    if (item.status === 2) {
-                        tempStatus = "上架"
-                    }
-                    if (item.status === 3) {
-                        tempStatus = "下架"
-                    }                    
-                    // 广告位置
-                    let tempTypeName = "";                    
-                    if (item.type === 1) {
-                        tempTypeName = "明星banner"
-                    }
-                    if (item.type === 2) {
-                        tempTypeName = "通告banner"
-                    }
-                    data.push({
-                        key: index.toString(),
-                        id: item.id,
-                        index: index + 1,
-                        sort: item.sort !== 0 ? item.sort : "",                            
-                        name: item.title,
-                        photo: item.photo,
-                        type: item.type,
-                        typeName: tempTypeName,
-                        cityName: item.cityName,
-                        cityId: item.cityId,
-                        linkAddress: item.linkAddress,
-                        createTime: item.createTime,
-                        statusCode: item.status,
-                        status: tempStatus
-                    });
-                });
+                }                
                 this.setState({
                     loading: false,
-                    data: data,
+                    data: this.dateHandle(json.data.data.list),
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,
@@ -952,97 +753,54 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.expectHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});  
-        })
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 设置排序
     handleSort = (row) => {
         this.setState({loading: true});
-        const data = {            
+        config.sortAdv({            
             id: row.id,// 广告Id            
             sort: Number(row.sort),// 排序
-        };
-        sortAdv(data).then((json) => {
+        }).then((json) => {
             if (json.data.result === 0) {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
-                this.expectHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 广告删除
     itemDelete = (id) => {
         this.setState({loading: true});
-        deleteAdv({id: id}).then((json) => {
+        config.deleteAdv({id: id}).then((json) => {
             if (json.data.result === 0) {
                 message.success("广告删除成功");
                 this.getData(this.props.keyword);
             } else {
-                this.expectHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            message.error("保存失败");
-            this.setState({loading: false});
-        })
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 广告上架,下架
     itemBan = (id, status) => {
         this.setState({loading: true});
-        const data = { // 2:上架, 3:下架
+        config.putAwayAdv({ // 2:上架, 3:下架
             id: id,
             status: status === "上架" ? 3 : 2
-        };
-        putAwayAdv(data).then((json) => {
+        }).then((json) => {
              if (json.data.result === 0) {
                 message.success(status === "上架" ? "明星下架成功" : "明星上架成功");
                 this.getData();
             } else {
-                this.expectHandle(json.data);
+                common.exceptHandle(this, json.data);;
             }
-        }).catch((err) => {
-            message.error("保存失败");
-            this.setState({loading: false});
-        })
-    };
-
-    // 异常处理
-    expectHandle = (data) => {
-        if (data.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (data.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(data.message);
-            this.setState({loading: false});
-        }
-    };
-
-    // 表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.institutionPageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.institutionPageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            status: filters.status ? filters.status[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };    
 
     componentWillMount() {
@@ -1059,23 +817,23 @@ class DataTable extends Component {
     render() {
         const components = {
             body: {
-              row: EditableFormRow,
-              cell: EditableCell,
+                row: EditableFormRow,
+                cell: EditableCell,
             },
         };
         const columns = this.columns.map((col) => {
             if (!col.editable) {
-              return col;
+                return col;
             }
             return {
-              ...col,
-              onCell: record => ({
-                record,
-                editable: col.editable,
-                dataIndex: col.dataIndex,
-                title: col.title,
-                handleSort: this.handleSort,
-              }),
+                ...col,
+                onCell: record => ({
+                    record,
+                    editable: col.editable,
+                    dataIndex: col.dataIndex,
+                    title: col.title,
+                    handleSort: this.handleSort,
+                }),
             };
         });
         return <Table 
@@ -1086,7 +844,7 @@ class DataTable extends Component {
                     pagination={this.state.pagination}
                     columns={columns}
                     scroll={{ x: 1500 }}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -1094,13 +852,7 @@ class AdvManage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            opObj: {
-                add: true,
-                delete: true,
-                modify: true,
-                select: true,
-                putAway: true
-            },
+            opObj: {},
             keyword: {// 获取广告列表所需关键词
                 type: null,
                 cityCode: "",
@@ -1114,13 +866,7 @@ class AdvManage extends Component {
             endOpen: false,
             mapObj: {},// 地图控件对象
             provinceList: [],// 省市列表
-        };
-        this.optionsType = [
-            <Option key={this.state.keyword.type} value={this.state.keyword.type}>{"全部banner位置"}</Option>,
-            <Option key={1} value={1}>明星banner </Option>,
-            <Option key={2} value={2}>通告banner</Option>,
-        ];
-        this.optionsOfCity = [{value: "0", label: "全国"}];       
+        };              
     }
 
     // 获取省市列表信息及当前城市地区代码
@@ -1137,8 +883,6 @@ class AdvManage extends Component {
                 districtSearch.search('中国', (status, result) => {                    
                     this.setState({
                         provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
-                    }, () => {                                            
-                        this.cityList();
                     });
                 })
             });
@@ -1154,31 +898,15 @@ class AdvManage extends Component {
                 })
             })
         })
-    };
-
-    // 城市选项生成
-    cityList = () => {
-        if (this.state.provinceList.length) {
-            this.state.provinceList.forEach((item) => {
-                let children = [];
-                if (item.districtList) {
-                    item.districtList.forEach((subItem) => {
-                        children.push({value: subItem.adcode, label: subItem.name});                    
-                    });
-                }
-                this.optionsOfCity.push({value: item.adcode, label: item.name, children: children});
-            });
-        }        
-    };
+    };    
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-       this.setState({opObj: getPower(this).data});
+       this.setState({opObj: common.getPower(this).data});
     };
 
     //广告位置设置
     setType = (value) => {
-        console.log("selected:", value);
         this.setState({
             keyword: {
                 type: value,
@@ -1268,12 +996,6 @@ class AdvManage extends Component {
         this.setState({flag_add: !this.state.flag_add})
     };
 
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
-    };
-
     componentWillMount() {
         this.getMapDate();// 获取省份城市        
         this.setPower();// 获取权限
@@ -1298,19 +1020,15 @@ class AdvManage extends Component {
                             <header className="clearfix">
                                 {/*广告位置筛选*/}
                                 <Select
-                                    style={{
-                                        width: "150px",
-                                        float: "left",
-                                        marginRight: "20px"
-                                    }}
+                                    style={{width: "150px", float: "left", marginRight: "20px"}}
                                     onChange={this.setType}
                                     placeholder="请选择banner位置"
                                     allowClear>
-                                    {this.optionsType}
+                                    {common.bannerOptions}
                                 </Select>
                                 {/*城市筛选*/}
                                 <Cascader 
-                                    options={this.optionsOfCity} 
+                                    options={common.pCAName(this.state.provinceList).optionsOfCity} 
                                     onChange={this.setCity} 
                                     style={{width: "150px", float: "left", marginRight: "20px"}} 
                                     placeholder="请选择所属城市"
@@ -1338,11 +1056,11 @@ class AdvManage extends Component {
                                 <div className="add-button" style={{float: "right"}}>
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add}
-                                        optionsOfCity={this.optionsOfCity}
+                                        optionsOfCity={common.pCAName(this.state.provinceList).optionsOfCity}
                                         provinceList={this.state.provinceList}
                                         optionsType={this.optionsType}
                                         recapture={this.setFlag}
-                                        toLoginPage={this.toLoginPage}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*广告列表*/}
@@ -1355,7 +1073,7 @@ class AdvManage extends Component {
                                     typeList={this.state.typeList}
                                     keyword={this.state.keyword}
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>
                             {/*地图组件容器*/}
                             <div id="adv-mapContainer"/>                              

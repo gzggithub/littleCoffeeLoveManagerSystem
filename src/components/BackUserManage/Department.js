@@ -9,8 +9,9 @@ import {
     Popconfirm,
     Spin,
 } from 'antd';
-import { departmentList, addDepartment, deleteDepartment, updateDepartment, departmentDetail, departmentUserList } from '../../config';
-import { getPower, exceptHandle, errorHandle} from '../../config/common';
+// import { departmentList, addDepartment, deleteDepartment, updateDepartment, departmentDetail, departmentUserList } from '../../config';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const FormItem = Form.Item;
 const {TextArea} = Input;
@@ -92,10 +93,7 @@ class AddItem extends Component {
 
     handleCancel = () => {
         const form = this.form;
-        this.setState({
-            visible: false,
-            loading: false
-        });
+        this.setState({visible: false,loading: false});
         form.resetFields();
     };
 
@@ -111,36 +109,16 @@ class AddItem extends Component {
                 name: values.name,                
                 desc: values.description
             };
-            addDepartment(data).then((json) => {
+            config.addDepartment(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("部门添加成功");
                     this.handleCancel();
                     this.props.setFlag();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle();});
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -241,36 +219,16 @@ class AddSubItem extends Component {
                 name: values.name,                
                 desc: values.description,
             };
-            addDepartment(data).then((json) => {
+            config.addDepartment(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("子部门添加成功");
                     this.handleCancel();
                     this.props.recapture();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle();})
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = () => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -296,8 +254,7 @@ class AddSubItem extends Component {
 //成员名单表单
 const NumDetailForm = Form.create()(
     (props) => {
-        const {visible, onCancel, confirmLoading, loading, data, columns, pagination} = props;
-        // const {getFieldDecorator} = form;
+        const {visible, onCancel, confirmLoading, loading, data, columns, _this, pagination} = props;
 
         return (
             <Modal
@@ -305,17 +262,16 @@ const NumDetailForm = Form.create()(
                 title="部门成员"
                 width={600}
                 onCancel={onCancel}
-                // onOk={onCreate}
                 destroyOnClose={true}
                 confirmLoading={confirmLoading}
-                footer={null}
-            >
+                footer={null}>
                 <div className="table-box">                    
                     <Table bordered
                       loading={loading}
                       dataSource={data}
                       pagination={pagination}
-                      columns={columns}/>
+                      columns={columns}
+                      onChange={(pagination) => common.handleTableChange(_this, pagination)}/>
                 </div>
             </Modal>
         );
@@ -328,13 +284,7 @@ class NumDetail extends Component {
         visible: false,
         loading: false,
         data: [],
-        pagination: {
-            current: 1,
-            pageSize: 10,
-            pageSizeOptions: ["5", "10", "15", "20"],
-            showQuickJumper: true,
-            showSizeChanger: true
-        }
+        pagination: common.pagination
     };
                      
     columns = [
@@ -377,7 +327,7 @@ class NumDetail extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
         }
-        departmentUserList(params).then((json) => {
+        config.departmentUserList(params).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     data: json.data.data.list,
@@ -389,9 +339,9 @@ class NumDetail extends Component {
                     }
                 })                    
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle();});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     handleCancel = () => {
@@ -400,26 +350,6 @@ class NumDetail extends Component {
             loading: false,
             data: []
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = () => {
-        message.error("获取失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -437,6 +367,7 @@ class NumDetail extends Component {
                     loading={this.state.loading}
                     data={this.state.data}
                     columns={this.columns}
+                    _this={this}
                     pagination={this.pagination}/>
             </a>
         );
@@ -511,15 +442,15 @@ class ItemEdit extends Component {
     };
 
     getData = () => {
-        departmentDetail({id: this.props.id}).then((json) => {
+        config.departmentDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 this.setState({                    
                     data: json.data.data
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(json.data);
             }
-        }).catch((err) => {this.errorHandle();});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -530,22 +461,17 @@ class ItemEdit extends Component {
     handleCancel = () => {
         const form = this.form;
         this.setState({
-            visible: false
-        }, () => {
-            this.setState({
-                data: {},
-                loading: false
-            });
-            form.resetFields();
+            visible: false,
+            data: {},
+            loading: false
         });
+        form.resetFields();
     };
 
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
+            if (err) {return;}
             const data = {
                 id: this.props.id,
                 name: values.name,
@@ -553,36 +479,16 @@ class ItemEdit extends Component {
                 desc: values.description
             };
             this.setState({loading: true});
-            updateDepartment(data).then((json) => {
+            config.updateDepartment(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("部门信息编辑成功");
                     this.handleCancel();
                     this.props.recapture();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle();});
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = () => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -613,13 +519,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,            
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -688,11 +588,10 @@ class DataTable extends Component {
                             </Popconfirm>
                             {/*添加子部门*/}
                             <AddSubItem 
-                                id={record.id} 
-                                parentId={record.parentId} 
+                                id={record.id}
+                                parentId={record.parentId}
                                 recapture={this.getData}
                                 opStatus={this.props.opObj.add && record.parentId === 0}
-                                // opStatus={this.props.opObj.add}
                                 toLoginPage={this.props.toLoginPage}/>
                         </div>
                     );
@@ -745,7 +644,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
-        departmentList(params).then((json) => {
+        config.departmentList(params).then((json) => {
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -768,57 +667,22 @@ class DataTable extends Component {
                     }
                 })
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     //部门删除
     deleteItem = (para) => {
         this.setState({loading: true});        
-        deleteDepartment({id: para}).then((json) => {
+        config.deleteDepartment({id: para}).then((json) => {
             if (json.data.result === 0) {
                 message.success("部门删除成功");
                 this.getData();
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("获取失败");
-        this.setState({loading: false});
-    };
-
-    //表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.institutionPageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.institutionPageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            status: filters.status ? filters.status[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     componentWillMount() {
@@ -839,7 +703,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -854,17 +718,11 @@ class DepartmentManage extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-       this.setState({opObj: getPower(this).data});
+       this.setState({opObj: common.getPower(this).data});
     };
 
     setFlag = () => {
         this.setState({flag_add: !this.state.flag_add});
-    };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
     };
 
     componentWillMount() {
@@ -881,7 +739,8 @@ class DepartmentManage extends Component {
         }
     }
 
-    render() {        
+    render() { 
+        console.log(this.state.opObj)      
         return (
             <div className="menus">
                 {
@@ -894,7 +753,7 @@ class DepartmentManage extends Component {
                                     <AddItem 
                                         opStatus={this.state.opObj.add} 
                                         setFlag={this.setFlag}
-                                        toLoginPage={this.toLoginPage}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*部门列表*/}
@@ -902,7 +761,7 @@ class DepartmentManage extends Component {
                                 <DataTable 
                                     opObj={this.state.opObj} 
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>
                         </div>
                         :

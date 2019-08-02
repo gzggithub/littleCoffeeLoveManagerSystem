@@ -14,8 +14,10 @@ import {
     Tree,
     Icon,
 } from 'antd';
-import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, subordinateMember, addMember, getPermissionList, getPermission, setPermission } from '../../config';
-import { getPower, handleTableChange, exceptHandle, errorHandle, toLoginPage } from '../../config/common';
+// import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, subordinateMember, addMember, getPermissionList, getPermission, setPermission } from '../../config';
+// import { getPower, handleTableChange, exceptHandle, errorHandle, toLoginPage } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
 const {TextArea} = Input;
@@ -107,35 +109,16 @@ class ItemAdd extends Component {
                 name: values.roleName,
                 desc: values.remark,                
             };
-            addRole(data).then((json) => {
+            config.addRole(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("角色添加成功");
                     this.handleCancel();
                     this.props.setFlag();
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+            }).catch((err) => common.errorHandle(this, err));
         })
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");
-            this.props.toLoginPage();
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            this.props.toLoginPage();
-        } else {
-            message.error(json.message);
-            this.setState({loading: false})
-        }
-    };
-
-    errorHandle = (err) => {
-        console.log(err);
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -284,11 +267,8 @@ class ItemAddMember extends Component {
         };
     }   
 
-    showModal = () => {
-        // 获取部门列表
-        this.getDepartmentList();
-        // this.generateList(this.state.gData);
-        // 获取初始详情信息
+    showModal = () => {        
+        this.getDepartmentList();// 获取部门列表
         this.setState({visible: true});
     };
     
@@ -375,16 +355,16 @@ class ItemAddMember extends Component {
     
     // 获取部门列表
     getDepartmentList = (departmentName) => {
-        subordinateMember().then((json) => {
+        config.subordinateMember().then((json) => {
             if (json.data.result === 0) {
                 console.log(json.data.data)
                 this.setState({                    
                     gData: this.dataHandle(json.data.data)
                 });                
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
     
     // 暂时不用
@@ -572,12 +552,12 @@ class ItemAddMember extends Component {
         return option.description.indexOf(inputValue) > -1
     };    
     
-    //（暂时不用无删）
+    //（暂时不用勿删）
     handleChange = (targetKeys) => {
         this.setState({ targetKeys });
     };
     
-    //（暂时不用无删）
+    //（暂时不用勿删）
     handleSearch = (dir, value) => {
         console.log('search:', dir, value);
     };
@@ -619,36 +599,16 @@ class ItemAddMember extends Component {
                 roleId: this.props.id,             
                 userIds: this.state.memberListId// 添加人员所有id                
             };
-            addMember(data).then((json) => {
+            config.addMember(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("添加人员成功");
                     this.handleCancel();                        
                     this.props.recapture();// 编辑成功，重新获取列表
                 } else {
-                    exceptHandle(this, json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => errorHandle(this, err));
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("获取失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -813,8 +773,7 @@ const RoleAuthorityForm = Form.create()(
                 onCancel={onCancel}
                 onOk={onCreate}
                 destroyOnClose={true}
-                confirmLoading={confirmLoading}
-            >
+                confirmLoading={confirmLoading}>
                 {
                     (menuList.length === 0 || menuListExist.length === "") ?
                         <div className="spin-box">
@@ -917,7 +876,6 @@ class RoleAuthority extends Component {
                                 })
                             }
 
-                            // 
                             // 当前三级菜单信息对象生成
                             let thirdData = {
                                 id: thirdItem.id,
@@ -946,28 +904,27 @@ class RoleAuthority extends Component {
             // 写入result
             result.push(item)
         });
-        console.log(555);
         console.log(result);
         return result
     };
 
     // 获取可用权限菜单列表
     getMenuList = () => {
-        getPermissionList().then((json) => {
+        config.getPermissionList().then((json) => {
             if (json.data.result === 0) {
                 console.log(json.data.data);
                 this.setState({
                     menuList: this.dataHandle(json.data.data)// 对原始权限菜单列表进行处理后写入
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 获取该角色当前权限菜单列表
     getMenuListExist = () => {
-        getPermission({id: this.props.id}).then((json) => {
+        config.getPermission({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 let data=[];
                 if (json.data.data.length) {
@@ -983,9 +940,9 @@ class RoleAuthority extends Component {
                     });
                 }                   
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 权限菜单变更处理函数（无三级菜单项处理，已废弃）
@@ -1194,12 +1151,6 @@ class RoleAuthority extends Component {
         }
         // 三级菜单变更处理
         if (type === 3) {
-            // type, id, value，parentId
-            // // 获取当前操作菜单所属一级菜单对象
-            // let targetarget01 = this.state.menuList.filter(item => gParentId === item.id)[0];
-            // // 获取当前操作菜单所属二级菜单对象
-            // let parentTarget = parentTarget01.filter(item => parentId === item.id)[0];
-
             // 获取当前操作菜单所属一级菜单对象
             let target02 = this.state.menuList.filter(item => gParentId === item.id)[0];
             // 获取当前操作菜单所属二级菜单对象
@@ -1276,7 +1227,7 @@ class RoleAuthority extends Component {
                     }
                 }
                 
-                 // 下属四级菜单取消选中
+                // 下属四级菜单取消选中
                 if (target.children) {
                     target.children.forEach((item) => {
                         const index = tempArr.indexOf(item.id);
@@ -1374,11 +1325,9 @@ class RoleAuthority extends Component {
         }
     };
 
-    showModal = () => {
-        // 获取可用角色权限菜单列表
-        this.getMenuList();
-        // 获取该角色当前权限菜单列表
-        this.getMenuListExist();
+    showModal = () => {        
+        this.getMenuList();// 获取可用角色权限菜单列表        
+        this.getMenuListExist();// 获取该角色当前权限菜单列表
         this.setState({visible: true});
     };
 
@@ -1405,48 +1354,22 @@ class RoleAuthority extends Component {
             return a - b
         });
         console.log(data);
-        // 信息比对
-        // if (this.state.menuListExistInit.toString() === data.toString()) {
-        //     message.error("暂无信息更改，无法提交");
-        //     return;
-        // }
         console.log(this.state.menuListExist);
         this.setState({loading: true});
         console.log(this.state.menuListExist);
 
-        setPermission({
+        config.setPermission({
             roleId: this.props.id,
-            menuIds: this.state.menuListExist
-            // menuIds: JSON.stringify(this.state.menuListExist)
+            menuIds: this.state.menuListExist            
         }).then((json) => {
             if (json.data.result === 0) {
                 message.success("角色权限设置成功");
                 this.handleCancel();
                 this.props.recapture();
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("获取失败");
-        this.setState({loading: false});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     render() {
@@ -1522,20 +1445,19 @@ const ItemEditForm = Form.create()(
 //角色编辑组件
 class ItemEdit extends Component {
     state = {
-        visible: false,
-        // 初始详情信息
-        data: {},
+        visible: false,        
+        data: {},// 初始详情信息
         loading: false
     };
 
     getData = () => {       
-        roleDetail({id: this.props.id}).then((json) => {
+        config.roleDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 this.setState({data: json.data.data});
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {        
@@ -1565,36 +1487,16 @@ class ItemEdit extends Component {
                 name: values.roleName,
                 desc: values.remark
             };
-            updateRole(data).then((json) => {
+            config.updateRole(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("角色信息编辑成功");
                     this.handleCancel();                    
                     this.props.recapture();// 编辑成功，重新获取列表
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error("获取失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -1620,7 +1522,7 @@ class ItemEdit extends Component {
 //成员名单表单
 const NumDetailForm = Form.create()(
     (props) => {
-        const {visible, onCancel, _this, loading, data, columns, pagination, confirmLoading} = props;
+        const {visible, onCancel, loading, data, columns, _this, pagination, confirmLoading} = props;
 
         return (
             <Modal
@@ -1638,7 +1540,7 @@ const NumDetailForm = Form.create()(
                         dataSource={data}
                         pagination={pagination}
                         columns={columns}
-                        onChange={(pagination) => handleTableChange(this, pagination)}/>
+                        onChange={(pagination) => common.handleTableChange(_this, pagination)}/>
                 </div>
             </Modal>
         );
@@ -1651,13 +1553,7 @@ class NumDetail extends Component {
         visible: false,
         loading: false,
         data: [],
-        pagination: {
-            current: 1,
-            pageSize: 15,
-            pageSizeOptions: ["5", "10", "15", "20"],
-            showQuickJumper: true,
-            showSizeChanger: true
-        }
+        pagination: common.pagination
     };
                      
     columns = [
@@ -1709,7 +1605,7 @@ class NumDetail extends Component {
 
     getDataMemberList = () => {
         this.setState({loading: true});        
-        memberList({
+        config.memberList({
             id: this.props.id,
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
@@ -1736,9 +1632,9 @@ class NumDetail extends Component {
                     }
                 })
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     handleCancel = () => {
@@ -1751,39 +1647,6 @@ class NumDetail extends Component {
             });
         })       
     };
-
-    // 异常处理
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else {
-    //         message.error(json.message);
-    //         this.setState({loading: false});
-    //     }
-    // };
-    
-    // 错误处理
-    // errorHandle = (err) => {
-    //     message.error("获取失败");
-    //     this.setState({loading: false});
-    // };
-
-    //页码变化处理
-    // handleTableChange = (pagination) => {
-    //     const pager = {...this.state.pagination};
-    //     pager.current = pagination.current;
-    //     localStorage.roleSize = pagination.pageSize;
-    //     pager.pageSize = Number(localStorage.roleSize);
-    //     this.setState({
-    //         pagination: pager
-    //     }, () => {
-    //         this.getData();
-    //     })
-    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1800,7 +1663,7 @@ class NumDetail extends Component {
                     loading={this.state.loading}
                     data={this.state.data}
                     columns={this.columns}
-                    pagination={this.pagination}
+                    pagination={this.state.pagination}
                     _this={this}/>
             </a>
         );
@@ -1814,13 +1677,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -1940,8 +1797,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
         }
-        roleList(params).then((json) => {
-            const data = [];
+        config.roleList(params).then((json) => {
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -1964,56 +1820,23 @@ class DataTable extends Component {
                     }
                 })
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     //角色删除
     itemDelete = (para) => {
         this.setState({loading: true});
-        deleteRole({id: para}).then((json) => {
+        config.deleteRole({id: para}).then((json) => {
             if (json.data.result === 0) {
                     message.success("删除成功");
                     this.getData();
                 } else {
-                    exceptHandle(this, json.data);
+                    common.exceptHandle(this, json.data);
                 }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
-
-    // 异常处理
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else {
-    //         message.error(json.message);
-    //         this.setState({loading: false});
-    //     }
-    // };
-    
-    // 错误处理
-    // errorHandle = (err) => {
-    //     message.error("获取失败");
-    //     this.setState({loading: false});
-    // };
-
-    //页码变化处理
-    // handleTableChange = (pagination) => {
-    //     const pager = {...this.state.pagination};
-    //     pager.current = pagination.current;
-    //     localStorage.roleSize = pagination.pageSize;
-    //     pager.pageSize = Number(localStorage.roleSize);
-    //     this.setState({
-    //         pagination: pager
-    //     }, () => {
-    //         this.getData();
-    //     })
-    // };
 
     componentWillMount() {
         this.getData();
@@ -2035,7 +1858,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={(pagination) => handleTableChange(this, pagination)}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -2053,7 +1876,7 @@ class Roles extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-       this.setState({opObj: getPower(this).data});
+       this.setState({opObj: common.getPower(this).data});
     };
 
     // 关键词写入
@@ -2064,12 +1887,6 @@ class Roles extends Component {
     setFlag = () => {
         this.setState({flag_add: !this.state.flag_add});
     };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    // toLoginPage = () => {
-    //     sessionStorage.clear();
-    //     this.props.history.push('/')
-    // };
 
     componentWillMount() {
         this.setPower();
@@ -2103,7 +1920,7 @@ class Roles extends Component {
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add} 
                                         setFlag={this.setFlag}
-                                        toLoginPage={this.toLoginPage}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*角色列表*/}
@@ -2112,7 +1929,7 @@ class Roles extends Component {
                                     opObj={this.state.opObj} 
                                     keyword={this.state.keyword}
                                     flag_add={this.state.flag_add} 
-                                    toLoginPage={() => toLoginPage(this)}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>
                         </div>
                         :

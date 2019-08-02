@@ -6,8 +6,10 @@ import {
     Popconfirm,
     message
 } from 'antd';
-import { commentList, deleteComment } from '../../config';
-import { getPower, pagination } from '../../config/common';
+// import { commentList, deleteComment } from '../../config';
+// import { getPower, toLoginPage, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
 
@@ -23,7 +25,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: pagination
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -109,7 +111,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
-        commentList(params).then((json) => {
+        config.commentList(params).then((json) => {
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -132,56 +134,23 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     //评论删除
     itemDelete = (id) => {
         this.setState({loading: true});
-        deleteComment({id: id}).then((json) => {
+        config.deleteComment({id: id}).then((json) => {
             if (json.data.result === 0) {
                 message.success("删除成功");
                 this.getData(this.props.keyword);
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
-    }
-
-    //表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.institutionPageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.institutionPageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            status: filters.status ? filters.status[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
-    };
+        }).catch((err) => common.errorHandle(this, err));
+    };    
 
     componentWillMount() {
         this.getData();
@@ -202,7 +171,7 @@ class DataTable extends Component {
                     pagination={this.state.pagination}
                     columns={this.columns}
                     // scroll={{ x: 1500 }}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -224,7 +193,7 @@ class EvaluationManage extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        this.setState({opObj: getPower(this).data})
+        this.setState({opObj: common.getPower(this).data})
     };
 
     // 名称关键词设置
@@ -284,15 +253,7 @@ class EvaluationManage extends Component {
     };
 
     setFlag = () => {
-        this.setState({
-            flag_add: !this.state.flag_add
-        })
-    };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
+        this.setState({flag_add: !this.state.flag_add})
     };
 
     componentWillMount() {
@@ -310,7 +271,6 @@ class EvaluationManage extends Component {
     }
 
     render() {
-        console.log(this.state.opObj)
         return (
             <div className="institutions comment">
                 {
@@ -343,7 +303,7 @@ class EvaluationManage extends Component {
                                     opObj={this.state.opObj} 
                                     keyword={this.state.keyword}
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>                               
                         </div>
                         :

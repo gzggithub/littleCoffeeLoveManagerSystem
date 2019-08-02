@@ -10,13 +10,14 @@ import {
     Col,
     Modal,
     Button,
-    Icon,
     Upload
 } from 'antd';
-import * as qiniu from 'qiniu-js';
-import * as UUID from 'uuid-js';
-import { configUrl, getToken, coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
-import { getPower, pagination } from '../../config/common';
+// import * as qiniu from 'qiniu-js';
+// import * as UUID from 'uuid-js';
+// import { configUrl, getToken, coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
+// import { getPower, toLoginPage, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -123,7 +124,7 @@ class EditableCell extends Component {
 // 编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, reqwestUploadToken, picList, viewPic, picUpload, setPicList, photoLoading, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, form, data, picList, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
         // 已上传图片列表
@@ -135,39 +136,19 @@ const ItemEditForm = Form.create()(
                     <div className="photoExist-item clearfix" key={index + 1}>
                         <img src={item.resource} alt=""/>
                         <div className="remove">
-                            <Button type="dashed" shape="circle" icon="minus" onClick={() => setPicList(index)}/>
+                            <Button type="dashed" shape="circle" icon="minus" onClick={() => common.deleteFileList(_this, 2, index)}/>
                         </div>
                     </div>
                 )
             });
         }
 
-        // 图片处理
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }         
-            reqwestUploadToken(file);
-            return isIMG && isLt2M;
-        };
-
         //  生活照
-        const picHandleChange = (info) => {
+        const customRequest = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
-                picUpload(info.file);
+                common.picUpload(_this, 3, info.file, _this.state.uploadToken);
             }, 500);
         };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );
         
         return (
             <Modal
@@ -215,10 +196,10 @@ const ItemEditForm = Form.create()(
                                         listType="picture-card"
                                         accept="image/*"
                                         showUploadList={false}
-                                        beforeUpload={beforeUpload}
-                                        customRequest={picHandleChange}>
-                                        {uploadButton}
-                                        {/*<p className="hint">（可上传1-9张图片）</p>*/}
+                                        beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                        customRequest={customRequest}>
+                                        {common.uploadButton(1, photoLoading)}
+                                        <p className="hint">{config.configUrl.uploadTipContent}</p>
                                     </Upload>
                                 </div>                       
                             )}
@@ -235,39 +216,33 @@ class ItemEdit extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            visible: false,
-            // 明星基本信息
-            data: {},
+            visible: false,            
+            data: {},// 明星基本信息
             uploadToken: '',
             viewPic: '',
             picList: [],
-            photoLoading: false,
-            // 提交按钮状态变量
-            loading: false,                  
+            photoLoading: false,            
+            loading: false, // 提交按钮状态变量                 
         };
         // this.editor = ""
     }
 
     // 获取明星基本信息
     getData = () => {
-        coffeeDetail({id: this.props.id}).then((json) => {
-             if (json.data.result === 0) {
-                // 已有所属分类写入                    
-                // json.data.data.typeId = json.data.data.excellentCourseType.typeId;                
+        config.coffeeDetail({id: this.props.id}).then((json) => {
+             if (json.data.result === 0) {               
                 // 富文本数据写入
                 // this.editor.setData(json.data.data.characteristic);
                 // 信息写入
-                console.log(json.data.data.resourceList)
                 this.setState({
                     data: json.data.data,
-                    viewPic: json.data.data.resourceList[0].resource,
+                    viewPic: json.data.data.resourceList.length ? json.data.data.resourceList[0].resource : '',
                     picList: json.data.data.resourceList
                 });
             } else {
-                this.props.exceptHandle(json.data);
-                this.setState({loading: false});              
+                common.exceptHandle(this, json.data);             
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -276,60 +251,6 @@ class ItemEdit extends Component {
         // setTimeout(()=> {
         //    this.editor = window.CKEDITOR.replace(document.getElementById('content'));                      
         // });
-    };
-
-    // 图片处理    
-    reqwestUploadToken = () => { // 请求上传凭证，需要后端提供接口
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                    this.setState({
-                        uploadToken: json.data.data,
-                    })
-                } else {
-                    this.props.exceptHandle(json.data);
-                }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
-    };
-
-    // 图片上传
-    picUpload = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true});
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g, "");
-        const token = this.state.uploadToken;
-        const config = {region: qiniu.region.z0};
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");
-                _this.setState({photoLoading03: false})
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                let {picList} = _this.state; // 此行不加只能添加一张
-                picList.push({resource: configUrl.photoUrl + res.key, type: 0});
-                _this.setState({
-                    picList: picList,
-                    viewPic: configUrl.photoUrl + res.key || "",           
-                    photoLoading: false,
-                })
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始        
-    };
-
-    setPicList = (index) => {
-        let data = this.state.picList;
-        data.splice(index, 1);
-        this.setState({
-            picList: data
-        });
     };
 
     // 取消处理
@@ -346,7 +267,7 @@ class ItemEdit extends Component {
                 photoLoading: false,                                   
                 loading: false,
             });
-            this.editor = ""
+            // this.editor = ""
             form.resetFields();
         });
     };
@@ -361,7 +282,7 @@ class ItemEdit extends Component {
             if (picList.length) {
                 picList.forEach((item, index) => {
                     tempPicList.push({
-                        resource: item.resource.slice(configUrl.photoUrl.length)
+                        resource: item.resource.slice(config.configUrl.photoUrl.length)
                     });
                 });               
             } else {
@@ -374,36 +295,16 @@ class ItemEdit extends Component {
                 resourceList: tempPicList
             };
             this.setState({loading: true});
-            updateCoffee(result).then((json) => {
+            config.updateCoffee(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("编辑成功");
                     this.handleCancel();
                     this.props.recapture();                            
                 } else {
-                    this.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -415,16 +316,14 @@ class ItemEdit extends Component {
              <a style={{display: this.props.opStatus ? "inline" : "none"}}>
                 <span onClick={this.showModal}>编辑</span>                
                 <ItemEditForm
-                    ref={this.saveFormRef}                 
+                    ref={this.saveFormRef}
+                    _this={this}                
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}                                   
                     data={this.state.data}
-                    reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
                     picList={this.state.picList}
-                    picUpload={this.picUpload}
-                    setPicList={this.setPicList}
                     photoLoading={this.state.photoLoading}                    
                     confirmLoading={this.state.loading}/>                
             </a>
@@ -443,10 +342,7 @@ const ItemDetailsForm = Form.create()(
             resourceList.forEach((item, index) => {
                 imgList.push(
                     <Col span={6} key={index + 1}>
-                        <img src={item.resource} style={{width: "100%"}} alt=""/>
-                        {/*<div className="photoExist-item clearfix" key={index + 1}>
-                            <img src={item} alt=""/>                            
-                        </div>*/}
+                        <img src={item.resource} style={{width: "100%"}} alt=""/>                        
                     </Col>
                 )
             })
@@ -481,9 +377,7 @@ const ItemDetailsForm = Form.create()(
                         </Row>                        
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">图片</h4>
-                        <Row gutter={24}>
-                            {imgList}
-                        </Row>
+                        <Row gutter={24}>{imgList}</Row>
                         <div className="ant-line"></div>
                         <div className="ant-line"></div>
                     </Form>
@@ -504,7 +398,7 @@ class ItemDetails extends Component {
 
     // 获取基本信息
     getData = () => {
-        coffeeDetail({id: this.props.id}).then((json) => {
+        config.coffeeDetail({id: this.props.id}).then((json) => {
              if (json.data.result === 0) {
                 this.setState({
                     loading: false,
@@ -512,9 +406,9 @@ class ItemDetails extends Component {
                     resourceList: json.data.data.resourceList
                 });
             } else {
-                this.exceptHandle(json.data);                         
+                common.exceptHandle(this, json.data);                         
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {        
@@ -529,26 +423,6 @@ class ItemDetails extends Component {
             data: "",
             resourceList: []
         });
-    };
-
-    // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
     };
 
     render() {
@@ -573,7 +447,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: pagination
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -690,11 +564,9 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         };
-        coffeeList(params).then((json) => {
+        config.coffeeList(params).then((json) => {
             if (json.data.result === 0) {
-                console.log(555);
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    console.log(6666);
                     this.setState({
                         pagination: {
                             current: 1,
@@ -715,15 +587,15 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 设置排序
     handleSort = (row) => {
         this.setState({loading: true});
-        sortCoffee({
+        config.sortCoffee({
             id: row.id,// 广告Id
             sort: Number(row.sort),// 排序
         }).then((json) => {
@@ -731,15 +603,15 @@ class DataTable extends Component {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 设置浏览数
     setViewNum = (row) => {
         this.setState({loading: true});
-        viewNum({
+        config.viewNum({
             id: row.id,
             num: Number(row.operateNum),// 浏览数
         }).then((json) => {
@@ -747,55 +619,22 @@ class DataTable extends Component {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     //删除
     itemDelete = (id) => {
         this.setState({loading: true});
-        deleteCoffee({id: id}).then((json) => {
+        config.deleteCoffee({id: id}).then((json) => {
             if (json.data.result === 0) {
                 message.success("删除成功");
                 this.getData(this.props.keyword);
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {this.errorHandle(err);});
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
-    };
-
-    //表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.institutionPageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.institutionPageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            status: filters.status ? filters.status[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     componentWillMount() {
@@ -840,7 +679,7 @@ class DataTable extends Component {
                     components={components}
                     columns={columns}
                     scroll={{ x: 1500 }}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -862,7 +701,7 @@ class CoffeeCircle extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        this.setState({opObj: getPower(this).data});
+        this.setState({opObj: common.getPower(this).data});
     };
 
     // 名称关键词设置
@@ -922,12 +761,6 @@ class CoffeeCircle extends Component {
         this.setState({flag_add: !this.state.flag_add});
     };
 
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
-    };
-
     componentWillMount() {
         this.setPower();
         if (this.props.location.search) {
@@ -943,7 +776,6 @@ class CoffeeCircle extends Component {
     }
 
     render() {
-        console.log(this.state.opObj)
         return (
             <div className="institutions coffee-circle">
                 {
@@ -976,7 +808,7 @@ class CoffeeCircle extends Component {
                                     keyword={this.state.keyword}
                                     opObj={this.state.opObj}                                   
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>                               
                         </div>
                         :

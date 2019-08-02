@@ -13,8 +13,10 @@ import {
     InputNumber,
     Select,
 } from 'antd';
-import { checkList, checkDetail, check} from '../../config';
-import { getPower, genderOptions } from '../../config/common';
+// import { checkList, checkDetail, check} from '../../config';
+// import { toLoginPage, getPower, genderOptions, checkOptions, checkStatus, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const TabPane = Tabs.TabPane;
 const Search = Input.Search;
@@ -69,7 +71,7 @@ const ItemCheckForm = Form.create()(
                                             message: '性别不能为空',
                                         }],
                                     })(
-                                        <Select disabled placeholder="请选择性别">{genderOptions}</Select>
+                                        <Select disabled placeholder="请选择性别">{common.genderOptions}</Select>
                                     )}
                                 </FormItem>
                             </Col>
@@ -179,11 +181,7 @@ const ItemCheckForm = Form.create()(
                                             message: "审核结果不能为空"
                                         }],
                                     })(
-                                        <RadioGroup buttonStyle="solid" onChange={(e) => setFeeType(e.target.value)}>
-                                            <Radio.Button value={3} style={{marginRight: "20px", borderRadius: "4px"}}>驳回</Radio.Button>
-                                            <Radio.Button value={4} style={{marginRight: "20px", borderRadius: "4px"}}>通过</Radio.Button>                                            
-                                            <Radio.Button value={5} style={{marginRight: "20px", borderRadius: "4px"}}>不通过</Radio.Button>
-                                        </RadioGroup>
+                                        <RadioGroup buttonStyle="solid" onChange={(e) => setFeeType(e.target.value)}>{common.checkOptions}</RadioGroup>
                                     )}
                                 </FormItem>                            
                             </Col>
@@ -191,8 +189,7 @@ const ItemCheckForm = Form.create()(
                         <div className="ant-line"></div>                    
                         <FormItem className="opinion" label="不通过/驳回原因：">
                             {getFieldDecorator('opinion', {
-                                rules: [{
-                                    // required: feeType === 4 ? false : true,
+                                rules: [{                                    
                                     required: feeType !== 4,
                                     message: '审核意见不能为空',
                                 }],
@@ -227,13 +224,13 @@ class ItemCheck extends Component {
 
     // 获取本页信息
     getData = () => {
-        checkDetail({id: this.props.id}).then((json) => {
+        config.checkDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {                
                 this.setState({data: json.data.data});
             } else {
-                this.props.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => { message.error("获取失败");});
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     setFeeType = (value) => {
@@ -257,13 +254,9 @@ class ItemCheck extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) { return;}
-            // if (values.checkStatus !== 4 && !values.opinion) {
-            //     message.error("驳回/不通过意见不能为空");
-            //     return;
-            // }
+            if (err) { return;}            
             this.setState({loading: true});
-            check({
+            config.check({
                 id: this.props.id,               
                 checkStatus: values.checkStatus,
                 checkOpinion: values.opinion
@@ -273,30 +266,10 @@ class ItemCheck extends Component {
                     this.handleCancel();
                     this.props.recapture();
                 } else {
-                    this.props.exceptHandle(json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {this.errorHandle(err);});
+            }).catch((err) => common.errorHandle(this, err));
         });
-    };
-
-     // 异常处理
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");            
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-    
-    // 错误处理
-    errorHandle = () => {
-        message.error("保存失败");
-        this.setState({loading: false});
     };
 
     saveFormRef = (form) => {
@@ -318,8 +291,7 @@ class ItemCheck extends Component {
                     feeType={this.state.feeType}
                     setFeeType01={this.setFeeType01}
                     feeType01={this.state.feeType01}
-                    confirmLoading={this.state.loading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
@@ -346,7 +318,6 @@ class ItemOpinion extends Component {
                     visible={this.state.visible}
                     footer={null}
                     onCancel={this.handleCancel}
-                    maskClosable={false}
                     destroyOnClose={true}>                        
                     <div className="item-opinion" style={{minHeight: "200px"}}>
                         <p>{this.props.record.checkOpinion || "暂无"}</p>
@@ -364,13 +335,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            },
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -443,6 +408,26 @@ class DataTable extends Component {
         );
     }
 
+    dataHandle = (data) => {
+        const result = [];
+        data.forEach((item, index) => {            
+            result.push({
+                key: index.toString(),
+                id: item.id,                           
+                index: index + 1,                           
+                name: item.name,
+                phone: item.phone,                                                     
+                cityName: item.cityName,
+                createTime: item.createTime,
+                photo: item.photo,                           
+                statusCode: item.checkStatus,
+                status: common.checkStatus(item.checkStatus),
+                checkOpinion: item.checkOpinion
+            });
+        });
+        return result;
+    };
+
     //获取本页信息
     getData = (type, keyword) => {
         this.setState({loading: true});
@@ -454,8 +439,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
         };
-        checkList(params).then((json) => {
-            const data = [];
+        config.checkList(params).then((json) => {
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -467,37 +451,10 @@ class DataTable extends Component {
                         this.getData();
                     });
                     return
-                }
-                json.data.data.list.forEach((item, index) => {
-                    let tempStatus = '';
-                    if (item.checkStatus === 1) {
-                        tempStatus = "未审核";
-                    } else if (item.checkStatus === 2) {
-                        tempStatus = "需重审";
-                    } else if (item.checkStatus === 3) {
-                        tempStatus = "已驳回";
-                    } else if (item.checkStatus === 4) {
-                        tempStatus = "通过";
-                    } else if (item.checkStatus === 5) {
-                        tempStatus = '不通过'
-                    }
-                    data.push({
-                        key: index.toString(),
-                        id: item.id,                           
-                        index: index + 1,                           
-                        name: item.name,
-                        phone: item.phone,                                                     
-                        cityName: item.cityName,
-                        createTime: item.createTime,
-                        photo: item.photo,                           
-                        statusCode: item.checkStatus,
-                        status: tempStatus,
-                        checkOpinion: item.checkOpinion
-                    });
-                });
+                }                
                 this.setState({
                     loading: false,
-                    data: data,
+                    data: this.dataHandle(json.data.data.list),
                     pagination: {
                         total: json.data.data.total,
                         current: this.state.pagination.current,
@@ -505,38 +462,9 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            message.error("获取失败");
-            this.setState({loading: false});
-        });
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");
-            this.props.toLoginPage();
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");
-            this.props.toLoginPage();
-        } else {
-            message.error(json.message);
-            this.setState({loading: false});
-        }
-    };
-
-    //页码变化处理
-    handleTableChange = (pagination) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.institutionCheckPageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.institutionCheckPageSize);
-        this.setState({
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     componentWillMount() {
@@ -557,7 +485,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -645,15 +573,9 @@ class StarCheck extends Component {
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
         this.setState({           
-            opObjReady: getPower(this, "/index/app-home/star-check/ready").dataTabs, // 待审核权限
-            opObjDeny: getPower(this, "/index/app-home/star-check/deny").dataTabs // 已驳回权限
+            opObjReady: common.getPower(this, "/index/app-home/star-check/ready").dataTabs, // 待审核权限
+            opObjDeny: common.getPower(this, "/index/app-home/star-check/deny").dataTabs // 已驳回权限
         });
-    };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
     };
 
     componentWillMount() {
@@ -678,11 +600,7 @@ class StarCheck extends Component {
                         placeholder="请输入姓名"
                         onSearch={this.search}
                         enterButton
-                        style={{
-                            width: "320px", 
-                            float: "left",
-                            marginRight: "20px"
-                        }} />
+                        style={{width: "320px", float: "left", marginRight: "20px"}}/>
                     {/*明星日期筛选*/}
                     <span>日期筛选： </span>
                     <DatePicker 
@@ -709,7 +627,7 @@ class StarCheck extends Component {
                         keyword={this.state.keyword}
                         opObjReady={this.state.opObjReady}
                         opObjDeny={this.state.opObjDeny}
-                        toLoginPage={this.toLoginPage} 
+                        toLoginPage={() => common.toLoginPage(this)}
                         flag_add={this.state.flag_add}/>
                 </div>
                 <p className="hint"/>

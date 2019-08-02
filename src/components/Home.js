@@ -17,7 +17,9 @@ import {
     Modal,
     Form
 } from 'antd';
-import { getVerificationCode, loginOut, resetPassword } from '../config';
+// import { getVerificationCode, loginOut, resetPassword } from '../config';
+import * as config from '../config';
+import * as common from '../config/common';
 import logoImg from "../logo.png";
 
 const {Header, Footer} = Layout;
@@ -67,8 +69,7 @@ const ResetPasswordForm = Form.create()(
                         <FormItem className="codeButton" {...formItemLayout_12}>
                             <Button style={{float: "right", width: "100px"}}
                                     type="primary"
-                                    onClick={getCode}
-                            >
+                                    onClick={getCode}>
                                 {codeButtonStatus ? countDown + "s后重发" : "获取验证码"}
                             </Button>
                         </FormItem>
@@ -87,6 +88,7 @@ const ResetPasswordForm = Form.create()(
                                 rules: [{
                                     required: true,
                                     message: '密码不能为空',
+                                    validator: common.checkPassword
                                 }],
                             })(
                                 <Input placeholder="8-16位字母与数字组合"/>
@@ -136,7 +138,7 @@ class ResetPassword extends Component {
         } else {
             const regPhone = /^1[0-9]{10}$/;
             if (regPhone.test(phone)) {               
-                getVerificationCode({phone: phone}).then((json) => {
+                config.getVerificationCode({phone: phone}).then((json) => {
                     if (json.data.result === 0) {                        
                         this.setState({// 开启倒计时
                             codeButtonStatus: true,
@@ -197,7 +199,7 @@ class ResetPassword extends Component {
                 code: values.code,
                 pwd: values.pwd
             };
-            resetPassword(data).then((json) => {
+            config.resetPassword(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("密码设置成功，请重新登录");
                     // 设置成功之后变量初始化
@@ -219,10 +221,7 @@ class ResetPassword extends Component {
                     }                        
                     this.setState({loading: false});
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            });
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
 
@@ -311,7 +310,7 @@ class Home extends Component {
 
     // 退出登录处理
     signOut = () => {
-        loginOut().then((json) => {            
+        config.loginOut().then((json) => {            
             sessionStorage.clear();// 清除登陆信息            
             this.props.history.push('/');// 跳转至登陆页面
         }).catch((err) => {
@@ -361,7 +360,7 @@ class Home extends Component {
                             <div className="logo">
                                 <img src={logoImg} alt=""/>
                                 <div className="pic-right">
-                                    <p>淘儿学</p>
+                                    <p>小咖爱</p>
                                     <p>运营管理系统</p>
                                 </div>
                             </div>

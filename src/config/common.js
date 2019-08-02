@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Select, message } from 'antd';
+import { Select, Modal, Radio, Icon, message } from 'antd';
 import * as qiniu from 'qiniu-js';
 import * as UUID from 'uuid-js';
 import {configUrl, getToken} from './index'
@@ -13,45 +13,75 @@ export const pagination = {
     pageSizeOptions: ["5", "10", "15", "20"],
     showQuickJumper: true,
     showSizeChanger: true
-}
+};
 
 export const genderOptions = [
-    <options key={0} value={0}>女</options>,
-    <options key={1} value={1}>男</options>
-]
+    // <Option key="" value="">{"全部"}</Option>,
+    <Option key={0} value={0}>女</Option>,
+    <Option key={1} value={1}>男</Option>
+];
 
-export const genderStatus = (gender) => {
+export const genderStatus = (gender) => {// 性别 女：0，男： 1
     let tempGender = '';
     if (gender === 0) {
         tempGender = "女";
-    }
-    if (gender === 1) {
+    } else if (gender === 1) {
         tempGender = "男";
     }
     return tempGender;
+};
+
+export const putAwayStatus = (status) => {// 明星状态    
+    let tempStatus = "";
+    if (status === 2) {
+        tempStatus = "上架";
+    } else if (status  === 3) {
+        tempStatus = "下架";
+    }
+    return tempStatus;
+};
+
+export const banStatus = (status) => {
+    let tempStatus = "";
+    if (status === 0) {
+        tempStatus = "禁用"
+    } else if (status === 1) {
+        tempStatus = "启用"
+    }
+    return tempStatus;
 }
 
 export const bannerOptions = [
+    // <Option key="" value="">全部banner位置</Option>,
     <Option key={1} value={1}>明星banner</Option>,
     <Option key={2} value={2}>通告banner</Option>
-]
+];
+
+export const bannerStatus = (type) => {
+    let tempTypeName = "";                    
+    if (type === 1) {
+        tempTypeName = "明星banner"
+    } else if (type === 2) {
+        tempTypeName = "通告banner"
+    }
+    return tempTypeName;
+}
 
 export const noticeOptions = [
     <Option key="" value="">全部</Option>,
     <Option key={1} value={1}>进行中</Option>,
     <Option key={2} value={2}>已结束</Option>,
-]
+];
 
 export const noticeStatus = (status) => {// 通告状态    
     let tempStatus = "";
     if (status === 1) {
         tempStatus = "进行中";
-    }
-    if (status  === 2) {
+    } else if (status  === 2) {
         tempStatus = "已结束";
     }
     return tempStatus;
-}
+};
 
 export const childrenOptions = [
     <Option key={0} value={0}>妈妈</Option>,
@@ -61,7 +91,29 @@ export const childrenOptions = [
     <Option key={4} value={4}>外公</Option>,
     <Option key={5} value={5}>外婆</Option>,
     <Option key={6} value={6}>其他</Option>,
-]
+];
+
+export const checkOptions = [
+    <Radio.Button key={3} value={3} style={{marginRight: "20px", borderRadius: "4px"}}>驳回</Radio.Button>,
+    <Radio.Button key={4} value={4} style={{marginRight: "20px", borderRadius: "4px"}}>通过</Radio.Button>,
+    <Radio.Button key={5} value={5} style={{marginRight: "20px", borderRadius: "4px"}}>不通过</Radio.Button>
+];
+
+export const checkStatus = (checkStatus) => {
+    let tempStatus = '';
+    if (checkStatus === 1) {
+        tempStatus = "未审核";
+    } else if (checkStatus === 2) {
+        tempStatus = "需重审";
+    } else if (checkStatus === 3) {
+        tempStatus = "已驳回";
+    } else if (checkStatus === 4) {
+        tempStatus = "通过";
+    } else if (checkStatus === 5) {
+        tempStatus = '不通过'
+    }
+    return tempStatus;
+};
 /* ............................................公共的方法............................................. */
 // 手机号和座机号正则验证
 export function checkTel (rule, value, callback) {
@@ -120,9 +172,9 @@ export function checkPassword (rule, value, callback) {
 };
 
 // 根据省市区id 查找 省市区name
-export const pCAName = (provinceList, adcode) => {    
-    const optionsOfCity = [{value: "0", label: "全国"}];
-    const optionsOfArea = [{value: "0", label: "全国"}];
+export const pCAName = (provinceList, adcode) => {
+    const optionsOfCity = [{value: "0", label: "全国"}];//省，市选项生成
+    const optionsOfArea = [{value: "0", label: "全国"}];//省，市，区选项生成
     let currentCityName = [];
     let currentCity = [];
     let currentAreaName = [];
@@ -158,7 +210,7 @@ export const pCAName = (provinceList, adcode) => {
         })
     }
     return { optionsOfCity, currentCity, currentCityName, optionsOfArea, currentArea, currentAreaName };
-}
+};
 
 // 获取当前登录人对此菜单的操作权限
 export const getPower = (_this, url, num) => {
@@ -240,7 +292,7 @@ export const getMapDate = (_this, id, num) => { // id: 地图容器，num：表�
 // 小于两位时间处理
 const timeDeal = (time) => {
     return time < 10 ? '0' + time : time;
-}
+};
 
 // 倒计时
 export const countdown = (startTime, endDate) => {
@@ -273,65 +325,180 @@ export const countdown = (startTime, endDate) => {
         minute: timeDeal(minute),
         second: timeDeal(second)
     };
+};
+
+// 复制 倒计时 提示模态框
+const countDownModalTip = (content) => {
+    let secondsToGo = 3;
+    const modal = Modal.success({
+        title: `温馨提示`,
+        content: `你还没添加${content}，请先添加${content}，正在返回，请稍后 ${secondsToGo} s.`,
+    });
+    const timer = setInterval(() => {
+        secondsToGo -= 1;
+        modal.update({
+           content: `你还没添加${content}，请先添加${content}，正在返回，请稍后 ${secondsToGo} s.`,
+        });
+    }, 1000);
+    setTimeout(() => {
+        clearInterval(timer);
+        modal.destroy();
+    }, secondsToGo * 1000);
+};
+
+export const beforeUpload = (file, _this, num) => {
+    if (num === 2) {
+        reqwestUploadToken(_this);
+    } else {
+        const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+        if (!isIMG) {
+            message.error('文件类型错误');
+        }
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+            message.error('文件不能大于2M');
+        }         
+        reqwestUploadToken(_this);
+        return isIMG && isLt2M;
+    }    
+};
+
+export const uploadButton = (num, loading) => {
+    if (num === 1) {
+        return (
+            <div>
+                <Icon type={loading ? 'loading' : 'plus'}/>
+                <div className="ant-upload-text" style={{display: loading ? "none" : "block"}}>选择图片</div>
+            </div>
+        );
+    } else if (num === 2) {
+        return (
+            <div>
+                <Icon style={{fontSize: "50px"}} type={loading ? 'loading' : 'video-camera'}/>
+                <div className="ant-upload-text" style={{display: loading ? "none" : "block"}}>添加视频</div>
+            </div>
+        );
+    }
+    
 }
 
-var uploadToken = '';
-
-const reqwestUploadToken = (_this) => {
+// 请求上传凭证token，需要后端提供接口
+export const reqwestUploadToken = (_this) => {
     getToken().then((json) => {
         if (json.data.result === 0) {
-                uploadToken = json.data.data;
-            } else {
-                exceptHandle(_this, json.data);
-            }
+            _this.setState({
+                uploadToken: json.data.data,
+            });
+        } else {
+            exceptHandle(_this, json.data);
+        }
     }).catch((err) => errorHandle(_this, err));
-    return uploadToken;
 };
 
 // 图片上传
-export const picUpload = (_this, num, para) => {
-    _this.setState({photoLoading: true, videoLoading: true});
+export const picUpload = (_this, num, para, uploadToken) => {
+    let videoSize = 0;
+    if (num === 1) {
+        _this.setState({photoLoading: true});
+    } else if (num === 2) {
+        _this.setState({photoLoading02: true});
+    } else if (num === 3) {
+        _this.setState({photoLoading: true});
+    } else if (num === 4) {
+        _this.setState({videoLoading: true});
+    } else if (num === 5) {
+        videoSize = (para.size/1024/1024).toFixed(2);
+        _this.setState({videoLoading: true});
+    }   
     const file = para;
     const key = UUID.create().toString().replace(/-/g, "");
-    const token = reqwestUploadToken(_this);
+    const token = uploadToken;
     console.log(token)
     console.log(1231231312312)
-    const config = {region: qiniu.region.z0};
+    const config01 = {region: qiniu.region.z0};
     const observer = {
         next (res) {console.log(res)},
         error (err) {
             console.log(err)
-            message.error(err.message ? err.message : "图片提交失败");
-            _this.setState({photoLoading: false, videoLoading: false})
+            if (num === 1 || num ===2 || num === 3) {
+                message.error(err.message ? err.message : "图片提交失败");
+                _this.setState({photoLoading: false, photoLoading02: false})
+            } else {
+                message.error(err.message ? err.message : "视频提交失败");
+                _this.setState({videoLoading: false})
+            }
         }, 
         complete (res) {
             console.log(res);
-            message.success("图片提交成功");
+            if (num === 4 || num === 5) {
+                message.success("视频提交成功");
+            } else {
+                message.success("图片提交成功");
+            }             
             let {picList, videoList} = _this.state; // 此行不加只能添加一张
             if (num === 1) {// 1:表示单张图片
                 _this.setState({                   
                     viewPic: configUrl.photoUrl + res.key || "",           
                     photoLoading: false,
                 })
-            } else if (num === 2) {// 2:表示多张图片
+            } else if (num === 2) {// 2:表示多张图片（数组元素是string）
                 picList.push(configUrl.photoUrl + res.key);
+                _this.setState({
+                    picList: picList,
+                    viewPic02: configUrl.photoUrl + res.key || "",           
+                    photoLoading02: false,
+                });
+            } else if (num === 3) {// 3:表示多张图片（数组元素是object）
+                 picList.push({resource: configUrl.photoUrl + res.key, type: 0});
                 _this.setState({
                     picList: picList,
                     viewPic: configUrl.photoUrl + res.key || "",           
                     photoLoading: false,
-                })
-            } else if (num === 3) {// 3:多条视频
+                });
+            } else if (num === 4) {// 4:多条视频（数组元素是string）
                 videoList.push(configUrl.photoUrl + res.key);
                 _this.setState({
                     videoList: videoList,
                     videoPic: configUrl.photoUrl + res.key || "",           
                     videoLoading: false,
-                })
+                });
+            } else if (num === 5) {// 4:多条视频（数组元素是object))
+                let videoE = document.createElement("video"); // 获取时长
+                videoE.src = configUrl.photoUrl + res.key;
+                setTimeout(()=> {
+                    console.log(videoE.duration);
+                    videoList.unshift({ 
+                        sort: 0,
+                        name: '',                    
+                        resource: configUrl.photoUrl + res.key,
+                        duration: videoE.duration,
+                        videoSize: videoSize,
+                        readOnly: true,
+                    });
+                    _this.setState({
+                        videoList: videoList,                       
+                        viewVideo: "",
+                        videoLoading: false,
+                    });
+                }, 1500);
+                
             }
         }
     }
-    const observable = qiniu.upload(file, key, token, config);
-    observable.subscribe(observer); // 上传开始        
+    const observable = qiniu.upload(file, key, token, config01);
+    observable.subscribe(observer); // 上传开始
+};
+
+// 删除图片和视频
+export const deleteFileList = (_this, num, index) => {
+    let {picList, videoList} = _this.state;
+    if (num === 2) { // 2:表示是图片
+        picList.splice(index, 1);
+        _this.setState({picList: picList});
+    } else if (num === 3) { // 3:表示是视频
+        videoList.splice(index, 1);
+        _this.setState({videoList: videoList});
+    }
 };
 
 // 登陆信息过期或不存在时的返回登陆页操作
@@ -341,7 +508,7 @@ export const toLoginPage = (_this) => {
 };
 
 // 异常处理
-export const exceptHandle = (_this, json) => {
+export const exceptHandle = (_this, json, content) => {
     if (json.code === 901) {
         message.error("请先登录");          
         _this.props.toLoginPage();// 返回登陆页
@@ -350,7 +517,9 @@ export const exceptHandle = (_this, json) => {
         _this.props.toLoginPage();// 返回登陆页
     } else if (json.code === 1005) {
         message.error("无数据，请添加");
-        _this.setState({loading: false});                     
+        _this.setState({loading: false});
+    } else if (json.code === 1205) {// 判断没有添加数据时，提示信息                    
+        countDownModalTip(content);                  
     } else {
         message.error(json.message);
         _this.setState({loading: false});
@@ -364,7 +533,7 @@ export const errorHandle = (_this, err) => {
 };
 
 // js实现复制到剪贴板上
-export const copyToClipboard = (txt) => {
+export const copyToClipboard = (_this, txt) => {
     if (window.clipboardData) {
         window.clipboardData.clearData();
         window.clipboardData.setData("Text", txt);
@@ -403,6 +572,8 @@ export const copyToClipboard = (txt) => {
         document.execCommand("Copy");
         oInput.style.display = 'none';
         document.body.removeChild(oInput);
+        message.success("链接地址已经复制成功，请使用 Ctrl+V 粘贴");
+        _this.handleCancel();
     }
 }
 
@@ -413,12 +584,14 @@ export const checkRiches = (rule, value, callback) => {
 }
 
 // 页码变化处理  (暂时不能用，传参问题)
-export const handleTableChange = (_this, pagination) => {
+export const handleTableChange = (_this, pagination, filters) => {
     const pager = {..._this.state.pagination};
     pager.current = pagination.current;
     localStorage.roleSize = pagination.pageSize;
     pager.pageSize = Number(localStorage.roleSize);
-    _this.setState({       
+    _this.setState({
+        // type: filters.type ? filters.type[0] : null,
+        // status: filters.status ? filters.status[0] : null,    
         pagination: pager
     }, () => {
         _this.getData();

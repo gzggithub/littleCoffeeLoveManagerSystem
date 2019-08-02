@@ -6,15 +6,16 @@ import {
     Modal,
     Form,
     message,
-    Icon,
     Upload,
     Popconfirm,
     Spin
 } from 'antd';
-import * as qiniu from 'qiniu-js';
-import * as UUID from 'uuid-js';
-import { configUrl, getToken, typeList, addType, deleteType, updateType, typeDetail,  sortType } from '../../config';
-import { getPower, toLoginPage, exceptHandle, errorHandle } from '../../config/common';
+// import * as qiniu from 'qiniu-js';
+// import * as UUID from 'uuid-js';
+// import { configUrl, getToken, typeList, addType, deleteType, updateType, typeDetail, sortType } from '../../config';
+// import { getPower, toLoginPage, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 message.config({
     top: 50,
@@ -127,32 +128,20 @@ class EditableCell extends Component {
 // 新增一级类型表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, reqwestUploadToken, picUpload01, viewPic, photoLoading, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, form, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }         
-            reqwestUploadToken(file);
-            return isIMG && isLt2M;
-        };
-        const picHandleChange = (info) => {            
+        const customRequest = (info) => {           
             setTimeout(()=>{// 渲染的问题，加个定时器延迟
-                picUpload01(info.file);
+                common.picUpload(_this, 1, info.file, _this.state.uploadToken)
             }, 700);
         };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );
+        // const uploadButton = (
+        //     <div>
+        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
+        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+        //     </div>
+        // );
 
         return (
             <Modal
@@ -199,9 +188,9 @@ const ItemAddForm = Form.create()(
                                     listType="picture-card"
                                     className="avatar-uploader"
                                     showUploadList={false}
-                                    beforeUpload={beforeUpload}
-                                    customRequest={picHandleChange}>
-                                    {viewPic ? <img src={viewPic} alt=""/> : uploadButton}
+                                    beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                    customRequest={customRequest}>
+                                    {viewPic ? <img src={viewPic} alt=""/> : common.uploadButton(1, photoLoading)}
                                 </Upload>
                             )}
                         </FormItem>
@@ -229,44 +218,48 @@ class ItemAdd extends Component {
     };
 
     // 请求上传凭证，需要后端提供接口
-    reqwestUploadToken = () => {
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                    this.setState({
-                        uploadToken: json.data.data,
-                    })
-                } else {
-                    exceptHandle(this, json.data);
-                }
-        }).catch((err) => errorHandle(this, err));
-    };
+    // reqwestUploadToken = () => {
+        // let token = common.reqwestUploadToken(this);
+        // console.info(token);
+        // config.getToken().then((json) => {
+        //     if (json.data.result === 0) {
+        //             this.setState({
+        //                 uploadToken: json.data.data,
+        //             })
+        //         } else {
+        //             common.exceptHandle(this, json.data);
+        //         }
+        // }).catch((err) => common.errorHandle(this, err));
+    // };
 
-    picUpload01 = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true});
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g,"");
-        const token = this.state.uploadToken;
-        const config = {region: qiniu.region.z0};
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");                
-                _this.setState({photoLoading: false});
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                _this.setState({
-                    viewPic: configUrl.photoUrl + res.key || "",             
-                    photoLoading: false,
-                });
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始
-    };
+    // picUpload01 = (para) => {
+    //     ;
+        // const _this = this;
+        // this.setState({photoLoading: true});
+        // const file = para;
+        // const key = UUID.create().toString().replace(/-/g,"");
+        // const token = this.state.uploadToken;
+        // const config01 = {region: qiniu.region.z0};
+        // const observer = {
+        //     next (res) {console.log(res)},
+        //     error (err) {
+        //         console.log(err)
+        //         message.error(err.message ? err.message : "图片提交失败");                
+        //         _this.setState({photoLoading: false});
+        //     }, 
+        //     complete (res) {
+        //         console.log(res);
+        //         message.success("图片提交成功");
+        //         console.log(config);
+        //         _this.setState({
+        //             viewPic: config.configUrl.photoUrl + res.key || "",             
+        //             photoLoading: false,
+        //         });
+        //     }
+        // }
+        // const observable = qiniu.upload(file, key, token, config01);
+        // observable.subscribe(observer); // 上传开始
+    // };
 
     handleCancel = () => {
         this.setState({
@@ -284,18 +277,18 @@ class ItemAdd extends Component {
             this.setState({loading: true});            
             const data = {
                 name: values.name,
-                icon: this.state.viewPic.slice(configUrl.photoUrl.length),
+                icon: this.state.viewPic.slice(config.configUrl.photoUrl.length),
                 background: values.background
             };
-            addType(data).then((json) => {
+            config.addType(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("类型添加成功");
                     this.handleCancel();
                     this.props.setFlag();
                 } else {
-                    exceptHandle(this, json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => errorHandle(this, err));
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
 
@@ -309,11 +302,12 @@ class ItemAdd extends Component {
                 <Button style={{marginBottom: "10px"}} type="primary" onClick={this.showModal}>添加类型</Button>
                 <ItemAddForm
                     ref={this.saveFormRef}
+                    _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    reqwestUploadToken={this.reqwestUploadToken}
-                    picUpload01={this.picUpload01}
+                    // reqwestUploadToken={() => common.reqwestUploadToken(this)}
+                    // picUpload01={(para) => common.picUpload(this, 1, para, this.state.uploadToken)}
                     viewPic={this.state.viewPic}
                     photoLoading={this.state.photoLoading}                    
                     confirmLoading={this.state.loading}/>                
@@ -325,32 +319,32 @@ class ItemAdd extends Component {
 // 修改一级类型表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, form, data, reqwestUploadToken, picUpload01, viewPic, photoLoading, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, form, data, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
 
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }
-            reqwestUploadToken();
-            return isIMG && isLt2M;
-        };
-        const picHandleChange = (info) => {
+        // const beforeUpload = (file) => {
+        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+        //     if (!isIMG) {
+        //         message.error('文件类型错误');
+        //     }
+        //     const isLt2M = file.size / 1024 / 1024 < 2;
+        //     if (!isLt2M) {
+        //         message.error('文件不能大于2M');
+        //     }
+        //     reqwestUploadToken();
+        //     return isIMG && isLt2M;
+        // };
+        const customRequest = (info) => {
             setTimeout(() => {
-                picUpload01(info.file);
+                common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);
         };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );
+        // const uploadButton = (
+        //     <div>
+        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
+        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+        //     </div>
+        // );
 
         return (
             <Modal
@@ -405,9 +399,9 @@ const ItemEditForm = Form.create()(
                                             listType="picture-card"
                                             className="avatar-uploader"
                                             showUploadList={false}
-                                            beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}>
-                                            {viewPic ? <img src={viewPic} alt=""/> : uploadButton}
+                                            beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                            customRequest={customRequest}>
+                                            {viewPic ? <img src={viewPic} alt=""/> : common.uploadButton(1, photoLoading)}
                                         </Upload>
                                     )}
                                 </FormItem>
@@ -430,18 +424,16 @@ class ItemEdit extends Component {
     };
 
     getData = () => {
-        typeDetail({id: this.props.id}).then((json) => {
+        config.typeDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     data: json.data.data,
                     viewPic: json.data.data.photo,
                 });
             }else{
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => {
-            message.error("发送失败");
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -450,46 +442,46 @@ class ItemEdit extends Component {
     };
 
     // 请求上传凭证，需要后端提供接口
-    reqwestUploadToken = () => {
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                this.setState({
-                    uploadToken: json.data.data,
-                });
-            } else {
-                exceptHandle(this, json.data);
-            }
-        }).catch((err) => errorHandle(this, err));
-    };
+    // reqwestUploadToken = () => {
+    //     config.getToken().then((json) => {
+    //         if (json.data.result === 0) {
+    //             this.setState({
+    //                 uploadToken: json.data.data,
+    //             });
+    //         } else {
+    //             common.exceptHandle(this, json.data);
+    //         }
+    //     }).catch((err) => common.errorHandle(this, err));
+    // };
     
-    picUpload01 = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true,});
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g,"");
-        const token = this.state.uploadToken;
-        const config = {region: qiniu.region.z0};
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");
-                _this.setState({
-                    photoLoading: false,
-                })
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                _this.setState({
-                    viewPic: configUrl.photoUrl + res.key || "",                               
-                    photoLoading: false,
-                })
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始        
-    };
+    // picUpload01 = (para) => {
+    //     const _this = this;
+    //     this.setState({photoLoading: true,});
+    //     const file = para;
+    //     const key = UUID.create().toString().replace(/-/g,"");
+    //     const token = this.state.uploadToken;
+    //     const config = {region: qiniu.region.z0};
+    //     const observer = {
+    //         next (res) {console.log(res)},
+    //         error (err) {
+    //             console.log(err)
+    //             message.error(err.message ? err.message : "图片提交失败");
+    //             _this.setState({
+    //                 photoLoading: false,
+    //             })
+    //         }, 
+    //         complete (res) {
+    //             console.log(res);
+    //             message.success("图片提交成功");
+    //             _this.setState({
+    //                 viewPic: config.configUrl.photoUrl + res.key || "",                               
+    //                 photoLoading: false,
+    //             })
+    //         }
+    //     }
+    //     const observable = qiniu.upload(file, key, token, config);
+    //     observable.subscribe(observer); // 上传开始        
+    // };
 
     handleCancel = () => {
         this.setState({
@@ -509,7 +501,7 @@ class ItemEdit extends Component {
         form.validateFields((err, values) => {
             if (err) {return;}            
             if (this.state.viewPic) {
-                values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
+                values.photo = this.state.viewPic.slice(config.configUrl.photoUrl.length);
             } else {
                 message.error("图片不能为空")
                 return;
@@ -521,15 +513,15 @@ class ItemEdit extends Component {
                 icon: values.photo,                
             };            
             this.setState({loading: true});
-            updateType(result).then((json) => {
+            config.updateType(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("编辑成功");
                     this.handleCancel();
                     this.props.recapture()
                 } else {
-                   exceptHandle(this, json.data);
+                   common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => errorHandle(this, err));
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
 
@@ -543,16 +535,16 @@ class ItemEdit extends Component {
                 <span onClick={this.showModal}>编辑</span>
                 <ItemEditForm
                     ref={this.saveFormRef}
+                    _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
                     data={this.state.data}
-                    reqwestUploadToken={this.reqwestUploadToken}
-                    picUpload01={this.picUpload01}
+                    // reqwestUploadToken={() => common.reqwestUploadToken(this)}
+                    // picUpload01={(para) => common.picUpload(this, 1, para, this.state.uploadToken)}                    
                     viewPic={this.state.viewPic}
                     photoLoading={this.state.photoLoading}                    
-                    confirmLoading={this.state.loading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
@@ -565,13 +557,7 @@ class DataTable extends Component {
         this.state = {
             loading: true,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            }
+            pagination: common.pagination
         };
         this.columns = [
             {
@@ -657,7 +643,7 @@ class DataTable extends Component {
     // 获取本页信息
     getData = () => {
         this.setState({loading: true});
-        typeList({
+        config.typeList({
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize,
         }).then((json) => {
@@ -672,15 +658,15 @@ class DataTable extends Component {
                     }
                 });
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 排序
     handleSort = (row) => {
         this.setState({loading: true});
-        sortType({                
+        config.sortType({                
             id: row.id,// 机构Id                
             sort: Number(row.sort),// 排序
         }).then((json) => {
@@ -688,37 +674,22 @@ class DataTable extends Component {
                 this.setState({loading: false});
                 this.getData(); //刷新数据
             } else {
-                exceptHandle(this, json.data);                
+                common.exceptHandle(this, json.data);                
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 删除
     itemDelete = (para) => {
         this.setState({loading: true});
-        deleteType({id: para}).then((json) => {
+        config.deleteType({id: para}).then((json) => {
             if (json.data.result === 0) {
                 message.success("删除成功");
                 this.getData();
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
-    };
-
-    //表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.institutionPageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.institutionPageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            status: filters.status ? filters.status[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     componentWillMount() {
@@ -759,7 +730,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={columns}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -771,9 +742,9 @@ class Category extends Component {
             flag_add: false
         }
     };
-    // 获取当前登录人对此菜单的操作权限 
-    setPower = () => {
-        this.setState({opObj: getPower(this).data});     
+     
+    setPower = () => {// 获取当前登录人对此菜单的操作权限
+        this.setState({opObj: common.getPower(this).data});     
     };
 
     setFlag = () => {
@@ -805,7 +776,7 @@ class Category extends Component {
                                     <ItemAdd 
                                         opStatus={this.state.opObj.add} 
                                         setFlag={this.setFlag}
-                                        toLoginPage={() => toLoginPage(this)}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*类型列表*/}
@@ -813,7 +784,7 @@ class Category extends Component {
                                 <DataTable 
                                     opObj={this.state.opObj} 
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={() => toLoginPage(this)}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>
                         </div>
                         :

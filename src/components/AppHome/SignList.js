@@ -6,14 +6,15 @@ import {
     Modal,
     Form,
     Select,
-    message,
     Row,
     Col,
     DatePicker,
     Spin
 } from 'antd';
-import { genderOptions, genderStatus, copyToClipboard } from '../../config/common';
-import { copyUrl, signList, signDetail, exceptHandle, errorHandle} from '../../config';
+// import { configUrl, signList, signDetail } from '../../config';
+// import { toLoginPage, genderOptions, genderStatus, copyToClipboard, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -33,24 +34,19 @@ class ItemDownload extends Component {
         };
     }
 
-    showModal = (props, event) => {         
+    showModal = (props, event) => {
         this.setState({visible: true});
     };
 
     // 取消处理
     handleCancel = () => {
-        this.setState({
-            visible: false,
-            loading: false,
-        });
+        this.setState({visible: false, loading: false});
     };
 
     // 确认处理
     handleCreate = () => {
         this.setState({loading: true});
-        copyToClipboard(copyUrl + this.props.id);
-        message.success("链接地址已经复制成功，请使用 Ctrl+V 粘贴");
-        this.handleCancel();
+        common.copyToClipboard(this, config.configUrl.copyUrl + this.props.id);        
     };
 
     render() {
@@ -70,7 +66,7 @@ class ItemDownload extends Component {
                     maskClosable={false}
                     destroyOnClose={true}>
                     <div className="sign-link-address">
-                        <div>{copyUrl + this.props.id}</div>
+                        <div>{config.configUrl.copyUrl + this.props.id}</div>
                         <p>已为您生成在线访问地址，可在线查看报名名单的信息</p>
                     </div>
                 </Modal>                
@@ -127,7 +123,7 @@ const ItemDetailsForm = Form.create()(
                                                     message: '所属分类不能为空'
                                                 }],
                                             })(
-                                                <Select disabled>{genderOptions}</Select>
+                                                <Select disabled>{common.genderOptions}</Select>
                                             )}
                                         </FormItem> 
                                     </Col>
@@ -229,7 +225,7 @@ const ItemDetailsForm = Form.create()(
                                 <Row gutter={24}>
                                     <Col span={8}>
                                         <video controls="controls" width="100%">
-                                            <source src={data.selfIntroduce} type="video/mp4"/>
+                                            <source src={data.selfIntroduce} type="video/*"/>
                                         </video>
                                     </Col>                         
                                 </Row>
@@ -239,7 +235,7 @@ const ItemDetailsForm = Form.create()(
                                 <Row gutter={24}>
                                     <Col span={8}>
                                         <video controls="controls" width="100%">
-                                            <source src={data.productVideo} type="video/mp4"/>
+                                            <source src={data.productVideo} type="video/*"/>
                                         </video>
                                     </Col>
                                 </Row>
@@ -262,16 +258,16 @@ class ItemDetails extends Component {
     // 获取报名名单基本信息
     getData = () => {
         this.setState({loading: true});
-        signDetail({id: this.props.id}).then((json) => {
+        config.signDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {               
                 this.setState({
                     loading: false,
                     data: json.data.data,
                 });
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -280,28 +276,7 @@ class ItemDetails extends Component {
     };
 
     handleCancel = () => {
-        this.setState({
-            visible: false,          
-            data: {}
-        });
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false})
-        }
-    };
-
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
+        this.setState({visible: false, data: {}});
     };
 
     render() {
@@ -328,16 +303,9 @@ class DataTable extends Component {
             typeList: [],
             type: null,
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            },
-        };
-        // 列配置
-        this.columns = [
+            pagination: common.pagination
+        };        
+        this.columns = [// 列配置
             {
                 title: '序号',
                 dataIndex: 'index',
@@ -422,7 +390,7 @@ class DataTable extends Component {
                 sort: item.sort !== 0 ? item.sort : '',
                 name: item.name,
                 genderCode: item.gender,
-                gender: genderStatus(item.gender),
+                gender: common.genderStatus(item.gender),
                 height: (item.height ? item.height : 0) + 'cm' ,
                 weight: (item.weigth ? item.weight : 0) + 'kg',
                 area: item.provinceName + '/' + item.cityName,
@@ -436,7 +404,7 @@ class DataTable extends Component {
     // 获取本页信息
     getData = (keyword) => {
         this.setState({loading: true});
-        signList({
+        config.signList({
             annunciateId: this.props.opObj.id,                              
             name: keyword ? keyword.name : this.props.keyword.name,
             startTime: keyword ? keyword.startTime : this.props.keyword.startTime,
@@ -466,41 +434,9 @@ class DataTable extends Component {
                     }
                 })
             } else {
-                this.exceptHandle(json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => this.errorHandle(err));
-    };
-
-    exceptHandle = (json) => {
-        if (json.code === 901) {
-            message.error("请先登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else if (json.code === 902) {
-            message.error("登录信息已过期，请重新登录");                        
-            this.props.toLoginPage();// 返回登陆页
-        } else {
-            message.error(json.message);
-            this.setState({loading: false})
-        }
-    };
-
-    errorHandle = (err) => {
-        message.error(err.message);
-        this.setState({loading: false});
-    };
-
-    // 表格参数变化处理
-    handleTableChange = (pagination, filters) => {
-        const pager = {...this.state.pagination};
-        pager.current = pagination.current;
-        localStorage.coursePageSize = pagination.pageSize;
-        pager.pageSize = Number(localStorage.coursePageSize);
-        this.setState({
-            type: filters.type ? filters.type[0] : null,
-            pagination: pager,
-        }, () => {
-            this.getData();
-        });
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     componentWillMount() {
@@ -522,7 +458,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={this.handleTableChange}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -530,17 +466,9 @@ class DataTable extends Component {
 class SignList extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            // 报名名单权限
-            opObj: {
-                add: true,
-                copy: true,
-                select: true,
-                modify: true,
-                putAway: true,
-            },
-            // 获取报名名单列表所需关键词
-            keyword: {
+        this.state = {            
+            opObj: {},// 报名名单权限            
+            keyword: {// 获取报名名单列表所需关键词
                 name: '',
                 startTime: "",
                 endTime: "",
@@ -612,13 +540,7 @@ class SignList extends Component {
     // 刷新table页面
     setFlag = () => {
         this.setState({flag_add: !this.state.flag_add});
-    };
-
-    // 登陆信息过期或不存在时的返回登陆页操作
-    toLoginPage = () => {
-        sessionStorage.clear();
-        this.props.history.push('/')
-    };
+    };    
 
     componentWillMount() {
         this.setPower();
@@ -667,7 +589,7 @@ class SignList extends Component {
                                         opStatus={this.state.opObj.apply}
                                         id={this.state.opObj.id}
                                         recapture={this.setFlag}
-                                        toLoginPage={this.toLoginPage}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*报名名单列表*/}
@@ -676,7 +598,7 @@ class SignList extends Component {
                                     opObj={this.state.opObj}
                                     keyword={this.state.keyword}                                   
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={this.toLoginPage}/>
+                                    toLoginPage={() => common.toLoginPage(this)}/>
                             </div>
                         </div>
                         :

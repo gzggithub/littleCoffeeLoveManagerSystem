@@ -12,27 +12,28 @@ import {
     message,
     Row,
     Col,
-    Radio,
-    InputNumber,
+    // Radio,
+    // InputNumber,
     DatePicker,    
     Cascader,
     Popconfirm,
     Spin
 } from 'antd';
-import * as qiniu from 'qiniu-js';
-import * as UUID from 'uuid-js';
+// import * as qiniu from 'qiniu-js';
+// import * as UUID from 'uuid-js';
 import moment from 'moment';
-import { configUrl, getToken, noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReviewDetail, saveOrUpdatePastReview, signList, typeList } from '../../config';
-import { toLoginPage, noticeOptions, noticeStatus, pCAName, getPower, countdown, picUpload, removeTag, checkRiches, handleTableChange, exceptHandle, errorHandle} from '../../config/common';
+// import { configUrl, getToken, noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReviewDetail, saveOrUpdatePastReview, signList, typeList } from '../../config';
+// import { toLoginPage, noticeOptions, noticeStatus, pCAName, getPower, countdown, picUpload, removeTag, checkRiches, pagination, handleTableChange, exceptHandle, errorHandle} from '../../config/common';
+import * as common from '../../config/common';
+import * as config from '../../config';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
 const {TextArea} = Input;
 const {Option} = Select;
-const RadioGroup = Radio.Group;
+// const RadioGroup = Radio.Group;
 
 const dateFormat = "YYYY-MM-DD HH:mm:ss";
-// const riches = '';
 
 //单元格
 const Cell = ({value}) => (
@@ -42,12 +43,12 @@ const Cell = ({value}) => (
 // 新增、复制通告表单
 const ItemAddForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, setXY, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, keepAddNotice, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, setXY, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        const optionsOfCity = pCAName(provinceList, data.cityId).optionsOfCity;
-        let currentCity = pCAName(provinceList, data.cityId).currentCity;
+        const optionsOfCity = common.pCAName(provinceList, data.cityId).optionsOfCity;
+        let currentCity = common.pCAName(provinceList, data.cityId).currentCity;
 
         // 分类选项生成
         const optionsOfType =[]
@@ -70,8 +71,6 @@ const ItemAddForm = Form.create()(
                     if (status === 'complete' && result.info === 'OK') {
                         result.geocodes[0].addressComponent.adcode = result.geocodes[0].adcode;                       
                         setXY({lng: result.geocodes[0].location.lng, lat: result.geocodes[0].location.lat});
-                        console.log(result.geocodes[0].location.lng)
-                        console.log(result.geocodes[0].location.lat)
                         setFieldsValue({"address": result.geocodes[0].formattedAddress});
                         // setAddressComponent(result.geocodes[0].addressComponent);
                         marker.setPosition(result.geocodes[0].location);
@@ -88,29 +87,30 @@ const ItemAddForm = Form.create()(
         };
 
         // 图片相关
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }         
-            reqwestUploadToken(file);
-            return isIMG && isLt2M;
-        };
-        const picHandleChange = (info) => {
+        // const beforeUpload = (file) => {
+        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+        //     if (!isIMG) {
+        //         message.error('文件类型错误');
+        //     }
+        //     const isLt2M = file.size / 1024 / 1024 < 2;
+        //     if (!isLt2M) {
+        //         message.error('文件不能大于2M');
+        //     }         
+        //     reqwestUploadToken(file);
+        //     return isIMG && isLt2M;
+        // };
+        const customRequest = (info) => {
             setTimeout(()=>{
-                picUpload01(info.file);
+                // picUpload01(info.file);
+                common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);   
         };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );
+        // const uploadButton = (
+        //     <div>
+        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
+        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+        //     </div>
+        // );
 
         return (
             <Modal
@@ -239,9 +239,9 @@ const ItemAddForm = Form.create()(
                                             listType="picture-card"
                                             className="avatar-uploader"
                                             showUploadList={false}
-                                            beforeUpload={beforeUpload}
-                                            customRequest={picHandleChange}>
-                                            {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
+                                            beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                            customRequest={customRequest}>
+                                            {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : common.uploadButton(1, photoLoading)}
                                         </Upload>
                                     )}
                                 </FormItem>                                
@@ -331,7 +331,7 @@ class ItemAdd extends Component {
     };
 
     getTypeList = () => {
-        typeList({
+        config.typeList({
             pageNum: 1,
             pageSize: 20,
         }).then((json) => {
@@ -341,14 +341,14 @@ class ItemAdd extends Component {
                     allTypeList: json.data.data.list                   
                 });
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data, "通告");
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 获取通告基本信息
     getData = () => {
-        NewestNotice().then((json) => {
+        config.NewestNotice().then((json) => {
             if (json.data.result === 0) {
                 this.setState({// 信息写入
                     visible: true,
@@ -363,9 +363,9 @@ class ItemAdd extends Component {
                     this.map();
                 });
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = (props, event) => {
@@ -407,12 +407,7 @@ class ItemAdd extends Component {
         }, 500);
     };
 
-    setXY = (para) => {
-        console.log(para)
-        this.setState({xy: para}, () => {
-            console.log(this.state.xy)
-        });
-    };
+    setXY = (para) => {this.setState({xy: para});};
 
     // setFormattedAddress = (para) => {
     //     this.setState({formattedAddress: para});
@@ -430,65 +425,65 @@ class ItemAdd extends Component {
     // };
 
     // 倒计时
-    countDown = () => {
-        let secondsToGo = 3;
-        const modal = Modal.success({
-            title: `温馨提示`,
-            content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
-        });
-        const timer = setInterval(() => {
-            secondsToGo -= 1;
-            modal.update({
-               content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
-            });
-        }, 1000);
-        setTimeout(() => {
-            clearInterval(timer);
-            sessionStorage.removeItem("courseData");
-            modal.destroy();
-        }, secondsToGo * 1000);
-    };
+    // countDown = () => {
+    //     let secondsToGo = 3;
+    //     const modal = Modal.success({
+    //         title: `温馨提示`,
+    //         content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
+    //     });
+    //     const timer = setInterval(() => {
+    //         secondsToGo -= 1;
+    //         modal.update({
+    //            content: `你还没添加通告，请先添加通告，正在返回，请稍后 ${secondsToGo} s.`,
+    //         });
+    //     }, 1000);
+    //     setTimeout(() => {
+    //         clearInterval(timer);
+    //         sessionStorage.removeItem("courseData");
+    //         modal.destroy();
+    //     }, secondsToGo * 1000);
+    // };
 
-    reqwestUploadToken = () => {
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                    this.setState({
-                        uploadToken: json.data.data
-                    })
-                } else {
-                    exceptHandle(this, json.data);
-                }
-        }).catch((err) => errorHandle(this, err));
-    };
+    // reqwestUploadToken = () => {
+    //     config.getToken().then((json) => {
+    //         if (json.data.result === 0) {
+    //                 this.setState({
+    //                     uploadToken: json.data.data
+    //                 })
+    //             } else {
+    //                 common.exceptHandle(this, json.data);
+    //             }
+    //     }).catch((err) => common.errorHandle(this, err));
+    // };
 
-    picUpload01 = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true,});
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g,"");
-        const token = this.state.uploadToken;
-        const config = {
-            region: qiniu.region.z0
-        };
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");                
-                _this.setState({photoLoading: false});
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                _this.setState({
-                    viewPic: configUrl.photoUrl + res.key || "",                               
-                    photoLoading: false,
-                })
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始     
-    };
+    // picUpload01 = (para) => {
+    //     const _this = this;
+    //     this.setState({photoLoading: true,});
+    //     const file = para;
+    //     const key = UUID.create().toString().replace(/-/g,"");
+    //     const token = this.state.uploadToken;
+    //     const config = {
+    //         region: qiniu.region.z0
+    //     };
+    //     const observer = {
+    //         next (res) {console.log(res)},
+    //         error (err) {
+    //             console.log(err)
+    //             message.error(err.message ? err.message : "图片提交失败");                
+    //             _this.setState({photoLoading: false});
+    //         }, 
+    //         complete (res) {
+    //             console.log(res);
+    //             message.success("图片提交成功");
+    //             _this.setState({
+    //                 viewPic: config.configUrl.photoUrl + res.key || "",                               
+    //                 photoLoading: false,
+    //             })
+    //         }
+    //     }
+    //     const observable = qiniu.upload(file, key, token, config);
+    //     observable.subscribe(observer); // 上传开始     
+    // };
 
     // 取消处理
     handleCancel = () => {
@@ -529,10 +524,10 @@ class ItemAdd extends Component {
                 return
             }
             if (values.photo && viewPic) {
-                values.photo = viewPic.slice(configUrl.photoUrl.length);
+                values.photo = viewPic.slice(config.configUrl.photoUrl.length);
             }          
             // 省市区名称
-            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
             console.log(currentCityName)
             
             keepData.push({
@@ -582,10 +577,10 @@ class ItemAdd extends Component {
                 return
             }
             if (values.photo && viewPic) {
-                values.photo = viewPic.slice(configUrl.photoUrl.length);
+                values.photo = viewPic.slice(config.configUrl.photoUrl.length);
             }          
             // 省市区名称
-            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
             console.log(currentCityName)
             
             keepData.push({
@@ -605,40 +600,18 @@ class ItemAdd extends Component {
             })
             if (keepData.length) {
                 this.setState({loading: true});
-                addNotice(keepData).then((json) => {
+                config.addNotice(keepData).then((json) => {
                     if (json.data.result === 0) {
                         message.success("添加通告成功");
                         this.handleCancel();
                         this.props.recapture();
                     } else {
-                        exceptHandle(this, json.data);
+                        common.exceptHandle(this, json.data);
                     }
-                }).catch((err) => errorHandle(this, err));
+                }).catch((err) => common.errorHandle(this, err));
             }
         });       
     };
-
-    // 异常处理
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 1206) {// 判断没有添加数据时，提示信息                    
-    //         this.countDown();
-    //     } else {
-    //         message.error(json.message);
-    //         this.setState({loading: false});
-    //     }
-    // };
-    
-    // 错误处理
-    // errorHandle = (err) => {
-    //     message.error(err.message);
-    //     this.setState({loading: false});
-    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -651,6 +624,7 @@ class ItemAdd extends Component {
                 <Button type="primary" onClick={() => {this.showModal(2)}} style={{marginLeft: 10}}>添加</Button>
                 <ItemAddForm
                     ref={this.saveFormRef}
+                    _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
@@ -667,9 +641,9 @@ class ItemAdd extends Component {
                     // formattedAddress={this.state.formattedAddress}
                     setXY={this.setXY}
                     // setAddressComponent={this.setAddressComponent}
-                    reqwestUploadToken={this.reqwestUploadToken}
+                    // reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
-                    picUpload01={this.picUpload01}
+                    // picUpload01={this.picUpload01}
                     photoLoading={this.state.photoLoading}
                     confirmLoading={this.state.loading}/>             
             </div>
@@ -680,12 +654,12 @@ class ItemAdd extends Component {
 // 通告编辑表单
 const ItemEditForm = Form.create()(
     (props) => {
-        const {visible, onCancel, onCreate, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, setXY, reqwestUploadToken, viewPic, picUpload01, photoLoading, confirmLoading} = props;
+        const {_this, visible, onCancel, onCreate, provinceList, allTypeList, form, data, setEndTime, disabledStartDate, disabledEndDate, mapObj, setXY, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator, setFieldsValue} = form;
 
         // 城市选项生成
-        const optionsOfCity = pCAName(provinceList, data.cityId).optionsOfCity;
-        let currentCity = pCAName(provinceList, data.cityId).currentCity;
+        const optionsOfCity = common.pCAName(provinceList, data.cityId).optionsOfCity;
+        let currentCity = common.pCAName(provinceList, data.cityId).currentCity;
 
         // 分类选项生成
         const optionsOfType =[]
@@ -724,29 +698,29 @@ const ItemEditForm = Form.create()(
         };
 
         // 图片相关
-        const beforeUpload = (file) => {
-            const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-            if (!isIMG) {
-                message.error('文件类型错误');
-            }
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                message.error('文件不能大于2M');
-            }         
-            reqwestUploadToken(file);
-            return isIMG && isLt2M;
-        };
-        const picHandleChange = (info) => {
+        // const beforeUpload = (file) => {
+        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
+        //     if (!isIMG) {
+        //         message.error('文件类型错误');
+        //     }
+        //     const isLt2M = file.size / 1024 / 1024 < 2;
+        //     if (!isLt2M) {
+        //         message.error('文件不能大于2M');
+        //     }         
+        //     reqwestUploadToken(file);
+        //     return isIMG && isLt2M;
+        // };
+        const customRequest = (info) => {
             setTimeout(()=>{
-                picUpload01(info.file);
+                common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);   
         };
-        const uploadButton = (
-            <div>
-                <Icon type={photoLoading ? 'loading' : 'plus'}/>
-                <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-            </div>
-        );
+        // const uploadButton = (
+        //     <div>
+        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
+        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
+        //     </div>
+        // );
 
         return (
             <Modal
@@ -884,9 +858,9 @@ const ItemEditForm = Form.create()(
                                                     listType="picture-card"
                                                     className="avatar-uploader"
                                                     showUploadList={false}
-                                                    beforeUpload={beforeUpload}
-                                                    customRequest={picHandleChange}>
-                                                    {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : uploadButton}
+                                                    beforeUpload={(file) => common.beforeUpload(file, _this)}
+                                                    customRequest={customRequest}>
+                                                    {viewPic ? <img src={viewPic} style={{width: "100%"}} alt=""/> : common.uploadButton(1, photoLoading)}
                                                 </Upload>
                                             )}
                                         </FormItem>                                
@@ -974,7 +948,7 @@ class ItemEdit extends Component {
     };
 
     getTypeList = () => {
-        typeList({
+        config.typeList({
             pageNum: 1,
             pageSize: 20,
         }).then((json) => {
@@ -984,14 +958,14 @@ class ItemEdit extends Component {
                     allTypeList: json.data.data.list                   
                 });
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 获取通告基本信息
     getData = () => {
-        noticeDetail({id: this.props.id}).then((json) => {
+        config.noticeDetail({id: this.props.id}).then((json) => {
             if (json.data.result === 0) {
                 this.setState({
                     data: json.data.data,
@@ -1008,9 +982,9 @@ class ItemEdit extends Component {
                 });
 
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -1065,46 +1039,46 @@ class ItemEdit extends Component {
     //     });
     // };
 
-    reqwestUploadToken = () => {
-        getToken().then((json) => {
-            if (json.data.result === 0) {
-                    this.setState({
-                        uploadToken: json.data.data,
-                    })
-                } else {
-                    exceptHandle(this, json.data);
-                }
-        }).catch((err) => errorHandle(this, err));
-    };
+    // reqwestUploadToken = () => {
+    //     config.getToken().then((json) => {
+    //         if (json.data.result === 0) {
+    //                 this.setState({
+    //                     uploadToken: json.data.data,
+    //                 })
+    //             } else {
+    //                 common.exceptHandle(this, json.data);
+    //             }
+    //     }).catch((err) => common.errorHandle(this, err));
+    // };
 
-    picUpload01 = (para) => {
-        const _this = this;
-        this.setState({photoLoading: true,});
-        const file = para;
-        const key = UUID.create().toString().replace(/-/g,"");
-        const token = this.state.uploadToken;
-        const config = {
-            region: qiniu.region.z0
-        };
-        const observer = {
-            next (res) {console.log(res)},
-            error (err) {
-                console.log(err)
-                message.error(err.message ? err.message : "图片提交失败");                
-                _this.setState({photoLoading: false});
-            }, 
-            complete (res) {
-                console.log(res);
-                message.success("图片提交成功");
-                _this.setState({
-                    viewPic: configUrl.photoUrl + res.key || "",                               
-                    photoLoading: false,
-                })
-            }
-        }
-        const observable = qiniu.upload(file, key, token, config);
-        observable.subscribe(observer); // 上传开始     
-    };
+    // picUpload01 = (para) => {
+    //     const _this = this;
+    //     this.setState({photoLoading: true,});
+    //     const file = para;
+    //     const key = UUID.create().toString().replace(/-/g,"");
+    //     const token = this.state.uploadToken;
+    //     const config = {
+    //         region: qiniu.region.z0
+    //     };
+    //     const observer = {
+    //         next (res) {console.log(res)},
+    //         error (err) {
+    //             console.log(err)
+    //             message.error(err.message ? err.message : "图片提交失败");                
+    //             _this.setState({photoLoading: false});
+    //         }, 
+    //         complete (res) {
+    //             console.log(res);
+    //             message.success("图片提交成功");
+    //             _this.setState({
+    //                 viewPic: config.configUrl.photoUrl + res.key || "",                               
+    //                 photoLoading: false,
+    //             })
+    //         }
+    //     }
+    //     const observable = qiniu.upload(file, key, token, config);
+    //     observable.subscribe(observer); // 上传开始     
+    // };
 
     // 取消处理
     handleCancel = () => {
@@ -1145,10 +1119,10 @@ class ItemEdit extends Component {
                 return
             }
             if (values.photo && this.state.viewPic) {
-                values.photo = this.state.viewPic.slice(configUrl.photoUrl.length);
+                values.photo = this.state.viewPic.slice(config.configUrl.photoUrl.length);
             }          
             // 省市区名称
-            let currentCityName = pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
+            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
             console.log(currentCityName)
             console.log(values.time)
             const result = {
@@ -1169,37 +1143,17 @@ class ItemEdit extends Component {
             };
 
             this.setState({loading: true});
-            updateNotice(result).then((json) => {
+            config.updateNotice(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("编辑通告成功");
                     this.handleCancel();
                     this.props.recapture();                            
                 } else {
-                    exceptHandle(this, json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => errorHandle(this, err));
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
-
-    // 异常处理
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else {
-    //         message.error(json.message);
-    //         this.setState({loading: false});
-    //     }
-    // };
-    
-    // 错误处理
-    // errorHandle = (err) => {
-    //     message.error(err.message);
-    //     this.setState({loading: false});
-    // };
 
     saveFormRef = (form) => {
         this.form = form;
@@ -1211,6 +1165,7 @@ class ItemEdit extends Component {
                 <span onClick={this.showModal}>编辑</span>
                 <ItemEditForm
                     ref={this.saveFormRef}
+                    _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}                    
@@ -1224,9 +1179,9 @@ class ItemEdit extends Component {
                     // formattedAddress={this.state.formattedAddress}
                     setXY={this.setXY}
                     // setAddressComponent={this.setAddressComponent}
-                    reqwestUploadToken={this.reqwestUploadToken}
+                    // reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
-                    picUpload01={this.picUpload01}
+                    // picUpload01={this.picUpload01}
                     photoLoading={this.state.photoLoading}
                     confirmLoading={this.state.loading}/>                
             </a>
@@ -1317,7 +1272,7 @@ const ItemPassReviewForm = Form.create()(
                                 rules: [{
                                     required: true,
                                     // message: '精彩回顾不能为空'
-                                    validator: checkRiches                                  
+                                    validator: common.checkRiches                                  
                                 }],
                             })(
                                 <TextArea 
@@ -1360,7 +1315,7 @@ const ItemPassReviewForm = Form.create()(
                                                     columns={columns} 
                                                     dataSource={subData} 
                                                     pagination={pagination}
-                                                    onChange={(pagination) => handleTableChange(_this, pagination)}/>
+                                                    onChange={(pagination) => common.handleTableChange(_this, pagination)}/>
                                             </Modal>
                                             <Row gutter={24}>
                                                 {starExist}                                                
@@ -1391,14 +1346,9 @@ class ItemPassReview extends Component {
             subData: [],
             selectedRowKeys: [],
             selectedRows: [],
+            selectedRows01: [],
             subLoading: false,
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            },
+            pagination: common.pagination,
             subTabloading: false
         };
         this.editor = ""
@@ -1412,7 +1362,7 @@ class ItemPassReview extends Component {
                 dataIndex: 'modelCard',
                 render: (text, record) => (
                     <div className="hove-photo-scale">
-                        <img src={configUrl.photoUrl + record["modelCard"]} style={{width: '45px', height: "25px"}} alt=""/>
+                        <img src={record["modelCard"]} style={{width: '45px', height: "25px"}} alt=""/>
                     </div>
                 )
             },            
@@ -1421,17 +1371,17 @@ class ItemPassReview extends Component {
 
     // 获取基本信息
     getData = () => {
-        pastReviewDetail({annunciateId: this.props.id}).then((json) => {
+        config.pastReviewDetail({annunciateId: this.props.id}).then((json) => {
             if (json.data.result === 0) {                    
                 this.editor.setData(json.data.data.wonderfulReview);// 富文本数据写入
                 this.setState({// 信息写入
                     data: json.data.data,
-                    selectedRows: json.data.data.invitedApplyVOList || []                    
+                    selectedRows01: json.data.data.invitedApplyVOList || []                    
                 });
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showModal = () => {
@@ -1459,7 +1409,7 @@ class ItemPassReview extends Component {
     // 获取童星基本信息
     getSubData = (keyword) => {
         this.setState({subTabloading: true});
-        signList({
+        config.signList({
             annunciateId: this.props.id,                              
             name: '',
             startTime: '',
@@ -1489,9 +1439,9 @@ class ItemPassReview extends Component {
                     }
                 })
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     showSubModal = () => {
@@ -1502,7 +1452,10 @@ class ItemPassReview extends Component {
     onSelectChange = (selectedRowKeys, selectedRows) => {
         console.log('selectedRows changed: ', selectedRows);
         console.log('selectedRowKeys changed: ', selectedRowKeys);
-        this.setState({ selectedRowKeys, selectedRows});
+        this.setState({ 
+            selectedRowKeys, 
+            selectedRows01: selectedRows
+        });
     };
 
     // 童模删除
@@ -1510,7 +1463,7 @@ class ItemPassReview extends Component {
         let {selectedRows} = this.state;
         selectedRows.splice(index, 1);
         this.setState({
-            selectedRows: selectedRows
+            selectedRows01: selectedRows
         });
     };
 
@@ -1521,10 +1474,7 @@ class ItemPassReview extends Component {
             visible: false
         }, () => {
             this.setState({
-                data: {},               
-                uploadToken: "",              
-                viewPic: "",
-                picList: [],
+                data: {},
                 photoLoading: false,
                 loading: false,
             });
@@ -1545,8 +1495,8 @@ class ItemPassReview extends Component {
     };
 
     handleSubCreate= () => {
-        const {selectedRows} = this.state
-        if (selectedRows.length === 0) {
+        const {selectedRows01} = this.state
+        if (selectedRows01.length === 0) {
             message.error('请选择童模');
             return
         } else {
@@ -1564,7 +1514,7 @@ class ItemPassReview extends Component {
         const form = this.form;        
         form.validateFieldsAndScroll((err, values) => {// 获取表单数据并进行必填项校验
             // 富文本内容处理
-            values.wonderfulReview = removeTag(this.editor.getData());
+            values.wonderfulReview = common.removeTag(this.editor.getData());
             console.log(values.wonderfulReview)
             if (err) {return;}
 
@@ -1572,10 +1522,10 @@ class ItemPassReview extends Component {
                 message.error('精彩回顾不能为空');
                 return;
             }
-            let {selectedRows} = this.state;
+            let {selectedRows01} = this.state;
             let tempApplyId = [];
-            if (selectedRows.length) {
-                selectedRows.forEach((item) => {
+            if (selectedRows01.length) {
+                selectedRows01.forEach((item) => {
                     tempApplyId.push(item.id)
                 })
             }
@@ -1588,59 +1538,22 @@ class ItemPassReview extends Component {
                 applyIds: tempApplyId,
             };
             this.setState({loading: true});            
-            saveOrUpdatePastReview(result).then((json) => {
+            config.saveOrUpdatePastReview(result).then((json) => {
                 if (json.data.result === 0) {
                     message.success("往期回顾添加或编辑成功");
                     this.handleCancel();
                     this.handleSubCancel();
                     this.props.recapture();                            
                 } else {
-                    exceptHandle(this, json.data);
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => errorHandle(this, err));
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
-
-    // 异常处理
-    // exceptHandle = (json) => {
-    //     if (json.code === 901) {
-    //         message.error("请先登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 902) {
-    //         message.error("登录信息已过期，请重新登录");            
-    //         this.props.toLoginPage();// 返回登陆页
-    //     } else if (json.code === 1005) {
-    //         message.error("无数据，请添加");
-    //         this.setState({loading: false});                     
-    //     } else {
-    //         message.error(json.message);
-    //         this.setState({loading: false});
-    //     }
-    // };
-    
-    // 错误处理
-    // errorHandle = (err) => {
-    //     message.error(err.message);
-    //     this.setState({loading: false});
-    // };
 
     saveFormRef = (form) => {
         this.form = form;
     };
-
-    // 表格参数变化处理
-    // handleTableChange = (pagination, filters) => {
-    //     const pager = {...this.state.pagination};
-    //     pager.current = pagination.current;
-    //     localStorage.coursePageSize = pagination.pageSize;
-    //     pager.pageSize = Number(localStorage.coursePageSize);
-    //     this.setState({
-    //         type: filters.type ? filters.type[0] : null,
-    //         pagination: pager,
-    //     }, () => {
-    //         this.getSubData();
-    //     });
-    // };
 
     render() {
         return (
@@ -1658,315 +1571,14 @@ class ItemPassReview extends Component {
                     columns={this.columns}
                     subData={this.state.subData}
                     selectedRowKeys={this.state.selectedRowKeys}
-                    selectedRows={this.state.selectedRows}
+                    selectedRows={this.state.selectedRows01}
                     onSelectChange={this.onSelectChange}
-                    pagination={this.state.pagination}
                     _this={this}
+                    pagination={this.state.pagination}                    
                     subConfirmLoading={this.state.subLoading}
                     data={this.state.data}
-                    reqwestUploadToken={this.reqwestUploadToken}
-                    viewPic={this.state.viewPic}                    
-                    picUpload={this.picUpload}
-                    picList={this.state.picList}
                     setPicList={this.setPicList}
-                    photoLoading={this.state.photoLoading}
                     confirmLoading={this.state.loading}/>                
-            </a>
-        );
-    }
-}
-
-// 通告详情表单
-const ItemDetailsForm = Form.create()(
-    (props) => {
-        const {visible, onCancel, form, data, videoList, confirmLoading} = props;
-        const {getFieldDecorator} = form;
-
-        const tempVideoList = [];
-        if (videoList.length) {
-            videoList.forEach((item, index) => {
-                tempVideoList.push(
-                    <Col span={8} key={index+1}>
-                        <div className="video">
-                            <div className="chapter">第{item.sort}节</div>
-                            <div className="videoSource">                                
-                                <div className="videoSrc">
-                                    <video controls="controls" width="100%">
-                                        <source src={item.video} type="video/mp4" />                                                
-                                    </video>
-                                </div>
-                            </div>
-                            <h3 className="videoCourseName">{item.name}</h3>
-                        </div>
-                    </Col>)
-            })
-        }
-
-        return (
-            <Modal
-                visible={visible}
-                title="详情"
-                width={1000}
-                onCancel={onCancel}
-                footer={null}
-                maskClosable={false}
-                destroyOnClose={true}
-                confirmLoading={confirmLoading}>
-                <div className="institutionCheck-form">
-                    <Form layout="vertical">
-                        <h4 className="add-form-title-h4">基本信息</h4>
-                        <Row gutter={24}>
-                            <Col span={8}>
-                                <FormItem className="courseName"  label="通告名称：">
-                                    {getFieldDecorator('courseName', {
-                                        initialValue: data.name,
-                                        rules: [{
-                                            required: true,
-                                            message: '通告名称不能为空',
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入通告名称"/>
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="typeId" label="所属分类：">
-                                    {getFieldDecorator('typeIds', {
-                                        initialValue: data.typeIds,
-                                        rules: [{
-                                            required: true,
-                                            message: '所属分类不能为空'
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入所属分类"/>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={24}>
-                                <FormItem className="certification"  label="通告图片：">
-                                    {getFieldDecorator('pic', {
-                                        initialValue: data.pic,
-                                        rules: [{
-                                            required: true,
-                                            message: '通告图片不能为空',
-                                        }],
-                                    })(
-                                        <div className="coursePhoto">                                            
-                                            <img src={data.pic} alt=""/>
-                                        </div>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="author"  label="作者：">
-                                    {getFieldDecorator('author', {
-                                        initialValue: data.teacherName,
-                                        rules: [{
-                                            required: true,
-                                            message: '作者不能为空',
-                                        }],
-                                    })(
-                                        <Input disabled placeholder="请输入作者"/>
-                                    )}
-                                </FormItem> 
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="通告原价：">
-                                    {getFieldDecorator('originalPrice', {
-                                        initialValue: data.originalPrice,
-                                        rules: [{
-                                            required: true,
-                                            message: '通告原价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
-                                    )}
-                                </FormItem>
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="price"  label="通告现价：">
-                                    {getFieldDecorator('price', {
-                                        initialValue: data.price,
-                                        rules: [{
-                                            required: true,
-                                            message: '通告现价不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
-                                    )}
-                                </FormItem>
-                            </Col>
-                            <Col span={6}>
-                                <FormItem className="name" label="付费设置：">
-                                    {getFieldDecorator('name', {
-                                        initialValue: data.isCharge ? 1 : 2,
-                                        rules: [{
-                                            required: true,
-                                            message: '付费不能为空',
-                                        }],
-                                    })(
-                                        <RadioGroup disabled buttonStyle="solid">
-                                            <Radio.Button value={1} style={{marginRight: "20px", borderRadius: "4px"}}>收费</Radio.Button>
-                                            <Radio.Button value={2} style={{marginRight: "20px", borderRadius: "4px"}}>免费</Radio.Button>
-                                        </RadioGroup>                                       
-                                    )}
-                                </FormItem>                                
-                            </Col>
-                            <Col span={8}>
-                                <FormItem className="chapterChoose" label="">
-                                    从 {getFieldDecorator('chapter', {
-                                        initialValue: data.isCharge ? data.chargeJointCount : '',
-                                        rules: [{
-                                            required: true,
-                                            message: '章节不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={0} step={100} style={{width: "40%",marginTop: "6px"}} placeholder="请输入正整数" />
-                                    )} 节开始收费
-                                </FormItem>
-                            </Col>
-                            <Col span={2}></Col>
-                            <Col span={8}>
-                                <FormItem className="originalPrice" label="服务费：">
-                                    {getFieldDecorator('fee', {
-                                        initialValue: data.fee,
-                                        rules: [{
-                                            required: true,
-                                            message: '服务费不能为空',
-                                        }],
-                                    })(
-                                        <InputNumber disabled min={0} precision={2} step={100} style={{width: "100%"}} />
-                                    )}
-                                </FormItem>
-                            </Col>
-                            <div className="ant-line"></div>
-                        </Row>
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">通告详情</h4>
-                        <Row gutter={24}>
-                            <Col span={24}>
-                                <FormItem className="characteristic" label="通告简介：">
-                                    {getFieldDecorator('characteristic', {
-                                        initialValue: data.characteristic,
-                                        rules: [{
-                                            required: true,
-                                            message: '通告简介不能为空',
-                                        }],
-                                    })(                                        
-                                        <div className="courseDescription" style={{border: "1px solid #e5e3e0",padding: "10px"}} dangerouslySetInnerHTML={{__html: data.characteristic}}></div>
-                                    )}
-                                </FormItem>
-                            </Col>
-                        </Row>                        
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">购买须知</h4>
-                        <FormItem className="tips longItem" label="购买说明：">
-                            {getFieldDecorator('tips', {
-                                initialValue: data.tips,
-                                rules: [{
-                                    required: true,
-                                    message: '购买须知不能为空',
-                                }],
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="请填写通告购买须知"
-                                    autosize={{minRows: 5, maxRows: 10}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <FormItem className="warmPrompt longItem" label="温馨提示：">
-                            {getFieldDecorator('warmPrompt', {
-                                rules: [{
-                                    required: true,
-                                    message: '温馨提示不能为空',
-                                }],
-                                initialValue: data.warmPrompt || "如需要发票，请您在上课前向机构咨询",
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="如需要发票，请您在上课前向机构咨询"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <FormItem className="official longItem" label="官方说明：">
-                            {getFieldDecorator('official', {
-                                rules: [{
-                                    required: true,
-                                    message: '官方说明不能为空',
-                                }],
-                                initialValue: data.official || "为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                            })(
-                                <TextArea 
-                                    disabled
-                                    style={{resize: "none"}} 
-                                    placeholder="为保障您的权益，建议使用淘儿学线上支付，若使用其他支付方式导致纠纷，淘儿学不承担任何责任，感谢您的理解和支持！"
-                                    autosize={{minRows: 5, maxRows: 5}}/>
-                            )}
-                        </FormItem>
-                        <div className="ant-line"></div>
-                        <h4 className="add-form-title-h4">课时安排</h4>
-                        <Row gutter={24}>
-                            {tempVideoList}                           
-                        </Row>                       
-                    </Form>
-                </div>
-            </Modal>
-        );
-    }
-);
-
-// 通告详情组件
-class ItemDetails extends Component {
-    state = {
-        visible: false,
-        loading: true,
-        videoList: [],// 通告课时列表        
-        data: "",// 通告基本信息
-    };
-
-    // 获取通告基本信息
-    getData = () => {
-        noticeDetail({id: this.props.id}).then((json) => {
-            if (json.data.result === 0) {                   
-                this.setState({
-                    loading: false,
-                    data: json.data.data,
-                    videoList: json.data.data.lesson
-                });
-            } else {
-                exceptHandle(this, json.data);
-            }
-        }).catch((err) => errorHandle(this, err));
-    };
-
-    showModal = () => {        
-        this.getData();
-        this.setState({visible: true})
-    };
-
-    handleCancel = () => {
-        this.setState({
-            visible: false,
-            loading: true,
-            videoList: [],            
-            data: ""
-        });
-    };
-
-    render() {
-        return (           
-            <a style={{display: this.props.opStatus ? "inline" : "none"}}>
-                <span onClick={this.showModal}>详情</span>
-                <ItemDetailsForm 
-                    ref={this.saveFormRef}
-                    visible={this.state.visible}                                       
-                    data={this.state.data}                    
-                    videoList={this.state.videoList}
-                    onCancel={this.handleCancel}/>
             </a>
         );
     }
@@ -1979,16 +1591,9 @@ class DataTable extends Component {
         this.state = {
             loading: true,           
             data: [],
-            pagination: {
-                current: 1,
-                pageSize: 15,
-                pageSizeOptions: ["5", "10", "15", "20"],
-                showQuickJumper: true,
-                showSizeChanger: true
-            },
-        };
-        // 列配置
-        this.columns = [
+            pagination: common.pagination            
+        };        
+        this.columns = [// 列配置
             {
                 title: '序号',
                 dataIndex: 'index',
@@ -2026,7 +1631,7 @@ class DataTable extends Component {
                 width: '15%',
                 className: 'operating',                
                 render: (text, record) => {
-                    let time = countdown(record.beginDate, record.endDate);
+                    let time = common.countdown(record.beginDate, record.endDate);
                     return (
                         <div>
                             {
@@ -2153,7 +1758,7 @@ class DataTable extends Component {
                 viewNum: item.vistorNum || 0,
                 createTime: item.createTime,
                 statusCode: item.status,
-                status: noticeStatus(item.status)
+                status: common.noticeStatus(item.status)
             });
         });
         return result;
@@ -2171,7 +1776,7 @@ class DataTable extends Component {
             pageNum: this.state.pagination.current,
             pageSize: this.state.pagination.pageSize
         };
-        noticeList(params).then((json) => {
+        config.noticeList(params).then((json) => {
             if (json.data.result === 0) {
                 if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
                     this.setState({
@@ -2194,37 +1799,23 @@ class DataTable extends Component {
                     }
                 })
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data, "通告");
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
 
     // 通告结束
     itemOver = (id) => {
         this.setState({loading: true});        
-        noticeOver({id: id}).then((json) => {
+        config.noticeOver({id: id}).then((json) => {
             if (json.data.result === 0) {
                 message.success("通告结束成功");
                 this.getData();
             } else {
-                exceptHandle(this, json.data);
+                common.exceptHandle(this, json.data);
             }
-        }).catch((err) => errorHandle(this, err));
+        }).catch((err) => common.errorHandle(this, err));
     };
-
-    // 表格参数变化处理
-    // handleTableChange = (pagination, filters) => {
-    //     const pager = {...this.state.pagination};
-    //     pager.current = pagination.current;
-    //     localStorage.coursePageSize = pagination.pageSize;
-    //     pager.pageSize = Number(localStorage.coursePageSize);
-    //     this.setState({
-    //         type: filters.type ? filters.type[0] : null,
-    //         pagination: pager,
-    //     }, () => {
-    //         this.getData();
-    //     });
-    // };
 
     componentWillMount() {
         this.getData();
@@ -2245,7 +1836,7 @@ class DataTable extends Component {
                     dataSource={this.state.data}
                     pagination={this.state.pagination}
                     columns={this.columns}
-                    onChange={(pagination) => handleTableChange(this, pagination)}/>;
+                    onChange={(pagination) => common.handleTableChange(this, pagination)}/>;
     }
 }
 
@@ -2274,7 +1865,7 @@ class NotificationManage extends Component {
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
-        this.setState({opObj: getPower(this).data});        
+        this.setState({opObj: common.getPower(this).data});        
     };
 
     // 获取省市列表信息及当前城市地区代码
@@ -2423,7 +2014,7 @@ class NotificationManage extends Component {
                                 {/*展示城市筛选*/}
                                 <Cascader 
                                     className="star-select" 
-                                    options={pCAName(this.state.provinceList).optionsOfCity} 
+                                    options={common.pCAName(this.state.provinceList).optionsOfCity} 
                                     onChange={this.setCity} 
                                     placeholder="请选择展示城市"/>
                                 {/*状态筛选*/}
@@ -2432,7 +2023,7 @@ class NotificationManage extends Component {
                                     className="star-select"  
                                     placeholder="请选择状态" 
                                     allowClear>
-                                    {noticeOptions}
+                                    {common.noticeOptions}
                                 </Select>
                                 {/*通告名筛选*/}
                                 <Search 
@@ -2462,7 +2053,7 @@ class NotificationManage extends Component {
                                         disabledStartDate={this.disabledStartDate}
                                         disabledEndDate={this.disabledEndDate}
                                         recapture={this.setFlag}
-                                        toLoginPage={() => toLoginPage(this)}/>
+                                        toLoginPage={() => common.toLoginPage(this)}/>
                                 </div>
                             </header>
                             {/*通告列表*/}
@@ -2472,7 +2063,7 @@ class NotificationManage extends Component {
                                     keyword={this.state.keyword}
                                     provinceList={this.state.provinceList}
                                     flag_add={this.state.flag_add}
-                                    toLoginPage={() => toLoginPage(this)}/>                                    
+                                    toLoginPage={() => common.toLoginPage(this)}/>                                    
                             </div>
                             <div id="notice-mapContainer"/>
                         </div>
