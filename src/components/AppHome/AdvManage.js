@@ -15,12 +15,9 @@ import {
     Spin,
     Cascader,
 } from 'antd';
-// import * as qiniu from 'qiniu-js';
-// import * as UUID from 'uuid-js';
-// import { configUrl, getToken, advList, saveAdv, updateAdv, deleteAdv, sortAdv, putAwayAdv } from '../../config';
-// import { getPower, toLoginPage, pCAName, bannerOptions, bannerStatus, putAwayStatus, pagination, handleTableChange, exceptHandle, errorHandle} from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
+import moment from 'moment';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -732,17 +729,7 @@ class DataTable extends Component {
         };
         config.advList(params).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dateHandle(json.data.data.list),
@@ -867,38 +854,7 @@ class AdvManage extends Component {
             mapObj: {},// 地图控件对象
             provinceList: [],// 省市列表
         };              
-    }
-
-    // 获取省市列表信息及当前城市地区代码
-    getMapDate = () => {
-        this.setState({
-            mapObj: new window.AMap.Map('adv-mapContainer')
-        }, () => {
-            // 获取省区列表
-            this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-                var districtSearch = new window.AMap.DistrictSearch({
-                    level: 'country',
-                    subdistrict: 2
-                });
-                districtSearch.search('中国', (status, result) => {                    
-                    this.setState({
-                        provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
-                    });
-                })
-            });
-            // 获取当前城市地区代码
-            this.state.mapObj.plugin('AMap.CitySearch', () => {
-                var citySearch = new window.AMap.CitySearch();
-                citySearch.getLocalCity((status, result) => {
-                    if (status === 'complete' && result.info === 'OK') {
-                        this.setState({
-                            cityCode: result.adcode
-                        })
-                    }
-                })
-            })
-        })
-    };    
+    }  
 
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
@@ -974,30 +930,14 @@ class AdvManage extends Component {
         })
     };
 
-    // 禁用开始日期之前的日期
-    disabledStartDate = (startValue) => {
-        const endValue = this.state.endValue;
-        if (!startValue || !endValue) {
-            return false;
-        }
-        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
-    };
-
-    // 禁用结束日期之后的日期
-    disabledEndDate = (endValue) => {
-        const startValue = this.state.startValue;
-        if (!endValue || !startValue) {
-          return false;
-        }
-        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
-    };
-
     setFlag = () => { // 刷新table 
         this.setState({flag_add: !this.state.flag_add})
     };
 
     componentWillMount() {
-        this.getMapDate();// 获取省份城市        
+        let girlFriend = new Object({name: '苍老师'});
+        console.log("女友：" + girlFriend.name);
+        common.getMapDate(this, 'adv-mapContainer', 2);// 获取省份城市
         this.setPower();// 获取权限
         if (this.props.location.search) {
             this.props.history.push(this.props.location.pathname)
@@ -1020,8 +960,8 @@ class AdvManage extends Component {
                             <header className="clearfix">
                                 {/*广告位置筛选*/}
                                 <Select
-                                    style={{width: "150px", float: "left", marginRight: "20px"}}
                                     onChange={this.setType}
+                                    className="adv-select"
                                     placeholder="请选择banner位置"
                                     allowClear>
                                     {common.bannerOptions}
@@ -1030,28 +970,28 @@ class AdvManage extends Component {
                                 <Cascader 
                                     options={common.pCAName(this.state.provinceList).optionsOfCity} 
                                     onChange={this.setCity} 
-                                    style={{width: "150px", float: "left", marginRight: "20px"}} 
+                                    className="adv-select" 
                                     placeholder="请选择所属城市"
                                     allowClear/>
                                 {/*广告名称筛选*/}
                                 <Search
                                     placeholder="请输入描述信息"
                                     onSearch={this.setName}
-                                    enterButton
-                                    style={{width: "240px", float: "left", marginRight: "20px"}}/>
+                                    enterButton allowClear
+                                    className="adv-search"/>
                                 {/*广告创建日期筛选*/}
                                 <span>日期筛选： </span>
-                                <DatePicker 
+                                <DatePicker
+                                    disabledDate={(startValue) => common.disabledStartDate(this, startValue)}
+                                    onChange={this.setStartTime}
                                     placeholder="请选择开始日期"
-                                    style={{width: "150px"}}
-                                    disabledDate={this.disabledStartDate}
-                                    onChange={this.setStartTime}/>
+                                    className="datePick"/>
                                 <span style={{margin: "0 10px"}}>至</span>
-                                <DatePicker 
+                                <DatePicker
+                                    disabledDate={(endValue) => common.disabledStartDate(this, endValue)}
+                                    onChange={this.setEndTime}
                                     placeholder="请选择结束日期"
-                                    style={{width: "150px"}}
-                                    disabledDate={this.disabledEndDate}
-                                    onChange={this.setEndTime}/>
+                                    className="datePick"/>
                                 {/*广告添加*/}
                                 <div className="add-button" style={{float: "right"}}>
                                     <ItemAdd 

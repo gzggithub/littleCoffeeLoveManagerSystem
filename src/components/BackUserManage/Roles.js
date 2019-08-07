@@ -128,7 +128,7 @@ class ItemAdd extends Component {
     render() {
         return (
             <div style={{display: this.props.opStatus ? "block" : "none"}}>
-                <Button type="primary" onClick={this.showModal}>添加</Button>
+                <Button type="primary" onClick={this.showModal}>添加角色</Button>
                 <ItemAddForm
                     ref={this.saveFormRef}
                     visible={this.state.visible}
@@ -1611,17 +1611,7 @@ class NumDetail extends Component {
             pageSize: this.state.pagination.pageSize
         }).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getDataMemberList();
-                    });
-                    return
-                }
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     data: this.dataHandle(json.data.data.list),
                     loading: false,
@@ -1799,17 +1789,7 @@ class DataTable extends Component {
         }
         config.roleList(params).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data.list),

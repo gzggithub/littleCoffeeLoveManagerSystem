@@ -17,11 +17,8 @@ import {
     Cascader,
     Popconfirm
 } from 'antd';
-// import * as qiniu from 'qiniu-js';
-// import * as UUID from 'uuid-js';
+import locale from 'antd/lib/date-picker/locale/zh_CN';
 import moment from 'moment';
-// import { configUrl, getToken, starList, saveStar, starDetail, updateStar, NewestStar, sortStar, putAwayStar, childrenList } from '../../config';
-// import { getPower, toLoginPage, checkTel, pCAName, childrenOptions, genderOptions, genderStatus, putAwayStatus, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -154,39 +151,13 @@ const ItemAddForm = Form.create()(
                     });
                 }                
             }
-        };        
-
-        // 图片处理
-        // const beforeUpload = (file) => {
-        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-        //     if (!isIMG) {
-        //         message.error('文件类型错误');
-        //     }
-        //     const isLt2M = file.size / 1024 / 1024 < 2;
-        //     if (!isLt2M) {
-        //         message.error('文件不能大于2M');
-        //     }         
-        //     reqwestUploadToken(file);
-        //     return isIMG && isLt2M;
-        // };
-
-        // Avatar 头像
-        // const picHandleChange = (info) => {
-        //     setTimeout(() => {
-        //         picUpload(info.file);
-        //     }, 500);
-        // };
+        };
+       
         const customRequest = (info) => {
             setTimeout(()=>{// 渲染的问题，加个定时器延迟半秒
                 common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);   
-        };
-        // const uploadButton = (
-        //     <div>
-        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择头像</div>
-        //     </div>
-        // );
+        };       
         
         // 已上传图片列表
         const photoExist = [];
@@ -204,37 +175,18 @@ const ItemAddForm = Form.create()(
             });
         }
         
-        //  生活照
-        const customRequest02 = (info) => {
-            // setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
-            //     picUpload03(info.file);
-            // }, 500);
+        // 生活照
+        const customRequest02 = (info) => {           
             setTimeout(()=>{// 渲染的问题，加个定时器延迟半秒
                 common.picUpload(_this, 2, info.file, _this.state.uploadToken);
             }, 500);
         };
-        // const uploadButton03 = (
-        //     <div>
-        //         <Icon type={photoLoading03 ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading03 ? "none" : "block"}}>选择图片</div>
-        //     </div>
-        // );        
-
-        // 视频上传 处理
-        // const beforeUpload02 = (file) => {           
-        //     reqwestUploadToken(file);
-        // };
+       
         const customRequest05 = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 common.picUpload(_this, 5, info.file, _this.state.uploadToken);
             }, 500);
         };
-        // const uploadButton02 = (
-        //     <div>
-        //         <Icon style={{fontSize: "50px"}} type={videoLoading ? 'loading' : 'video-camera'}/>
-        //         <div className="ant-upload-text" style={{display: videoLoading ? "none" : "block"}}>添加视频</div>
-        //     </div>
-        // );
 
         // 已上传视频写入
         const tempVideoList = [];
@@ -261,7 +213,7 @@ const ItemAddForm = Form.create()(
                             </ul>
                         </div>                        
                     </Col>)
-            })
+            });
         }
         
         return (
@@ -953,33 +905,12 @@ const ItemEditForm = Form.create()(
             }
         };
 
-        // 图片处理
-        // const beforeUpload = (file) => {
-        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-        //     if (!isIMG) {
-        //         message.error('文件类型错误');
-        //     }
-        //     const isLt2M = file.size / 1024 / 1024 < 2;
-        //     if (!isLt2M) {
-        //         message.error('文件不能大于2M');
-        //     }         
-        //     reqwestUploadToken(file);
-        //     return isIMG && isLt2M;
-        // };
-
         // Avatar 头像
         const customRequest = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);
         };
-        // const uploadButton = (
-        //     <div>
-        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择头像</div>
-        //     </div>
-        // );
-
         
         // 已上传图片列表
         const photoExist = [];
@@ -1000,33 +931,15 @@ const ItemEditForm = Form.create()(
         //  生活照
         const customRequest02 = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
-                // picUpload03(info.file);
                 common.picUpload(_this, 2, info.file, _this.state.uploadToken);
             }, 500);
         };
-        // const uploadButton03 = (
-        //     <div>
-        //         <Icon type={photoLoading03 ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading03 ? "none" : "block"}}>选择图片</div>
-        //     </div>
-        // );
-        
-
-        // 视频上传 处理
-        // const beforeUpload02 = (file) => {           
-        //     reqwestUploadToken(file);            
-        // };
+       
         const customRequest05 = (info) => {
             setTimeout(() => {// 渲染的问题，加个定时器延迟半秒
                 common.picUpload(_this, 5, info.file, _this.state.uploadToken);
             }, 500);
-        };
-        // const uploadButton02 = (
-        //     <div>
-        //         <Icon style={{fontSize: "50px"}} type={videoLoading ? 'loading' : 'video-camera'}/>
-        //         <div className="ant-upload-text" style={{display: videoLoading ? "none" : "block"}}>添加视频</div>
-        //     </div>
-        // );
+        };        
 
         // 已上传视频写入
         const tempVideoList = [];
@@ -1310,23 +1223,19 @@ class ItemEdit extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            visible: false,
-            // 明星基本信息
-            data: {},
-            childList: [],         
-            // 明星图片相关变量            
-            uploadToken: "",// 获取上传图片token
+            visible: false,            
+            data: {},// 明星基本信息
+            childList: [], // 明星图片相关变量
+            uploadToken: "", // 获取上传图片token
             viewPic: "",
             photoLoading: false,
             viewPic02: "",
             picList: [],
-            photoLoading02: false,
-            // 视频上传
-            viewVideo: "",
+            photoLoading02: false,            
+            viewVideo: "",// 视频上传
             videoList: [],
-            videoLoading: false,
-            // 提交按钮状态变量
-            loading: false,                  
+            videoLoading: false,            
+            loading: false // 提交按钮状态变量               
         };
     }
 
@@ -1367,183 +1276,27 @@ class ItemEdit extends Component {
         }).catch((err) => common.errorHandle(this, err));
     };
 
-    // 图片处理    
-    // reqwestUploadToken = () => { // 请求上传凭证，需要后端提供接口
-    //     config.getToken().then((json) => {
-    //         if (json.data.result === 0) {
-    //                 this.setState({
-    //                     uploadToken: json.data.data,
-    //                 })
-    //             } else {
-    //                 common.exceptHandle(this, json.data);
-    //             }
-    //     }).catch((err) => common.errorHandle(this, err));
-    // };
-    
-    // 头像上传
-    // picUpload = (para) => {
-    //     const _this = this;
-    //     this.setState({photoLoading: true});
-    //     const file = para;
-    //     const key = UUID.create().toString().replace(/-/g, "");
-    //     const token = this.state.uploadToken;
-    //     const config = {region: qiniu.region.z0};
-    //     const observer = {
-    //         next (res) {console.log(res)},
-    //         error (err) {
-    //             console.log(err)
-    //             message.error(err.message ? err.message : "图片提交失败");
-    //             _this.setState({photoLoading: false})
-    //         }, 
-    //         complete (res) {
-    //             console.log(res);
-    //             message.success("图片提交成功");
-    //             _this.setState({
-    //                 viewPic: config.configUrl.photoUrl + res.key || "",           
-    //                 photoLoading: false,
-    //             })
-    //         }
-    //     }
-    //     const observable = qiniu.upload(file, key, token, config);
-    //     observable.subscribe(observer); // 上传开始        
-    // };
-
-    // 图片上传
-    // picUpload03 = (para) => {
-    //     const _this = this;
-    //     this.setState({photoLoading03: true});
-    //     const file = para;
-    //     const key = UUID.create().toString().replace(/-/g, "");
-    //     const token = this.state.uploadToken;
-    //     const config = {region: qiniu.region.z0};
-    //     const observer = {
-    //         next (res) {console.log(res)},
-    //         error (err) {
-    //             console.log(err)
-    //             message.error(err.message ? err.message : "图片提交失败");
-    //             _this.setState({photoLoading03: false})
-    //         }, 
-    //         complete (res) {
-    //             console.log(res);
-    //             message.success("图片提交成功");
-    //             let {picList} = _this.state; // 此行不加只能添加一张
-    //             picList.push(config.configUrl.photoUrl + res.key);
-    //             _this.setState({
-    //                 picList: picList,
-    //                 viewPic03: config.configUrl.photoUrl + res.key || "",           
-    //                 photoLoading03: false,
-    //             })
-    //         }
-    //     }
-    //     const observable = qiniu.upload(file, key, token, config);
-    //     observable.subscribe(observer); // 上传开始        
-    // };
-    
-    // 图片删除
-    // setPicList = (index) => {
-    //     let data = this.state.picList;
-    //     data.splice(index, 1);
-    //     this.setState({
-    //         picList: data
-    //     });
-    // };
-    
-    // 视频上传
-    // picUpload02 = (para) => {
-    //     const _this = this;
-    //     const videoSize = (para.size/1024/1024).toFixed(2);
-    //     if (this.state.videoList.length >= 15) {
-    //         message.error("视频最多上传15个");
-    //         return
-    //     } else {
-    //         this.setState({videoLoading: true});
-    //         const file = para;
-    //         const key = UUID.create().toString().replace(/-/g,"");
-    //         const token = this.state.uploadToken;
-    //         const config = {region: qiniu.region.z0};
-    //         const observer = {
-    //             next (res) {console.log(res);},
-    //             error (err) {
-    //                 console.log(err)
-    //                 message.error(err.message ? err.message : "视频提交失败");
-    //                 _this.setState({videoLoading: false});
-    //             }, 
-    //             complete (res) {
-    //                 console.log(res);
-    //                 message.success("视频提交成功");
-    //                 let videoList = _this.state.videoList;
-    //                 videoList.unshift({
-    //                     duration: 0,
-    //                     name: "",
-    //                     sort: 0,
-    //                     video: config.configUrl.photoUrl + res.key,
-    //                     videoSize: videoSize
-    //                 });
-    //                 _this.setState({
-    //                     videoList: videoList,                       
-    //                     viewVideo: "",
-    //                     videoLoading: false,
-    //                 })
-    //             }
-    //         }
-    //         const observable = qiniu.upload(file, key, token, config);
-    //         observable.subscribe(observer); // 上传开始
-    //     }
-    // };
-
-     // 视频编辑
-    editVideo = (index) => {
-        setTimeout(()=> {
-            // let ele = document.getElementById('video' + index);
-            // console.log(document.getElementById('video-edit'));
-            // let duration = document.getElementById('video-edit').duration;
-            // console.log(duration);
-            let {videoList} = this.state;
-            this.setState({                
-                videoList: videoList.map((item, idx) => idx === index ? {...item, readOnly: false} : item).sort((a, b) => {return  a.sort - b.sort;})  
-            },() => {
-                console.log(this.state.videoList)
-            });
+    // 视频编辑
+    editVideo = (index) => {          
+        let {videoList} = this.state;
+        this.setState({                
+            videoList: videoList.map((item, idx) => idx === index ? {...item, readOnly: false} : item).sort((a, b) => {return  a.sort - b.sort;})  
         });
-    };    
-    
-    // 视频删除
-    // deleteVideo = (index) => {
-    //     let data = this.state.videoList;
-    //     data.splice(index, 1);
-    //     this.setState({
-    //         videoList: data
-    //     });
-    // };
+    };
 
     // 视频明星名称
     onChangeCourseName = (value, index) => {
         let {videoList} = this.state;
-        // videoList.map((item, idx) => {
-        //     if (idx === index) {
-        //         {...item, name: value}
-        //     } else {
-        //         {item}
-        //     }
-        // })
-        console.log(value)
-        console.log(index)
         this.setState({
             videoList: videoList.map((item, idx) => idx === index ? {...item, name: value} : item),
-        },()=> {
-            console.log(this.state.videoList);
         });
     };
     
     // 视频设置排序
     onChangeSort = (value, index) => {
         let {videoList} = this.state;
-        console.log(value)
-        console.log(index)
         this.setState({
             videoList: videoList.map((item, idx) => idx === index ? {...item, sort: Number(value)} : item).sort((a, b) => {return b.sort - a.sort;})
-        },() => {
-            console.log(this.state.videoList)
         });
     };
 
@@ -1668,22 +1421,16 @@ class ItemEdit extends Component {
                     data={this.state.data}
                     setChildren={this.setChildren}
                     childList={this.state.childList}
-                    provinceList={this.props.provinceList}
-                    // reqwestUploadToken={this.reqwestUploadToken}
+                    provinceList={this.props.provinceList}                    
                     viewPic={this.state.viewPic}
-                    // picUpload={this.picUpload}
                     photoLoading={this.state.photoLoading}
                     viewPic02={this.state.viewPic02}
                     picList={this.state.picList}
-                    // picUpload03={this.picUpload03}
-                    // setPicList={this.setPicList}
                     photoLoading02={this.state.photoLoading02}
-                    // picUpload02={this.picUpload02}
                     viewVideo={this.state.viewVideo}                  
                     videoList={this.state.videoList}                  
                     videoLoading={this.state.videoLoading}
                     editVideo={this.editVideo}
-                    // deleteVideo={this.deleteVideo}
                     onChangeCourseName={this.onChangeCourseName}
                     onChangeSort={this.onChangeSort}                                       
                     confirmLoading={this.state.loading} />                
@@ -1924,14 +1671,10 @@ const ItemDetailsForm = Form.create()(
                         </FormItem>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">生活照</h4>
-                        <Row gutter={24}>
-                            {tempPicList}                           
-                        </Row>
+                        <Row gutter={24}>{tempPicList}</Row>
                         <div className="ant-line"></div>
                         <h4 className="add-form-title-h4">视频作品</h4>
-                        <Row gutter={24}>
-                            {tempVideoList}                           
-                        </Row>                       
+                        <Row gutter={24}>{tempVideoList}</Row>                       
                     </Form>
                 </div>
             </Modal>
@@ -1947,9 +1690,8 @@ class ItemDetails extends Component {
         childList: [],
         picList: [],      
         // 明星课时列表
-        videoList: [],
-        // 明星基本信息
-        data: "",
+        videoList: [],        
+        data: "", // 明星基本信息
     };
 
     // 获取明星基本信息
@@ -2158,17 +1900,7 @@ class DataTable extends Component {
             pageSize: this.state.pagination.pageSize
         }).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data.list),
@@ -2188,8 +1920,8 @@ class DataTable extends Component {
     handleSort = (row) => {
         this.setState({loading: true});
         config.sortStar({
-            id: row.id,// 明星Id                
-            sort: Number(row.sort),// 排序
+            id: row.id,                
+            sort: Number(row.sort)// 排序
         }).then((json) => {
             if (json.data.result === 0) {
                 this.setState({loading: false});
@@ -2281,37 +2013,6 @@ class StarManage extends Component {
         };                     
     };
 
-    // 获取省市列表信息及当前城市地区代码
-    getMapDate = () => {
-        this.setState({
-            mapObj: new window.AMap.Map('star-mapContainer')
-        }, () => {
-            // 获取省区列表
-            this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-                var districtSearch = new window.AMap.DistrictSearch({
-                    level: 'country',
-                    subdistrict: 3 // 1:省，2:市，3:区，4:街道
-                });
-                districtSearch.search('中国', (status, result) => {               
-                    this.setState({
-                        provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
-                    });
-                })
-            });
-            // 获取当前城市地区代码
-            this.state.mapObj.plugin('AMap.CitySearch', () => {
-                var citySearch = new window.AMap.CitySearch();
-                citySearch.getLocalCity((status, result) => {
-                    if (status === 'complete' && result.info === 'OK') {
-                        this.setState({
-                            cityCode: result.adcode
-                        })
-                    }
-                })
-            })
-        })
-    };
-
     // 获取当前登录人对此菜单的操作权限
     setPower = () => {
         this.setState({opObj: common.getPower(this).data});        
@@ -2366,24 +2067,6 @@ class StarManage extends Component {
             }
         })
     };
-
-    // 禁用开始日期之前的日期
-    disabledStartDate = (startValue) => {
-        const endValue = this.state.endValue;
-        if (!startValue || !endValue) {
-            return false;
-        }
-        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
-    };
-
-    // 禁用结束日期之后的日期
-    disabledEndDate = (endValue) => {
-        const startValue = this.state.startValue;
-        if (!endValue || !startValue) {
-          return false;
-        }
-        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
-    };
     
     // 刷新table页面
     setFlag = () => {
@@ -2391,7 +2074,7 @@ class StarManage extends Component {
     };
 
     componentWillMount() {
-        this.getMapDate();// 获取省份城市
+        common.getMapDate(this, 'star-mapContainer', 3);// 获取省份城市
         this.setPower();
         if (this.props.location.search) {
             this.props.history.push(this.props.location.pathname)
@@ -2429,16 +2112,17 @@ class StarManage extends Component {
                                 </Select>
                                 {/*明星创建日期筛选*/}
                                 <span>日期筛选： </span>
-                                <DatePicker 
+                                <DatePicker
+                                    locale={locale} 
                                     placeholder="请选择开始日期"
                                     style={{width: "150px"}}
-                                    disabledDate={this.disabledStartDate}
+                                    disabledDate={(startValue) => common.disabledStartDate(this, startValue)}
                                     onChange={this.setStartTime}/>
                                 <span style={{margin: "0 10px"}}>至</span>
                                 <DatePicker 
                                     placeholder="请选择结束日期"
                                     style={{width: "150px"}}
-                                    disabledDate={this.disabledEndDate}
+                                    disabledDate={(endValue) => common.disabledEndDate(this, endValue)}
                                     onChange={this.setEndTime}/>
                                 {/*明星添加按钮*/}
                                 <div className="star-add-button">

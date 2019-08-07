@@ -1,3 +1,14 @@
+.search,
+.select {
+    width: 320px;
+    float: left;
+    margin-right: 20px;
+}
+
+.datePick {
+    width: 150px;
+}
+
 /* 图片删除样式 */
 .photoExist-item {
     margin-bottom: 10px;

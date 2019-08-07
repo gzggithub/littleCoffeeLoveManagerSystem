@@ -401,8 +401,7 @@ class Home extends Component {
                                     <a style={{marginLeft: "10px"}}>退出</a>
                                 </Popconfirm>
                             </div>
-                        </Header>
-                        
+                        </Header>                        
                     </Layout>
                     {/*一级菜单路由组件映射表*/}
                     <Route path="/index/app-home" component={AppHome}/> 

@@ -1,5 +1,6 @@
 @import '~antd/dist/antd.css';
 @import './static/css/common.css';
+@import './static/css/AppHome/AdvManage.css';
 @import './static/css/AppHome/StarManage.css';
 @import './static/css/AppHome/SignList.css';
 @import './static/css/AppHome/NoticeManage.css';
@@ -215,7 +216,7 @@ td.operating {
 }
 
 .login form .ant-form-item.code .code-box {
-    width: 60px;
+    width: 90px;
     height: 38px;
     position: absolute;
     top: 0;

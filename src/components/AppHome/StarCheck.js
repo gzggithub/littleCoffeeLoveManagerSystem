@@ -13,8 +13,6 @@ import {
     InputNumber,
     Select,
 } from 'antd';
-// import { checkList, checkDetail, check} from '../../config';
-// import { toLoginPage, getPower, genderOptions, checkOptions, checkStatus, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -441,17 +439,7 @@ class DataTable extends Component {
         };
         config.checkList(params).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data.list),
@@ -533,7 +521,7 @@ class StarCheck extends Component {
                 endTime: this.state.keyword.endTime
             }
         })
-    };    
+    };
 
     // 结束日期设置
     setEndTime = (date, dateString) => {
@@ -545,24 +533,6 @@ class StarCheck extends Component {
                 endTime: dateString
             }
         })
-    };
-
-    // 禁用开始日期之前的日期
-    disabledStartDate = (startValue) => {
-        const endValue = this.state.endValue;
-        if (!startValue || !endValue) {
-            return false;
-        }
-        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
-    };
-
-    // 禁用结束日期之后的日期
-    disabledEndDate = (endValue) => {
-        const startValue = this.state.startValue;
-        if (!endValue || !startValue) {
-          return false;
-        }
-        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
     };
     
     // 刷新table数据
@@ -600,20 +570,20 @@ class StarCheck extends Component {
                         placeholder="请输入姓名"
                         onSearch={this.search}
                         enterButton
-                        style={{width: "320px", float: "left", marginRight: "20px"}}/>
+                        className="search"/>
                     {/*明星日期筛选*/}
                     <span>日期筛选： </span>
-                    <DatePicker 
-                        placeholder="请选择开始日期"
-                        style={{width: "150px"}}
-                        disabledDate={this.disabledStartDate}
-                        onChange={this.setStartTime} />
-                    <span style={{margin: "0 10px"}}>至</span>
                     <DatePicker
-                        placeholder="请选择结束日期"
-                        style={{width: "150px"}}
-                        disabledDate={this.disabledEndDate}
-                        onChange={this.setEndTime} />
+                        disabledDate={(startValue) => common.disabledStartDate(this, startValue)}
+                        onChange={this.setStartTime} 
+                        className="datePick"
+                        placeholder="请选择开始日期" />
+                    <span style={{margin: "0 10px"}}>至</span>
+                    <DatePicker                        
+                        disabledDate={(endValue) => common.disabledEndDate(this, endValue)}
+                        onChange={this.setEndTime}
+                        className="datePick"
+                        placeholder="请选择结束日期"/>
                 </div>
                 <header className="clearfix">
                     <Tabs defaultActiveKey={this.state.type} onChange={this.setType}>

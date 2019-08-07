@@ -12,10 +12,6 @@ import {
     Button,
     Upload
 } from 'antd';
-// import * as qiniu from 'qiniu-js';
-// import * as UUID from 'uuid-js';
-// import { configUrl, getToken, coffeeList, deleteCoffee, updateCoffee, coffeeDetail, sortCoffee, viewNum } from '../../config';
-// import { getPower, toLoginPage, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -61,8 +57,7 @@ class EditableCell extends Component {
                 return;
             }
             this.toggleEdit();
-            // 判断排序值是否改变，不变就不用排序，只有改变才请求sort接口
-            
+            // 判断排序值是否改变，不变就不用排序，只有改变才请求sort接口            
             if (dataIndex === 'sort') {
                 if (props1 !== Number(values.sort)) {
                     handleSort({ ...record, ...values });
@@ -566,17 +561,7 @@ class DataTable extends Component {
         };
         config.coffeeList(params).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data.list),
@@ -739,24 +724,6 @@ class CoffeeCircle extends Component {
         })
     };
 
-    // 禁用开始日期之前的日期
-    disabledStartDate = (startValue) => {
-        const endValue = this.state.endValue;
-        if (!startValue || !endValue) {
-            return false;
-        }
-        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
-    };
-
-    // 禁用结束日期之后的日期
-    disabledEndDate = (endValue) => {
-        const startValue = this.state.startValue;
-        if (!endValue || !startValue) {
-          return false;
-        }
-        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
-    };
-
     setFlag = () => {
         this.setState({flag_add: !this.state.flag_add});
     };
@@ -792,13 +759,13 @@ class CoffeeCircle extends Component {
                                 <span>日期筛选： </span>
                                 <DatePicker 
                                     onChange={this.setStartTime}
-                                    disabledDate={this.disabledStartDate}
+                                    disabledDate={(startValue) => common.disabledStartDate(this, startValue)}
                                     style={{width: "150px"}}
                                     placeholder="请选择开始日期"/>
                                 <span style={{margin: "0 10px"}}>至</span>
                                 <DatePicker 
                                     onChange={this.setEndTime}
-                                    disabledDate={this.disabledEndDate}                                    
+                                    disabledDate={(endValue) => common.disabledEndDate(this, endValue)}                                    
                                     style={{width: "150px"}}                                    
                                     placeholder="请选择结束日期"/>                               
                             </header>

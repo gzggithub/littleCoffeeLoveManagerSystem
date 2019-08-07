@@ -248,8 +248,7 @@ class ResetPassword extends Component {
                     countDown={this.state.countDown}
                     codeButtonStatus={this.state.codeButtonStatus}
                     getCode={this.getCode}
-                    confirmLoading={this.state.loading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
@@ -371,7 +370,7 @@ class NormalLoginForm extends Component {
         })
     };
 
-    componentWillMount() {        
+    componentWillMount() {
         if (localStorage.loginMsg) {// 已缓存登陆信息写入
             const tempMsg = JSON.parse(localStorage.loginMsg);
             this.setState({
@@ -418,7 +417,7 @@ class NormalLoginForm extends Component {
                             rules: [{required: true, message: '请输入验证码!'}],
                         })(
                             <div className="code-input">
-                                <Input style={{width: "200px"}} placeholder="请输入右侧验证码"/>
+                                <Input style={{width: "170px"}} placeholder="请输入右侧验证码"/>
                                 <div className="code-box" onClick={this.getCode}>
                                     <Tooltip title="点击重新获取" placement="rightTop">
                                         {this.state.codeStatus ?
@@ -443,9 +442,9 @@ class NormalLoginForm extends Component {
                                 loading={this.state.confirmLoading}>
                             登录
                         </Button>
-                        <div className="login-form-forgot">
+                        {/*<div className="login-form-forgot">
                             <ResetPassword resetPhone={this.resetPhone}/>
-                        </div>
+                        </div>*/}
                     </FormItem>
                 </Form>
             </div>

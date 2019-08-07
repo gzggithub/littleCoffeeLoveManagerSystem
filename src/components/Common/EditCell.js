@@ -1,4 +1,10 @@
 import React, {Component} from 'react';
+import {
+    Input,
+    Button,    
+    message,
+    Icon,
+} from 'antd';
 
 // 可编辑的单元格
 const EditableContext = React.createContext();
@@ -89,4 +95,5 @@ class EditableCell extends Component {
     }
 }
 
-export default EditableCell;
+// export default EditableCell;
+module.exports = EditableCell;

@@ -12,18 +12,12 @@ import {
     message,
     Row,
     Col,
-    // Radio,
-    // InputNumber,
     DatePicker,    
     Cascader,
     Popconfirm,
     Spin
 } from 'antd';
-// import * as qiniu from 'qiniu-js';
-// import * as UUID from 'uuid-js';
 import moment from 'moment';
-// import { configUrl, getToken, noticeList, addNotice, updateNotice, noticeDetail, NewestNotice, noticeOver, pastReviewDetail, saveOrUpdatePastReview, signList, typeList } from '../../config';
-// import { toLoginPage, noticeOptions, noticeStatus, pCAName, getPower, countdown, picUpload, removeTag, checkRiches, pagination, handleTableChange, exceptHandle, errorHandle} from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -31,7 +25,6 @@ const Search = Input.Search;
 const FormItem = Form.Item;
 const {TextArea} = Input;
 const {Option} = Select;
-// const RadioGroup = Radio.Group;
 
 const dateFormat = "YYYY-MM-DD HH:mm:ss";
 
@@ -285,9 +278,7 @@ class ItemAdd extends Component {
             startTime: null,
             endTime: null,
             mapObj: {},
-            // formattedAddress: "",
             xy: {},
-            // addressComponent: {},
             uploadToken: '',// 上传Token
             viewPic: "",
             photoLoading: false,
@@ -444,47 +435,6 @@ class ItemAdd extends Component {
     //     }, secondsToGo * 1000);
     // };
 
-    // reqwestUploadToken = () => {
-    //     config.getToken().then((json) => {
-    //         if (json.data.result === 0) {
-    //                 this.setState({
-    //                     uploadToken: json.data.data
-    //                 })
-    //             } else {
-    //                 common.exceptHandle(this, json.data);
-    //             }
-    //     }).catch((err) => common.errorHandle(this, err));
-    // };
-
-    // picUpload01 = (para) => {
-    //     const _this = this;
-    //     this.setState({photoLoading: true,});
-    //     const file = para;
-    //     const key = UUID.create().toString().replace(/-/g,"");
-    //     const token = this.state.uploadToken;
-    //     const config = {
-    //         region: qiniu.region.z0
-    //     };
-    //     const observer = {
-    //         next (res) {console.log(res)},
-    //         error (err) {
-    //             console.log(err)
-    //             message.error(err.message ? err.message : "图片提交失败");                
-    //             _this.setState({photoLoading: false});
-    //         }, 
-    //         complete (res) {
-    //             console.log(res);
-    //             message.success("图片提交成功");
-    //             _this.setState({
-    //                 viewPic: config.configUrl.photoUrl + res.key || "",                               
-    //                 photoLoading: false,
-    //             })
-    //         }
-    //     }
-    //     const observable = qiniu.upload(file, key, token, config);
-    //     observable.subscribe(observer); // 上传开始     
-    // };
-
     // 取消处理
     handleCancel = () => {
         const form = this.form;
@@ -501,7 +451,6 @@ class ItemAdd extends Component {
                 mapObj: {},
                 formattedAddress: "",
                 xy: {},
-                // addressComponent: {},
                 uploadToken: '',// 上传Token
                 viewPic: "",
                 photoLoading: false,
@@ -556,11 +505,7 @@ class ItemAdd extends Component {
             }, () => {
                 console.log(this.state.keepData);
             });
-            // console.log(999999999)
-            // console.log(keepData)
         });
-        // console.log(keepData)
-        // return keepData;
     };
 
     // 确认处理
@@ -637,13 +582,9 @@ class ItemAdd extends Component {
                     setEndTime={this.setEndTime}
                     disabledStartDate={this.disabledStartDate}
                     disabledEndDate={this.disabledEndDate}
-                    mapObj={this.state.mapObj}
-                    // formattedAddress={this.state.formattedAddress}
+                    mapObj={this.state.mapObj}                    
                     setXY={this.setXY}
-                    // setAddressComponent={this.setAddressComponent}
-                    // reqwestUploadToken={this.reqwestUploadToken}
                     viewPic={this.state.viewPic}
-                    // picUpload01={this.picUpload01}
                     photoLoading={this.state.photoLoading}
                     confirmLoading={this.state.loading}/>             
             </div>
@@ -696,31 +637,12 @@ const ItemEditForm = Form.create()(
         const setStartTime = (date, dateString) => {
             setFieldsValue({"time": dateString});            
         };
-
-        // 图片相关
-        // const beforeUpload = (file) => {
-        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-        //     if (!isIMG) {
-        //         message.error('文件类型错误');
-        //     }
-        //     const isLt2M = file.size / 1024 / 1024 < 2;
-        //     if (!isLt2M) {
-        //         message.error('文件不能大于2M');
-        //     }         
-        //     reqwestUploadToken(file);
-        //     return isIMG && isLt2M;
-        // };
+        
         const customRequest = (info) => {
             setTimeout(()=>{
                 common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);   
-        };
-        // const uploadButton = (
-        //     <div>
-        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-        //     </div>
-        // );
+        };        
 
         return (
             <Modal
@@ -786,7 +708,6 @@ const ItemEditForm = Form.create()(
                                                 <div className="efficiencyTime">
                                                     <DatePicker 
                                                         onChange={setStartTime}
-                                                        // 时间回显有问题显示不出来(data.beginDate 刚开始undefined，最后才有数据)
                                                         defaultValue={data.beginDate ? moment(data.beginDate, dateFormat) : ''}
                                                         format={dateFormat}                                                
                                                         disabledDate={disabledStartDate}
@@ -837,9 +758,7 @@ const ItemEditForm = Form.create()(
                                                 <Input onBlur={(event) => toXY(event.target.value)} allowClear placeholder="请填写地点" />
                                             )}
                                         </FormItem>
-                                    </Col>
-                                    {/*<p onClick={location}
-                                       style={{width: "120px", marginLeft: "100px", cursor: "pointer"}}>点击获取当前坐标</p>*/}
+                                    </Col>                                    
                                     <div id="add-notice-container" name="container" tabIndex="0"/>
                                 </Row>
                                 <div className="ant-line"></div>
@@ -902,10 +821,8 @@ class ItemEdit extends Component {
             endValue: null,
             startTime: null,
             endTime: null,
-            mapObj: {},
-            // formattedAddress: "",
+            mapObj: {},            
             xy: {},
-            // addressComponent: {},
             uploadToken: '',// 上传Token
             viewPic: "",
             photoLoading: false,
@@ -1024,62 +941,6 @@ class ItemEdit extends Component {
         this.setState({xy: para});
     };
 
-    // setFormattedAddress = (para) => {
-    //     this.setState({formattedAddress: para});
-    // };
-
-    // setAddressComponent = (para) => {
-    //     this.setState({
-    //         addressComponent: {
-    //             provinceName: para.province,
-    //             cityName: para.city,
-    //             areaName: para.district,
-    //             areaId: para.adcode
-    //         }
-    //     });
-    // };
-
-    // reqwestUploadToken = () => {
-    //     config.getToken().then((json) => {
-    //         if (json.data.result === 0) {
-    //                 this.setState({
-    //                     uploadToken: json.data.data,
-    //                 })
-    //             } else {
-    //                 common.exceptHandle(this, json.data);
-    //             }
-    //     }).catch((err) => common.errorHandle(this, err));
-    // };
-
-    // picUpload01 = (para) => {
-    //     const _this = this;
-    //     this.setState({photoLoading: true,});
-    //     const file = para;
-    //     const key = UUID.create().toString().replace(/-/g,"");
-    //     const token = this.state.uploadToken;
-    //     const config = {
-    //         region: qiniu.region.z0
-    //     };
-    //     const observer = {
-    //         next (res) {console.log(res)},
-    //         error (err) {
-    //             console.log(err)
-    //             message.error(err.message ? err.message : "图片提交失败");                
-    //             _this.setState({photoLoading: false});
-    //         }, 
-    //         complete (res) {
-    //             console.log(res);
-    //             message.success("图片提交成功");
-    //             _this.setState({
-    //                 viewPic: config.configUrl.photoUrl + res.key || "",                               
-    //                 photoLoading: false,
-    //             })
-    //         }
-    //     }
-    //     const observable = qiniu.upload(file, key, token, config);
-    //     observable.subscribe(observer); // 上传开始     
-    // };
-
     // 取消处理
     handleCancel = () => {
         const form = this.form;
@@ -1094,9 +955,7 @@ class ItemEdit extends Component {
                 startTime: null,
                 endTime: null,
                 mapObj: {},
-                // formattedAddress: "",
                 xy: {},
-                // addressComponent: {},
                 uploadToken: '',// 上传Token
                 viewPic: "",
                 photoLoading: false,
@@ -1175,13 +1034,9 @@ class ItemEdit extends Component {
                     setEndTime={this.setEndTime}
                     disabledStartDate={this.disabledStartDate}
                     disabledEndDate={this.disabledEndDate}
-                    mapObj={this.state.mapObj}
-                    // formattedAddress={this.state.formattedAddress}
-                    setXY={this.setXY}
-                    // setAddressComponent={this.setAddressComponent}
-                    // reqwestUploadToken={this.reqwestUploadToken}
-                    viewPic={this.state.viewPic}
-                    // picUpload01={this.picUpload01}
+                    mapObj={this.state.mapObj}                   
+                    setXY={this.setXY}                    
+                    viewPic={this.state.viewPic}                    
                     photoLoading={this.state.photoLoading}
                     confirmLoading={this.state.loading}/>                
             </a>
@@ -1270,8 +1125,7 @@ const ItemPassReviewForm = Form.create()(
                             {getFieldDecorator('wonderfulReview', {
                                 initialValue: data.wonderfulReview,
                                 rules: [{
-                                    required: true,
-                                    // message: '精彩回顾不能为空'
+                                    required: true,                                    
                                     validator: common.checkRiches                                  
                                 }],
                             })(
@@ -1337,11 +1191,9 @@ class ItemPassReview extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            visible: false,            
-            // 通告基本信息
-            data: {},           
-            // 提交按钮状态变量
-            loading: false, 
+            visible: false,
+            data: {},  // 通告基本信息
+            loading: false, // 提交按钮状态变量
             subVisible: false,
             subData: [],
             selectedRowKeys: [],
@@ -1418,17 +1270,7 @@ class ItemPassReview extends Component {
             pageSize: this.state.pagination.pageSize
         }).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                    
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     subTabloading: false,
                     subData: this.dataHandle(json.data.data.list),
@@ -1867,37 +1709,6 @@ class NotificationManage extends Component {
     setPower = () => {
         this.setState({opObj: common.getPower(this).data});        
     };
-
-    // 获取省市列表信息及当前城市地区代码
-    getMapDate = () => {
-        this.setState({
-            mapObj: new window.AMap.Map('notice-mapContainer')
-        }, () => {
-            // 获取省区列表
-            this.state.mapObj.plugin('AMap.DistrictSearch', () => {
-                var districtSearch = new window.AMap.DistrictSearch({
-                    level: 'country',
-                    subdistrict: 2 // 1:省，2:市，3:区，4:街道
-                });
-                districtSearch.search('中国', (status, result) => {               
-                    this.setState({
-                        provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
-                    });
-                })
-            });
-            // 获取当前城市地区代码
-            this.state.mapObj.plugin('AMap.CitySearch', () => {
-                var citySearch = new window.AMap.CitySearch();
-                citySearch.getLocalCity((status, result) => {
-                    if (status === 'complete' && result.info === 'OK') {
-                        this.setState({
-                            cityCode: result.adcode
-                        })
-                    }
-                })
-            })
-        })
-    };
     
     // 设置展示城市
     setCity = (value) => {
@@ -1965,24 +1776,6 @@ class NotificationManage extends Component {
             }
         })
     };
-
-    // 禁用开始日期之前的日期
-    disabledStartDate = (startValue) => {
-        const endValue = this.state.endValue;
-        if (!startValue || !endValue) {
-            return false;
-        }
-        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
-    };
-
-    // 禁用结束日期之后的日期
-    disabledEndDate = (endValue) => {
-        const startValue = this.state.startValue;
-        if (!endValue || !startValue) {
-          return false;
-        }
-        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
-    };
     
     // 刷新table页面
     setFlag = () => {
@@ -1990,7 +1783,7 @@ class NotificationManage extends Component {
     };
 
     componentWillMount() {
-        this.getMapDate();
+        common.getMapDate(this, 'notice-mapContainer', 2);
         this.setPower();
         if (this.props.location.search) {
             this.props.history.push(this.props.location.pathname)
@@ -2037,13 +1830,13 @@ class NotificationManage extends Component {
                                 <DatePicker 
                                     placeholder="请选择开始日期"
                                     style={{width: "150px"}}
-                                    disabledDate={this.disabledStartDate}
+                                    disabledDate={(startValue) => common.disabledStartDate(this, startValue)}
                                     onChange={this.setStartTime}/>
                                 <span style={{margin: "0 10px"}}>至</span>
                                 <DatePicker 
                                     placeholder="请选择结束日期"
                                     style={{width: "150px"}}
-                                    disabledDate={this.disabledEndDate}
+                                    disabledDate={(endValue) => common.disabledEndDate(this, endValue)}
                                     onChange={this.setEndTime}/>
                                 {/*通告添加按钮*/}
                                 <div className="star-add-button">

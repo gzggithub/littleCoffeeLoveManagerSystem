@@ -11,8 +11,6 @@ import {
     DatePicker,
     Spin
 } from 'antd';
-// import { configUrl, signList, signDetail } from '../../config';
-// import { toLoginPage, genderOptions, genderStatus, copyToClipboard, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -413,17 +411,7 @@ class DataTable extends Component {
             pageSize: this.state.pagination.pageSize
         }).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }                    
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data.list),
@@ -518,24 +506,6 @@ class SignList extends Component {
             }
         })
     };
-
-    // 禁用开始日期之前的日期
-    disabledStartDate = (startValue) => {
-        const endValue = this.state.endValue;
-        if (!startValue || !endValue) {
-            return false;
-        }
-        return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
-    };
-
-    // 禁用结束日期之后的日期
-    disabledEndDate = (endValue) => {
-        const startValue = this.state.startValue;
-        if (!endValue || !startValue) {
-          return false;
-        }
-        return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
-    };
     
     // 刷新table页面
     setFlag = () => {
@@ -575,13 +545,13 @@ class SignList extends Component {
                                 <DatePicker 
                                     placeholder="请选择开始日期"
                                     style={{width: "150px"}}
-                                    disabledDate={this.disabledStartDate}
+                                    disabledDate={(startValue) => common.disabledStartDate(this, startValue)}
                                     onChange={this.setStartTime}/>
                                 <span style={{margin: "0 10px"}}>至</span>
                                 <DatePicker 
                                     placeholder="请选择结束日期"
                                     style={{width: "150px"}}
-                                    disabledDate={this.disabledEndDate}
+                                    disabledDate={(endValue) => common.disabledEndDate(this, endValue)}
                                     onChange={this.setEndTime}/>
                                 {/*报名名单添加按钮*/}
                                 <div className="star-add-button">

@@ -9,7 +9,6 @@ import {
     Popconfirm,
     Spin,
 } from 'antd';
-// import { departmentList, addDepartment, deleteDepartment, updateDepartment, departmentDetail, departmentUserList } from '../../config';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -329,6 +328,7 @@ class NumDetail extends Component {
         }
         config.departmentUserList(params).then((json) => {
             if (json.data.result === 0) {
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     data: json.data.data.list,
                     loading: false,
@@ -646,17 +646,7 @@ class DataTable extends Component {
         };
         config.departmentList(params).then((json) => {
             if (json.data.result === 0) {
-                if (json.data.data.list.length === 0 && this.state.pagination.current !== 1) {
-                    this.setState({
-                        pagination: {
-                            current: 1,
-                            pageSize: this.state.pagination.pageSize
-                        }
-                    }, () => {
-                        this.getData();
-                    });
-                    return
-                }
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data.list),// 对原始菜单列表进行处理后写入

@@ -114,6 +114,7 @@ export const checkStatus = (checkStatus) => {
     }
     return tempStatus;
 };
+
 /* ............................................公共的方法............................................. */
 // 手机号和座机号正则验证
 export function checkTel (rule, value, callback) {
@@ -124,7 +125,7 @@ export function checkTel (rule, value, callback) {
     } else {
         const isPhone = /^([0-9]{3,4}-)?[0-9]{7,8}$/;
         const isPhone02 = /^\d{3,4}-\d{3,4}-\d{3,4}$/;
-        const isMob = /^1[0-9]{10}$/;           
+        const isMob = /^1[0-9]{10}$/;
         const valuePhone = value.trim();
         if (isMob.test(valuePhone) || isPhone.test(valuePhone) || isPhone02.test(valuePhone)) {
             callback(); // 校验通过
@@ -214,9 +215,6 @@ export const pCAName = (provinceList, adcode) => {
 
 // 获取当前登录人对此菜单的操作权限
 export const getPower = (_this, url, num) => {
-    console.log(555);
-    console.log(url);
-    console.log(num);
     let data = {};
     let dataTabs = {}; // 具有tabs选项卡权限
     let dataSub = {}; // (多一级)
@@ -271,7 +269,10 @@ export const getMapDate = (_this, id, num) => { // id: 地图容器，num：表�
                 subdistrict: num // 1:省，2:市，3:区，4:街道
             });
             districtSearch.search('中国', (status, result) => {
-                provinceList = result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode});
+                // provinceList = result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode});
+                _this.setState({
+                    provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
+                });
             });
         });
         // 获取当前城市地区代码
@@ -286,7 +287,7 @@ export const getMapDate = (_this, id, num) => { // id: 地图容器，num：表�
     })
     console.log(provinceList);
     console.log(cityCode);
-    return {provinceList, cityCode};
+    // return {provinceList, cityCode};
 };
 
 // 小于两位时间处理
@@ -378,8 +379,7 @@ export const uploadButton = (num, loading) => {
                 <div className="ant-upload-text" style={{display: loading ? "none" : "block"}}>添加视频</div>
             </div>
         );
-    }
-    
+    }    
 }
 
 // 请求上传凭证token，需要后端提供接口
@@ -583,6 +583,21 @@ export const checkRiches = (rule, value, callback) => {
     return true;
 }
 
+// table 请求数据不成功或list为空时处理
+export const handleTableNoDataResponse = (_this, data) => {
+    if (data.list.length === 0 && _this.state.pagination.current !== 1) {
+        _this.setState({
+            pagination: {
+                current: 1,
+                pageSize: _this.state.pagination.pageSize
+            }
+        }, () => {
+            _this.getData();
+        });
+        return
+    }
+}
+
 // 页码变化处理  (暂时不能用，传参问题)
 export const handleTableChange = (_this, pagination, filters) => {
     const pager = {..._this.state.pagination};
@@ -596,6 +611,24 @@ export const handleTableChange = (_this, pagination, filters) => {
     }, () => {
         _this.getData();
     });
+};
+
+// 禁用开始日期之前的日期
+export const disabledStartDate = (_this, startValue) => {
+    const endValue = _this.state.endValue;
+    if (!startValue || !endValue) {
+        return false;
+    }
+    return (startValue.valueOf() + 60*60*24*1000) > endValue.valueOf();
+};
+
+// 禁用结束日期之后的日期
+export const disabledEndDate = (_this, endValue) => {
+    const startValue = _this.state.startValue;
+    if (!endValue || !startValue) {
+      return false;
+    }
+    return endValue.valueOf() <= (startValue.valueOf() + 60*60*24*1000);
 };
 
 // 日期处理函数

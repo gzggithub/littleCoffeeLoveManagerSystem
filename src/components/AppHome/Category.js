@@ -136,12 +136,6 @@ const ItemAddForm = Form.create()(
                 common.picUpload(_this, 1, info.file, _this.state.uploadToken)
             }, 700);
         };
-        // const uploadButton = (
-        //     <div>
-        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-        //     </div>
-        // );
 
         return (
             <Modal
@@ -217,50 +211,6 @@ class ItemAdd extends Component {
         this.setState({visible: true});
     };
 
-    // 请求上传凭证，需要后端提供接口
-    // reqwestUploadToken = () => {
-        // let token = common.reqwestUploadToken(this);
-        // console.info(token);
-        // config.getToken().then((json) => {
-        //     if (json.data.result === 0) {
-        //             this.setState({
-        //                 uploadToken: json.data.data,
-        //             })
-        //         } else {
-        //             common.exceptHandle(this, json.data);
-        //         }
-        // }).catch((err) => common.errorHandle(this, err));
-    // };
-
-    // picUpload01 = (para) => {
-    //     ;
-        // const _this = this;
-        // this.setState({photoLoading: true});
-        // const file = para;
-        // const key = UUID.create().toString().replace(/-/g,"");
-        // const token = this.state.uploadToken;
-        // const config01 = {region: qiniu.region.z0};
-        // const observer = {
-        //     next (res) {console.log(res)},
-        //     error (err) {
-        //         console.log(err)
-        //         message.error(err.message ? err.message : "图片提交失败");                
-        //         _this.setState({photoLoading: false});
-        //     }, 
-        //     complete (res) {
-        //         console.log(res);
-        //         message.success("图片提交成功");
-        //         console.log(config);
-        //         _this.setState({
-        //             viewPic: config.configUrl.photoUrl + res.key || "",             
-        //             photoLoading: false,
-        //         });
-        //     }
-        // }
-        // const observable = qiniu.upload(file, key, token, config01);
-        // observable.subscribe(observer); // 上传开始
-    // };
-
     handleCancel = () => {
         this.setState({
             visible: false,
@@ -305,9 +255,7 @@ class ItemAdd extends Component {
                     _this={this}
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
-                    onCreate={this.handleCreate}
-                    // reqwestUploadToken={() => common.reqwestUploadToken(this)}
-                    // picUpload01={(para) => common.picUpload(this, 1, para, this.state.uploadToken)}
+                    onCreate={this.handleCreate}                    
                     viewPic={this.state.viewPic}
                     photoLoading={this.state.photoLoading}                    
                     confirmLoading={this.state.loading}/>                
@@ -321,30 +269,12 @@ const ItemEditForm = Form.create()(
     (props) => {
         const {_this, visible, onCancel, onCreate, form, data, viewPic, photoLoading, confirmLoading} = props;
         const {getFieldDecorator} = form;
-
-        // const beforeUpload = (file) => {
-        //     const isIMG = file.type === 'image/jpeg' || file.type === 'image/png';
-        //     if (!isIMG) {
-        //         message.error('文件类型错误');
-        //     }
-        //     const isLt2M = file.size / 1024 / 1024 < 2;
-        //     if (!isLt2M) {
-        //         message.error('文件不能大于2M');
-        //     }
-        //     reqwestUploadToken();
-        //     return isIMG && isLt2M;
-        // };
+        
         const customRequest = (info) => {
             setTimeout(() => {
                 common.picUpload(_this, 1, info.file, _this.state.uploadToken);
             }, 500);
         };
-        // const uploadButton = (
-        //     <div>
-        //         <Icon type={photoLoading ? 'loading' : 'plus'}/>
-        //         <div className="ant-upload-text" style={{display: photoLoading ? "none" : "block"}}>选择图片</div>
-        //     </div>
-        // );
 
         return (
             <Modal
@@ -441,48 +371,6 @@ class ItemEdit extends Component {
         this.setState({visible: true});        
     };
 
-    // 请求上传凭证，需要后端提供接口
-    // reqwestUploadToken = () => {
-    //     config.getToken().then((json) => {
-    //         if (json.data.result === 0) {
-    //             this.setState({
-    //                 uploadToken: json.data.data,
-    //             });
-    //         } else {
-    //             common.exceptHandle(this, json.data);
-    //         }
-    //     }).catch((err) => common.errorHandle(this, err));
-    // };
-    
-    // picUpload01 = (para) => {
-    //     const _this = this;
-    //     this.setState({photoLoading: true,});
-    //     const file = para;
-    //     const key = UUID.create().toString().replace(/-/g,"");
-    //     const token = this.state.uploadToken;
-    //     const config = {region: qiniu.region.z0};
-    //     const observer = {
-    //         next (res) {console.log(res)},
-    //         error (err) {
-    //             console.log(err)
-    //             message.error(err.message ? err.message : "图片提交失败");
-    //             _this.setState({
-    //                 photoLoading: false,
-    //             })
-    //         }, 
-    //         complete (res) {
-    //             console.log(res);
-    //             message.success("图片提交成功");
-    //             _this.setState({
-    //                 viewPic: config.configUrl.photoUrl + res.key || "",                               
-    //                 photoLoading: false,
-    //             })
-    //         }
-    //     }
-    //     const observable = qiniu.upload(file, key, token, config);
-    //     observable.subscribe(observer); // 上传开始        
-    // };
-
     handleCancel = () => {
         this.setState({
             visible: false,
@@ -539,9 +427,7 @@ class ItemEdit extends Component {
                     visible={this.state.visible}
                     onCancel={this.handleCancel}
                     onCreate={this.handleCreate}
-                    data={this.state.data}
-                    // reqwestUploadToken={() => common.reqwestUploadToken(this)}
-                    // picUpload01={(para) => common.picUpload(this, 1, para, this.state.uploadToken)}                    
+                    data={this.state.data}                                        
                     viewPic={this.state.viewPic}
                     photoLoading={this.state.photoLoading}                    
                     confirmLoading={this.state.loading}/>
@@ -648,6 +534,7 @@ class DataTable extends Component {
             pageSize: this.state.pagination.pageSize,
         }).then((json) => {
             if (json.data.result === 0) {
+                common.handleTableNoDataResponse(this, json.data.data);
                 this.setState({
                     loading: false,
                     data: this.dataHandle(json.data.data),
@@ -667,8 +554,8 @@ class DataTable extends Component {
     handleSort = (row) => {
         this.setState({loading: true});
         config.sortType({                
-            id: row.id,// 机构Id                
-            sort: Number(row.sort),// 排序
+            id: row.id,
+            sort: Number(row.sort)
         }).then((json) => {
             if (json.data.result === 0) {
                 this.setState({loading: false});

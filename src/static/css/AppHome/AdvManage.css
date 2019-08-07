@@ -1,0 +1,13 @@
+.adv-select, .adv-search {
+    float: left;
+    margin-right: 20px;
+}
+
+.adv-select {
+    width: 160px;
+    
+}
+
+.adv-search {
+    width: 240px;
+}

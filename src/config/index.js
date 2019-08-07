@@ -8,11 +8,23 @@ var qs = require('qs');
 // axios.defaults.headers.common['Authorization'] = getAuthorization();
 
 export const configUrl = {
-    photoUrl: 'https://image.taoerxue.com/', // 正式服务器图片地址
+    // photoUrl: 'https://image.taoerxue.com/', // 正式服务器图片地址
     copyUrl: "https://annunciation.taoerxue.cn?id=", // 正式下载地址
-    // photoUrl: 'http://image.taoerxue.cn/',   // 测试服务器图片地址
+    photoUrl: 'http://image.taoerxue.cn/',   // 测试服务器图片地址
     // copyUrl: "https://annunciation.taoerxue.com.cn?id=", // 测试下载地址
     uploadTipContent: "（按住Ctrl可以选择多张图片上传）"
+}
+
+export const local = {         
+    "lang": {            
+        "placeholder": "请选择日期",            
+        "today": "今天",            
+        "yearFormat": "YYYY",            
+        "dateFormat": "M/D/YYYY",            
+        "dayFormat": "D",            
+        "dateTimeFormat": "M/D/YYYY HH:mm:ss",            
+        "monthFormat": "MMMM"       
+    }
 }
 
 /*创建Post x-www-form-urlencode请求参数, 参数转字符串*/
