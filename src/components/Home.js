@@ -17,7 +17,6 @@ import {
     Modal,
     Form
 } from 'antd';
-// import { getVerificationCode, loginOut, resetPassword } from '../config';
 import * as config from '../config';
 import * as common from '../config/common';
 import logoImg from "../logo.png";
@@ -147,20 +146,9 @@ class ResetPassword extends Component {
                             this.fn_countDown = setInterval(this.countDown, 1000)
                         })
                     } else {
-                        if (json.data.code === 901) {
-                            message.error("请先登录");                           
-                            this.props.toLoginPage(); // 返回登陆页
-                        } else if (json.data.code === 902) {
-                            message.error("登录信息已过期，请重新登录");                            
-                            this.props.toLoginPage();// 返回登陆页
-                        } else {
-                            message.error(json.data.message);
-                            this.setState({loading: false});
-                        }
+                        common.exceptHandle(this, json.data);
                     }
-                }).catch((err) => {
-                    message.error("发送失败");
-                });
+                }).catch((err) => common.errorHandle(this, err));
             } else {
                 if (phone) {
                     message.error("请填写正确的手机号码")
@@ -190,9 +178,7 @@ class ResetPassword extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
+            if (err) {return;}
             this.setState({loading: true});            
             const data = {
                 phone: values.phone,
@@ -201,16 +187,13 @@ class ResetPassword extends Component {
             };
             config.resetPassword(data).then((json) => {
                 if (json.data.result === 0) {
-                    message.success("密码设置成功，请重新登录");
-                    // 设置成功之后变量初始化
-                    this.handleCancel();
-                    // 密码设置成功后更新缓存登陆信息
-                    const loginMsg = {
+                    message.success("密码设置成功，请重新登录");                    
+                    this.handleCancel();// 设置成功之后变量初始化                    
+                    const loginMsg = {// 密码设置成功后更新缓存登陆信息
                         phone: values.phone
                     };
-                    localStorage.loginMsg = JSON.stringify(loginMsg);
-                    // 退出登录
-                    this.props.signOut();                    
+                    localStorage.loginMsg = JSON.stringify(loginMsg);                    
+                    this.props.signOut(); // 退出登录
                 } else {
                     if (json.data.code === 703) {
                         message.error("短信验证码错误或已过期")
@@ -232,7 +215,7 @@ class ResetPassword extends Component {
     render() {
         return (
             <a>
-                <span onClick={this.showModal}>修改密码</span>
+                <span onClick={this.showModal} style={{display: "none"}}>修改密码</span>
                 <ResetPasswordForm
                     ref={this.saveFormRef}
                     visible={this.state.visible}
@@ -241,8 +224,7 @@ class ResetPassword extends Component {
                     countDown={this.state.countDown}
                     codeButtonStatus={this.state.codeButtonStatus}
                     getCode={this.getCode}
-                    confirmLoading={this.state.loading}
-                />
+                    confirmLoading={this.state.loading}/>
             </a>
         );
     }
@@ -388,7 +370,7 @@ class Home extends Component {
                                 {/*当前登录人信息*/}
                                 <span className="username">{sessionStorage.name ? (sessionStorage.name + "(" + sessionStorage.phone + ")") : "未登录"}</span>                                
                                 {/*重置密码*/}
-                                {/*<ResetPassword signOut={this.signOut}/>*/} 
+                                <ResetPassword signOut={this.signOut}/>
                                 {/*退出登录*/}
                                 <Popconfirm 
                                     title="确认退出?"

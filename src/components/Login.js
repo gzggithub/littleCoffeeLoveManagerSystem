@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Form, Icon, Input, Button, Modal, Checkbox, Tooltip, message} from 'antd';
-import { getVerificationCode, login, resetPassword } from '../config';
-import { dataHandle } from '../config/common';
+import * as config from '../config';
+import * as common from '../config/common';
 import logo from "../static/images/logo.png";
 
 const FormItem = Form.Item;
@@ -47,10 +47,7 @@ const ResetPasswordForm = Form.create()(
                         )}
                     </FormItem>
                     <FormItem className="codeButton" {...formItemLayout_12}>
-                        <Button style={{float: "right", width: "100px"}}
-                                type="primary"
-                                onClick={getCode}
-                        >
+                        <Button onClick={getCode} type="primary" style={{float: "right", width: "100px"}}>
                             {codeButtonStatus ? countDown + "s后重发" : "获取验证码"}
                         </Button>
                     </FormItem>
@@ -123,7 +120,7 @@ class ResetPassword extends Component {
         }
         this.setState({
             countDown: this.state.countDown - 1
-        })
+        });
     };
 
     // 获取验证码
@@ -136,35 +133,24 @@ class ResetPassword extends Component {
         } else {
             const regPhone = /^1[0-9]{10}$/;
             if (regPhone.test(phone)) {                
-                getVerificationCode({phone: phone}).then((json) => {
+                config.getVerificationCode({phone: phone}).then((json) => {
                     if (json.data.result === 0) {
                         // 开启倒计时
                         this.setState({
                             codeButtonStatus: true,
                             countDown: 60
                         }, () => {
-                            this.fn_countDown = setInterval(this.countDown, 1000)
-                        })
+                            this.fn_countDown = setInterval(this.countDown, 1000);
+                        });
                     } else {
-                        if (json.data.code === 901) {
-                            message.error("请先登录");                           
-                            this.props.toLoginPage(); // 返回登陆页
-                        } else if (json.data.code === 902) {
-                            message.error("登录信息已过期，请重新登录");                            
-                            this.props.toLoginPage();// 返回登陆页
-                        } else {
-                            message.error(json.data.message);
-                            this.setState({loading: false});
-                        }
+                        common.exceptHandle(this, json.data);
                     }
-                }).catch((err) => {
-                    message.error("发送失败");
-                });
+                }).catch((err) => common.errorHandle(this, err));
             } else {
                 if (phone) {
-                    message.warning("请填写正确的手机号码")
+                    message.warning("请填写正确的手机号码");
                 } else {
-                    message.warning("手机号码不能为空")
+                    message.warning("手机号码不能为空");
                 }
             }
         }
@@ -190,9 +176,7 @@ class ResetPassword extends Component {
     handleCreate = () => {
         const form = this.form;
         form.validateFields((err, values) => {
-            if (err) {
-                return;
-            }
+            if (err) {return;}
             this.setState({loading: true});            
             const data = {
                 phone: values.phone,
@@ -200,7 +184,7 @@ class ResetPassword extends Component {
                 userKey: values.userKey,
                 pwd: values.pwd
             };
-            resetPassword(data).then((json) => {
+            config.resetPassword(data).then((json) => {
                 if (json.data.result === 0) {
                     message.success("密码设置成功");
                     // 设置成功之后变量初始化
@@ -212,23 +196,9 @@ class ResetPassword extends Component {
                     localStorage.loginMsg = JSON.stringify(loginMsg);
                     this.props.resetPhone(values.phone)
                 } else {
-                    if (json.data.code === 605) {
-                        message.error("您的名下有多家机构，需填写用户名才能重置密码。’")
-                    } else if (json.data.code === 703) {
-                        message.error("短信验证码错误或已过期")
-                    } else if (json.data.code === 803) {
-                        message.error("密码格式错误")
-                    } else if (json.data.code === 1004) {
-                        message.error("用户不存在")
-                    } else {
-                        message.error(json.data.message);
-                    }
-                    this.setState({loading: false});
+                    common.exceptHandle(this, json.data);
                 }
-            }).catch((err) => {
-                message.error("保存失败");
-                this.setState({loading: false});
-            });
+            }).catch((err) => common.errorHandle(this, err));
         });
     };
 
@@ -268,7 +238,7 @@ class NormalLoginForm extends Component {
             codeStatus: true,
             key: "",
             // 登录按钮状态开关
-            confirmLoading: false
+            loading: false
         }
     }
 
@@ -278,21 +248,21 @@ class NormalLoginForm extends Component {
         // 表单内容校验
         this.props.form.validateFields((err, values) => {
             if (!err) {
-                this.setState({confirmLoading: true});                
+                this.setState({loading: true});                
                 const data = {
                     phone: values.phone,
                     password: values.password,
                     code: values.code,
                     key: this.state.key
                 };
-                login(data).then((json) => {
+                config.login(data).then((json) => {
                     if (json.data.result === 0) {
                         // 登陆信息写入sessionStorage
                         sessionStorage.token = json.data.data.token;
                         sessionStorage.name = json.data.data.userInfo.username;
                         sessionStorage.phone = json.data.data.userInfo.phone;
                         if (json.data.data.menuList.length) {
-                            const menuListOne = dataHandle(json.data.data.menuList);//菜单分级处理
+                            const menuListOne = common.dataHandle(json.data.data.menuList);//菜单分级处理
                             sessionStorage.menuListOne = JSON.stringify(menuListOne);
                         }
                         
@@ -314,27 +284,9 @@ class NormalLoginForm extends Component {
                         this.props.history.push('/index');// 登录成功跳转
                     } else {                        
                         this.getCode();// 登录失败重新获取图片验证码
-                        if (json.data.code === 603) {
-                            message.error("账号不存在")
-                        } else if (json.data.code === 605) {
-                            message.error("您的名下有多个机构，请使用用户名进行登录")
-                        } else if (json.data.code === 704) {
-                            message.error("图片验证码为空")
-                        } else if (json.data.code === 705) {
-                            message.error("验证码错误1")
-                        } else if (json.data.code === 802) {
-                            message.error("密码错误")
-                        } else if (json.data.code === 903) {
-                            message.error("请先配置用户角色或权限")
-                        } else {
-                            message.error(json.data.message);
-                        }
-                        this.setState({confirmLoading: false})
+                        common.exceptHandle(this, json.data);
                     }
-                }).catch((err) => {
-                    message.error("登录失败");
-                    this.setState({confirmLoading: false});
-                });
+                }).catch((err) => common.errorHandle(this, err));
             }
         })
     };
@@ -395,8 +347,7 @@ class NormalLoginForm extends Component {
                             initialValue: this.state.loginMsg.phone,
                             rules: [{required: true, message: '请输入账号!'}],
                         })(
-                            <Input prefix={<Icon type="user" style={{color: 'rgba(0,0,0,.25)'}}/>}
-                                   placeholder="手机号/用户名"/>
+                            <Input prefix={<Icon type="user" style={{color: 'rgba(0,0,0,.25)'}}/>} placeholder="手机号/用户名"/>
                         )}
                     </FormItem>
                     <FormItem className="password">
@@ -438,13 +389,10 @@ class NormalLoginForm extends Component {
                         })(
                             <Checkbox>记住密码</Checkbox>
                         )}
-                        <Button type="primary" htmlType="submit" className="login-form-button"
-                                loading={this.state.confirmLoading}>
-                            登录
-                        </Button>
-                        {/*<div className="login-form-forgot">
+                        <Button loading={this.state.loading} type="primary" htmlType="submit" className="login-form-button">登录</Button>
+                        <div className="login-form-forgot" style={{display: "none"}}>
                             <ResetPassword resetPhone={this.resetPhone}/>
-                        </div>*/}
+                        </div>
                     </FormItem>
                 </Form>
             </div>

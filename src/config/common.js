@@ -191,14 +191,12 @@ export const pCAName = (provinceList, adcode) => {
                         subItem.districtList.forEach((thirdItem) => {
                             subChildrenArea.push({value: thirdItem.adcode, label: thirdItem.name});
                             if (thirdItem.adcode === String(adcode)) {
-                                console.log(888)
                                 currentArea = [item.adcode, subItem.adcode, thirdItem.adcode];
                                 currentAreaName = [item.name, subItem.name, thirdItem.name];
                             }
                         })
                     }
                     if (subItem.adcode === String(adcode)) {
-                        console.log(777)
                         currentCity = [item.adcode, subItem.adcode];
                         currentCityName = [item.name, subItem.name];
                     }
@@ -509,21 +507,38 @@ export const toLoginPage = (_this) => {
 
 // 异常处理
 export const exceptHandle = (_this, json, content) => {
-    if (json.code === 901) {
+    if (json.code === 603) {
+        message.error("账号不存在")
+    } else if (json.code === 605) {
+        message.error("您的名下有多家机构，需填写用户名才能重置密码。’");
+    } else if (json.code === 703) {
+        message.error("短信验证码错误或已过期");
+    } else if (json.code === 704) {
+        message.error("图片验证码为空");
+    } else if (json.code === 705) {
+        message.error("验证码错误1");
+    } else if (json.code === 802) {
+        message.error("密码错误");
+    } else if (json.code === 803) {
+        message.error("密码格式错误");    
+    } else if (json.code === 901) {
         message.error("请先登录");          
         _this.props.toLoginPage();// 返回登陆页
     } else if (json.code === 902) {
         message.error("登录信息已过期，请重新登录");            
         _this.props.toLoginPage();// 返回登陆页
+    } else if (json.code === 903) {
+        message.error("请先配置用户角色或权限")
+    } else if (json.code === 1004) {
+        message.error("用户不存在");
     } else if (json.code === 1005) {
         message.error("无数据，请添加");
-        _this.setState({loading: false});
     } else if (json.code === 1205) {// 判断没有添加数据时，提示信息                    
         countDownModalTip(content);                  
     } else {
-        message.error(json.message);
-        _this.setState({loading: false});
+        message.error(json.message);        
     }
+    _this.setState({loading: false});
 };
     
 // 错误处理

@@ -10,10 +10,6 @@ import {
     Popconfirm,
     Spin
 } from 'antd';
-// import * as qiniu from 'qiniu-js';
-// import * as UUID from 'uuid-js';
-// import { configUrl, getToken, typeList, addType, deleteType, updateType, typeDetail, sortType } from '../../config';
-// import { getPower, toLoginPage, pagination, handleTableChange, exceptHandle, errorHandle } from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 

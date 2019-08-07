@@ -17,7 +17,6 @@ import {
 } from 'antd';
 import * as common from '../../config/common';
 import * as config from '../../config';
-import moment from 'moment';
 
 const Search = Input.Search;
 const FormItem = Form.Item;
@@ -935,8 +934,6 @@ class AdvManage extends Component {
     };
 
     componentWillMount() {
-        let girlFriend = new Object({name: '苍老师'});
-        console.log("女友：" + girlFriend.name);
         common.getMapDate(this, 'adv-mapContainer', 2);// 获取省份城市
         this.setPower();// 获取权限
         if (this.props.location.search) {

@@ -5,7 +5,7 @@
   "proxy": "https://www.taoerxue.com.cn",
   "homepage": ".",
   "dependencies": {
-    "antd": "^3.16.1",
+    "antd": "^3.21.2",
     "axios": "^0.19.0",
     "qiniu-js": "^2.5.4",
     "qs": "^6.7.0",
@@ -16,7 +16,7 @@
     "uuid-js": "^0.7.5"
   },
   "devDependencies": {
-    "moment": "^2.20.1",
+    "moment": "^2.24.0",
     "react-avatar-editor": "^11.0.2",
     "react-scripts": "1.0.17",
     "reqwest": "^2.0.5"

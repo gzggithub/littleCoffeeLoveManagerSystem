@@ -76,44 +76,47 @@ class EditableCell extends Component {
         const { editable, dataIndex, title, record, index, handleSort, ...restProps } = this.props;
         return (
         <td {...restProps}>
-            {editable ? (
-            <EditableContext.Consumer>
-                {(form) => {
-                    this.form = form;
-                    return (
-                        editing ? (
-                        <FormItem style={{ margin: 0 }}>
-                            {form.getFieldDecorator((dataIndex), {
-                                rules: [{
-                                    required: false,
-                                    message: "只能输入数字",
-                                }],
-                                initialValue: record[dataIndex],
-                                })(
-                                <Input style={{ textAlign: "center" }}
-                                    ref={node => (this.input = node)}
-                                    onPressEnter={this.sort.bind(this, record[dataIndex])}
-                                    onBlur={this.sort.bind(this, record[dataIndex])}
-                                    placeholder="双击设置排序"
-                                />
-                            )}
-                        </FormItem>
-                        ) : (
-                        <div
-                            className="editable-cell-value-wrap"
-                            onClick={this.toggleEdit}
-                        >
-                            <Input style={{ textAlign: "center" }}
-                                    ref={node => (this.input = node)}
-                                    value={record[dataIndex]}
-                                    placeholder="双击设置排序"
-                                />
-                        </div>
-                        )
-                    );
-                }}
-            </EditableContext.Consumer>
-            ) : restProps.children}
+            {
+                editable ? (
+                    <EditableContext.Consumer>
+                        {(form) => {
+                            this.form = form;
+                            return (
+                                editing ? 
+                                    (
+                                        <FormItem style={{ margin: 0 }}>
+                                            {form.getFieldDecorator((dataIndex), {
+                                                rules: [{
+                                                    required: false,
+                                                    message: "只能输入数字",
+                                                }],
+                                                initialValue: record[dataIndex],
+                                                })(
+                                                <Input style={{ textAlign: "center" }}
+                                                    ref={node => (this.input = node)}
+                                                    onPressEnter={this.sort.bind(this, record[dataIndex])}
+                                                    onBlur={this.sort.bind(this, record[dataIndex])}
+                                                    placeholder="双击设置排序"/>
+                                            )}
+                                        </FormItem>
+                                    ) 
+                                    : 
+                                    (
+                                        <div className="editable-cell-value-wrap" onClick={this.toggleEdit}>
+                                            <Input 
+                                                style={{ textAlign: "center" }}
+                                                ref={node => (this.input = node)}
+                                                value={record[dataIndex]}
+                                                placeholder="双击设置排序"/>
+                                        </div>
+                                    )
+                            );
+                        }}
+                    </EditableContext.Consumer>
+                    ) 
+                    : 
+                    restProps.children
+            }
         </td>
         );
     }
