@@ -3,7 +3,6 @@ import {
     HashRouter  as Router,
     Route
 } from 'react-router-dom';
-import {LocaleProvider} from 'antd';
 import {ConfigProvider} from 'antd';
 import zh_CN from 'antd/lib/locale-provider/zh_CN';
 import 'moment/locale/zh-cn';

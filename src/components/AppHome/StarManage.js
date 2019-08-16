@@ -426,7 +426,7 @@ const ItemAddForm = Form.create()(
                                         {common.uploadButton(1, photoLoading02)}                                        
                                         <p className="hint">{config.configUrl.uploadTipContent}</p>
                                     </Upload>
-                                </div>                       
+                                </div>
                             )}
                         </FormItem>
                         <div className="ant-line"></div>

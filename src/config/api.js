@@ -133,8 +133,6 @@ export  default {
     ban: `${base}/cs/user/ban`,
     // 重置密码
     resetPwd: `${base}/cs/user/resetPassword`,
-    // 机构列表
-    orgList: `${base}/cs/org/list`,
     /*-------------------------------部门管理-------------------------------*/
     // 列表
     departmentList: `${base}/cs/department/list`,

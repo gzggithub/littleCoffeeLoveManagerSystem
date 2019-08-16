@@ -15,18 +15,6 @@ export const configUrl = {
     uploadTipContent: "（按住Ctrl可以选择多张图片上传）"
 }
 
-export const local = {         
-    "lang": {            
-        "placeholder": "请选择日期",            
-        "today": "今天",            
-        "yearFormat": "YYYY",            
-        "dateFormat": "M/D/YYYY",            
-        "dayFormat": "D",            
-        "dateTimeFormat": "M/D/YYYY HH:mm:ss",            
-        "monthFormat": "MMMM"       
-    }
-}
-
 /*创建Post x-www-form-urlencode请求参数, 参数转字符串*/
 function createPostParams(obj) {
     return qs.stringify(obj);
@@ -399,12 +387,6 @@ export const ban = data => {
 export const resetPwd = data => {
     setAuthorization();
     return axios.post(api.resetPwd, createPostParams(data));
-}
-
-// 机构列表
-export const orgList = params => {
-    setAuthorization();
-    return axios.get(api.orgList, {params: params});
 }
 
 /*-------------------------------部门管理-------------------------------*/

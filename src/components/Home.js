@@ -342,7 +342,7 @@ class Home extends Component {
                             <div className="logo">
                                 <img src={logoImg} alt=""/>
                                 <div className="pic-right">
-                                    <p>小咖爱</p>
+                                    <p>童星汇</p>
                                     <p>运营管理系统</p>
                                 </div>
                             </div>

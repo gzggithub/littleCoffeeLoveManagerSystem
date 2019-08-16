@@ -504,29 +504,21 @@ class ItemEdit extends Component {
 
     // 确认操作
     handleCreate = () => {
-        // data空值处理
-        if (JSON.stringify(this.state.data) === "{}") {
-            return;
-        }
         const form = this.form;
         form.validateFieldsAndScroll((err, values) => {
-            if (err) {
-                return;
-            }
+            if (err) {return;}
             // 广告图片写入与校验 // 如何判断是否修改            
-            if (!this.state.viewPic) {
-                message.error("广告图片未选择提交");
-                return
-            }        
+            // if (!this.state.viewPic) {
+            //     message.error("广告图片未选择提交");
+            //     return
+            // }        
             
-            if (!values.cityId) {
-                message.error("请选择展示城市");
-                return
-            }
-
-            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
-
+            // if (!values.cityId) {
+            //     message.error("请选择展示城市");
+            //     return
+            // }
             this.setState({loading: true});
+            let currentCityName = common.pCAName(this.props.provinceList, values.cityId[1]).currentCityName;
             const data = {
                 id: this.props.id,
                 provinceId: values.cityId[0],
