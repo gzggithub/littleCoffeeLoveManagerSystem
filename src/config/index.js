@@ -2,11 +2,6 @@ import axios from 'axios';
 import api from './api';
 var qs = require('qs');
 
-/*设置请求头的类型*/
-// axios.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
-/*设置请求头的token 开始加载一次(解决办法是写一个方法。调接口之前调下改方法)*/
-// axios.defaults.headers.common['Authorization'] = getAuthorization();
-
 export const configUrl = {
     // photoUrl: 'https://image.taoerxue.com/', // 正式服务器图片地址
     copyUrl: "https://annunciation.taoerxue.cn?id=", // 正式下载地址
@@ -23,22 +18,6 @@ function createPostParams(obj) {
 // 设置请求头的 Authorization
 const setAuthorization =  () => {
     return axios.defaults.headers.common['Authorization'] = sessionStorage.token;    
-}
-
-/*get*/
-export const getOrgDetailInfo = params => {
-    return axios.get(api.getOrgDetailInfo, {params: params});
-}
-
-/*post*/ 
-export const getCourseDetailInfo = data => {
-    return axios.post(api.getCourseDetailInfo, qs.stringify(data));
-}
-
-/*delete*/
-//  删除-如果服务端将参数当做url 参数 接收，则格式为：{params: param}，这样发送的url将变为http:www.XXX.com?a=..&b=..
-export const getNewsDetail = params => {
-    return axios.delete(api.getNewsDetail, {params: params});
 }
 
 /*-------------------------------公共接口-------------------------------*/
@@ -495,14 +474,3 @@ export const setPermission = data => {
     setAuthorization();
     return axios.post(api.setPermission, data);
 }
-
-/*-------------------------------公共方法-------------------------------*/
-// 去除富文本的标签只获得文本内容
-export const removeTag = (str) => {
-    let fn_result = str;
-    fn_result = fn_result.replace(/(↵)/g, "");
-    fn_result = fn_result.replace(/(&nbsp;)/g, "");
-    fn_result = fn_result.replace("<html><head><title></title></head><body>", "");
-    fn_result = fn_result.replace("</body></html>", "");
-    return fn_result;
-};

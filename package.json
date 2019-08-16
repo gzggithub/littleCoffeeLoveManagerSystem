@@ -2,7 +2,7 @@
   "name": "project",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://www.taoerxue.com.cn",
+  "proxy": "https://childstar.taoerxue.com.cn",
   "homepage": ".",
   "dependencies": {
     "antd": "^3.21.2",
@@ -10,16 +10,13 @@
     "qiniu-js": "^2.5.4",
     "qs": "^6.7.0",
     "react": "^16.2.0",
-    "react-audio-player": "^0.11.0",
     "react-dom": "^16.2.0",
     "react-router-dom": "^4.2.2",
     "uuid-js": "^0.7.5"
   },
   "devDependencies": {
     "moment": "^2.24.0",
-    "react-avatar-editor": "^11.0.2",
-    "react-scripts": "1.0.17",
-    "reqwest": "^2.0.5"
+    "react-scripts": "1.0.17"
   },
   "scripts": {
     "start": "set PORT=3002 HOST=192.168.166.107 && react-scripts start",

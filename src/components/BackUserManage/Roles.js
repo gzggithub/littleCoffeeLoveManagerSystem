@@ -14,8 +14,6 @@ import {
     Tree,
     Icon,
 } from 'antd';
-// import { roleList, addRole, deleteRole, updateRole, roleDetail, departmentList, memberList, subordinateMember, addMember, getPermissionList, getPermission, setPermission } from '../../config';
-// import { getPower, handleTableChange, exceptHandle, errorHandle, toLoginPage } from '../../config/common';
 import * as common from '../../config/common';
 import * as config from '../../config';
 
@@ -1883,7 +1881,6 @@ class Roles extends Component {
     }
 
     render() {
-        console.log(this.state.opObj);
         return (
             <div className="roles">
                 {

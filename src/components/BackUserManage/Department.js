@@ -729,8 +729,7 @@ class DepartmentManage extends Component {
         }
     }
 
-    render() { 
-        console.log(this.state.opObj)      
+    render() {
         return (
             <div className="menus">
                 {

@@ -3,7 +3,7 @@
 顶部一级菜单组件：Home
 
 二级菜单组件：
-1.小咖爱：AppHome
+1.小咖爱(童星汇)：AppHome
     分类管理：Category
     广告管理：AdvManage
     明星管理：StarManage

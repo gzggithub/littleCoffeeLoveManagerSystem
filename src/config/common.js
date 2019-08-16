@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Select, Modal, Radio, Icon, message } from 'antd';
 import * as qiniu from 'qiniu-js';
@@ -229,7 +228,6 @@ export const getPower = (_this, url, num) => {
                 });
             }
             if (url) {
-                console.log(url)
                 subItem.children.forEach((fourthItem) => {
                     if (fourthItem.url === url) {                        
                         fourthItem.children.forEach((fifthItem) => {
@@ -267,7 +265,7 @@ export const getMapDate = (_this, id, num) => { // id: 地图容器，num：表�
                 subdistrict: num // 1:省，2:市，3:区，4:街道
             });
             districtSearch.search('中国', (status, result) => {
-                // provinceList = result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode});
+                provinceList = result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode});
                 _this.setState({
                     provinceList: result.districtList[0].districtList.sort((a, b) => {return a.adcode - b.adcode})
                 });
@@ -283,9 +281,7 @@ export const getMapDate = (_this, id, num) => { // id: 地图容器，num：表�
             })
         })
     })
-    console.log(provinceList);
-    console.log(cityCode);
-    // return {provinceList, cityCode};
+    return {provinceList, cityCode};
 };
 
 // 小于两位时间处理
@@ -411,8 +407,6 @@ export const picUpload = (_this, num, para, uploadToken) => {
     const file = para;
     const key = UUID.create().toString().replace(/-/g, "");
     const token = uploadToken;
-    console.log(token)
-    console.log(1231231312312)
     const config01 = {region: qiniu.region.z0};
     const observer = {
         next (res) {console.log(res)},
@@ -464,7 +458,6 @@ export const picUpload = (_this, num, para, uploadToken) => {
                 let videoE = document.createElement("video"); // 获取时长
                 videoE.src = configUrl.photoUrl + res.key;
                 setTimeout(()=> {
-                    console.log(videoE.duration);
                     videoList.unshift({ 
                         sort: 0,
                         name: '',                    
@@ -557,10 +550,8 @@ export const copyToClipboard = (_this, txt) => {
         window.location = txt;
     } else if (window.netscape) {
         try {
-            console.log(5777)
             window.netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
         } catch (e) {
-            console.log(5777)
             alert("被浏览器拒绝！\n请在浏览器地址栏输入'about:config'并回车\n然后将 'signed.applets.codebase_principal_support'设置为'true'");
         }
         var clip = window.Components.classes['@mozilla.org/widget/clipboard;1'].createInstance(window.Components.interfaces.nsIClipboard);
@@ -773,9 +764,6 @@ export const dataHandle = (data) => {
         return para.parentId === 0
     };
     let data01 = data.filter(fnFilter01);
-    // data01.sort((a, b) => {
-    //     return a.orderNum - b.orderNum
-    // });
     data01.forEach((item) => {
         const temp = {
             id: item.id,
@@ -790,9 +778,6 @@ export const dataHandle = (data) => {
             return para.parentId === item.id
         };
         let data02 = data.filter(fnFilter02);
-        // data02.sort((a, b) => {                
-        //     return b.id - a.id
-        // });
         if (data02.length) {
             item.children = [];
             data02.forEach((subItem) => {

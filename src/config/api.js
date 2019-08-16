@@ -1,5 +1,3 @@
-// 测试代理地址
-// let base = 'https://www.taoerxue.com.cn/childStarManager'
 // 正式代理地址
 let base = '/childStarManager'
 
@@ -51,8 +49,6 @@ export  default {
     starList: `${base}/cs/star/list`,
     // 添加
     saveStar: `${base}/cs/star/save`,
-    // 删除
-    // deleteStar: `${base}/cs/star/delete`,
     // 编辑
     updateStar: `${base}/cs/star/update`,
     // 详情
